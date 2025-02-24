@@ -5,8 +5,21 @@ part 'card_state.dart';
 
 class CardBloc extends Bloc<CreateCard, CardState> {
   CardBloc() : super(const CardState()) {
+    on<QuestionAnswerChanged>(_onQuestionAndAnswerChanged);
     on<QuestionChanged>(_onQuestionChanged);
     on<AnswerChanged>(_onAnswerChanged);
+  }
+
+  void _onQuestionAndAnswerChanged(QuestionAnswerChanged event, Emitter<CardState> emit) {
+    final question = event.question;
+    final answer = event.answer;
+    emit(
+      state.copyWith(
+        question: question,
+        answer: answer,
+        isCardValid: _isCardValid(question: question, answer: answer),
+      ),
+    );
   }
 
   void _onQuestionChanged(QuestionChanged event, Emitter<CardState> emit) {

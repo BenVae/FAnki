@@ -168,7 +168,7 @@ class DeckRepository {
     return flashCard;
   }
 
-  Future<void> removeFlashCardFromSelectedDeckById(int cardId) async {
+  Future<DeckModel> removeFlashCardFromSelectedDeckById(int cardId) async {
     if (_currentDeck == null) {
       throw Exception('No deck selected');
     }
@@ -189,6 +189,9 @@ class DeckRepository {
 
     if (updatedDeck != null) {
       _currentDeck = updatedDeck.toDomain();
+      return _currentDeck!;
+    } else {
+      throw Exception('Removing card did not work.');
     }
   }
 }

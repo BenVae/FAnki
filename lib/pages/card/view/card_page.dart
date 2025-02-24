@@ -20,6 +20,9 @@ class _CardPageState extends State<CardPage> {
     super.initState();
     final currentFlashCard = context.read<CardDeckBloc>().state.currentCard;
     if (currentFlashCard != null) {
+      context
+          .read<CardBloc>()
+          .add(QuestionAnswerChanged(question: currentFlashCard.question, answer: currentFlashCard.answer));
       _questionTextEditingController = TextEditingController(text: currentFlashCard.question);
       _answerTextEditingController = TextEditingController(text: currentFlashCard.answer);
     } else {
@@ -44,7 +47,6 @@ class _CardPageState extends State<CardPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             context.read<CardDeckBloc>().add(RemoveCurrentCardAndDeckFromState());
-            // context.go('/HomeTabView/DeckPage');
             context.pop();
           },
         ),
@@ -55,49 +57,71 @@ class _CardPageState extends State<CardPage> {
           builder: (context, cardDeckState) {
             return BlocBuilder<CardBloc, CardState>(
               builder: (context, cardState) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                return ListView(
                   children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Question',
-                        border: OutlineInputBorder(),
+                    Card(
+                      elevation: 2.0,
+                      margin: const EdgeInsets.only(bottom: 16.0),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Question',
+                            border: OutlineInputBorder(),
+                          ),
+                          controller: _questionTextEditingController,
+                          onChanged: (question) => context.read<CardBloc>().add(QuestionChanged(question)),
+                        ),
                       ),
-                      controller: _questionTextEditingController,
-                      onChanged: (question) => context.read<CardBloc>().add(QuestionChanged(question)),
                     ),
-                    const SizedBox(height: 16.0),
-                    TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Answer',
-                        border: OutlineInputBorder(),
+                    Card(
+                      elevation: 2.0,
+                      margin: const EdgeInsets.only(bottom: 16.0),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Answer',
+                            border: OutlineInputBorder(),
+                          ),
+                          controller: _answerTextEditingController,
+                          onChanged: (answer) => context.read<CardBloc>().add(AnswerChanged(answer)),
+                        ),
                       ),
-                      controller: _answerTextEditingController,
-                      onChanged: (answer) => context.read<CardBloc>().add(AnswerChanged(answer)),
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton(
-                          onPressed: cardState.isCardValid
-                              ? () {
-                                  context
-                                      .read<CardDeckBloc>()
-                                      .add(CreateNewCard(question: cardState.question!, answer: cardState.answer!));
-                                  context.go('/HomeTabView/DeckPage');
-                                }
-                              : null,
-                          child: const Text('Save Flashcard'),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: cardState.isCardValid
+                                ? () {
+                                    context.read<CardDeckBloc>().add(
+                                          CreateNewCard(
+                                            question: cardState.question!,
+                                            answer: cardState.answer!,
+                                          ),
+                                        );
+                                    context.go('/HomeTabView/DeckPage');
+                                  }
+                                : null,
+                            child: const Text('Save Flashcard'),
+                          ),
                         ),
+                        const SizedBox(width: 16.0),
                         if (!cardDeckState.isNewCard && cardDeckState.currentCard != null)
-                          ElevatedButton(
-                            onPressed: () {
-                              context.read<CardDeckBloc>().add(
-                                    RemoveCardFromDeckById(cardId: cardDeckState.currentCard!.id),
-                                  );
-                              context.go('/HomeTabView/DeckPage');
-                            },
-                            child: const Text('Delete Card'),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(255, 206, 76, 66),
+                              ),
+                              onPressed: () {
+                                context.read<CardDeckBloc>().add(
+                                      RemoveCardFromDeckById(cardId: cardDeckState.currentCard!.id),
+                                    );
+                                context.go('/HomeTabView/DeckPage');
+                              },
+                              child: const Text('Delete Card'),
+                            ),
                           ),
                       ],
                     ),
