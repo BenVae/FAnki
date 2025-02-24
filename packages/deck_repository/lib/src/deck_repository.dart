@@ -60,13 +60,13 @@ class DeckRepository {
     }
   }
 
-  void setCurrentFlashCard({required int? cardId}) {
+  FlashCardModel? setCurrentFlashCard({required int? cardId}) {
     if (_currentDeck == null) {
       throw Exception('CurrentDeck was null.');
     }
 
     if (cardId == null) {
-      _currentFlashCard == null;
+      _currentFlashCard = null;
     } else {
       final foundCard = _currentDeck!.flashCards.firstWhere(
         (flashCard) => flashCard.id == cardId,
@@ -74,6 +74,7 @@ class DeckRepository {
       );
       _currentFlashCard = foundCard;
     }
+    return _currentFlashCard;
   }
 
   FlashCardModel? getCurrentFlashCard() {

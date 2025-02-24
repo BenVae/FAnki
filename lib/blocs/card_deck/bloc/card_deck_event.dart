@@ -28,3 +28,5 @@ final class SetFlashCardForEditingOrCreating extends CardDeckEvent {
 
   SetFlashCardForEditingOrCreating({this.cardId});
 }
+
+final class RemoveCurrentCardAndDeckFromState extends CardDeckEvent {}

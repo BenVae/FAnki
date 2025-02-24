@@ -18,7 +18,7 @@ class _CardPageState extends State<CardPage> {
   @override
   void initState() {
     super.initState();
-    final currentFlashCard = context.read<CardDeckBloc>().state.currentFlashCard;
+    final currentFlashCard = context.read<CardDeckBloc>().state.currentCard;
     if (currentFlashCard != null) {
       _questionTextEditingController = TextEditingController(text: currentFlashCard.question);
       _answerTextEditingController = TextEditingController(text: currentFlashCard.answer);
@@ -40,6 +40,14 @@ class _CardPageState extends State<CardPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create/Edit Flashcard'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            context.read<CardDeckBloc>().add(RemoveCurrentCardAndDeckFromState());
+            // context.go('/HomeTabView/DeckPage');
+            context.pop();
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -81,11 +89,11 @@ class _CardPageState extends State<CardPage> {
                               : null,
                           child: const Text('Save Flashcard'),
                         ),
-                        if (!cardDeckState.isNewCard && cardDeckState.currentFlashCard != null)
+                        if (!cardDeckState.isNewCard && cardDeckState.currentCard != null)
                           ElevatedButton(
                             onPressed: () {
                               context.read<CardDeckBloc>().add(
-                                    RemoveCardFromDeckById(cardId: cardDeckState.currentFlashCard!.id),
+                                    RemoveCardFromDeckById(cardId: cardDeckState.currentCard!.id),
                                   );
                               context.go('/HomeTabView/DeckPage');
                             },
