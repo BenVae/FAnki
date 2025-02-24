@@ -111,11 +111,9 @@ class DeckSelectionPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             ElevatedButton(
-                              onPressed: state.deckNameIsValid
+                              onPressed: state.newDeckNameIsValid
                                   ? () {
-                                      context
-                                          .read<DeckSelectionBloc>()
-                                          .add(CreateDeck(deckName: state.deckModel!.deckName));
+                                      context.read<DeckSelectionBloc>().add(CreateDeck());
                                       Navigator.of(context).pop();
                                     }
                                   : null,

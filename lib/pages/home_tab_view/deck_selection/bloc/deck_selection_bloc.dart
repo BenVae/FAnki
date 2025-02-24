@@ -20,13 +20,11 @@ class DeckSelectionBloc extends Bloc<DeckSelectionEvent, DeckSelectionState> {
 
   Future<void> _onFetchDecks(FetchDecks event, Emitter<DeckSelectionState> emit) async {
     emit(state.copyWith(isLoading: true));
-
     List<String> deckNamesFromRepo = await _deckRepository.getDeckNames();
     List<DeckName> deckNames = [];
     for (String deckName in deckNamesFromRepo) {
       deckNames.add(DeckName.dirty(deckName));
     }
-
     emit(state.copyWith(isLoading: false, decks: deckNames));
   }
 
@@ -34,22 +32,19 @@ class DeckSelectionBloc extends Bloc<DeckSelectionEvent, DeckSelectionState> {
     final deckName = DeckName.dirty(event.deckName);
     final deckNameIsUsed = await _deckRepository.isDeckNameUsed(event.deckName);
     final deckNameIsValid = deckName.isValid && !deckNameIsUsed;
-    emit(state.copyWith(currentDeckName: deckName, deckNameIsValid: deckNameIsValid));
+    emit(state.copyWith(nameOfNewDeck: deckName, newDeckNameIsValid: deckNameIsValid));
   }
 
   Future<void> _createDeck(CreateDeck event, Emitter<DeckSelectionState> emit) async {
-    String deckName = event.deckName;
+    String deckName = state.nameOfNewDeck.value;
     await _deckRepository.createDeck(deckName);
     add(FetchDecks());
-    emit(state.copyWith(currentDeckName: DeckName.pure()));
+    emit(state.copyWith(nameOfNewDeck: DeckName.pure()));
   }
 
   Future<void> _selectDeck(SelectDeckEvent event, Emitter<DeckSelectionState> emit) async {
     emit(state.copyWith(isLoading: true));
     DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
-    emit(state.copyWith(
-      isLoading: false,
-      deckModel: deck,
-    ));
+    emit(state.copyWith(isLoading: false, deckModel: deck));
   }
 }

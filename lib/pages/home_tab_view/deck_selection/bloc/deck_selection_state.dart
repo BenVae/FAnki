@@ -3,31 +3,31 @@ part of 'deck_selection_bloc.dart';
 final class DeckSelectionState {
   final bool isLoading;
   final List<DeckName> decks;
-  // final DeckName currentDeckName;
+  final DeckName nameOfNewDeck;
   final DeckModel? deckModel;
-  final bool deckNameIsValid;
+  final bool newDeckNameIsValid;
 
   const DeckSelectionState({
     this.isLoading = true,
     this.decks = const [],
-    // this.currentDeckName = const DeckName.pure(),
+    this.nameOfNewDeck = const DeckName.pure(),
     this.deckModel,
-    this.deckNameIsValid = false,
+    this.newDeckNameIsValid = false,
   });
 
   DeckSelectionState copyWith({
     bool? isLoading,
     List<DeckName>? decks,
-    DeckName? currentDeckName,
+    DeckName? nameOfNewDeck,
     DeckModel? deckModel,
-    bool? deckNameIsValid,
+    bool? newDeckNameIsValid,
   }) {
     return DeckSelectionState(
       isLoading: isLoading ?? this.isLoading,
       decks: decks ?? this.decks,
-      // currentDeckName: currentDeckName ?? this.currentDeckName,
+      nameOfNewDeck: nameOfNewDeck ?? this.nameOfNewDeck,
       deckModel: deckModel ?? this.deckModel,
-      deckNameIsValid: deckNameIsValid ?? this.deckNameIsValid,
+      newDeckNameIsValid: newDeckNameIsValid ?? this.newDeckNameIsValid,
     );
   }
 }

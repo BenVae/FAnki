@@ -13,9 +13,9 @@ final class DeckNameInputChange extends DeckSelectionEvent {
 }
 
 final class CreateDeck extends DeckSelectionEvent {
-  final String deckName;
+  // final String deckName;
 
-  const CreateDeck({required this.deckName});
+  // const CreateDeck({required this.deckName});
 }
 
 final class SelectDeckEvent extends DeckSelectionEvent {
