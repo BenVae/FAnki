@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:deck_repository/src/data_models/deck_model.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,7 +10,6 @@ import 'isar_data_models/isar_deck_model.dart';
 class DeckRepository {
   late final Isar isar;
 
-  final List<IsarDeckModel> _decks = [];
   DeckModel? _currentDeck;
   FlashCardModel? _currentFlashCard;
 
@@ -29,32 +30,29 @@ class DeckRepository {
   }
 
   Future<void> createDeck(String deckName) async {
-    IsarDeckModel deckModel = IsarDeckModel(deckName: deckName, flashCards: []);
+    final deckModel = IsarDeckModel(deckName: deckName, flashCards: []);
     await isar.writeTxn(() async {
       await isar.isarDeckModels.put(deckModel);
     });
-    _decks.add(deckModel);
   }
 
   Future<bool> isDeckNameUsed(String deckName) async {
-    IsarDeckModel? deckModel = await isar.isarDeckModels.filter().deckNameEqualTo(deckName).findFirst();
-    if (deckModel == null) {
-      return false;
-    } else {
-      return true;
-    }
+    final deckModel = await isar.isarDeckModels.filter().deckNameEqualTo(deckName).findFirst();
+    return deckModel != null;
   }
 
-  Future<void> setCurrentDeck(String deckName) async {
-    IsarDeckModel? isarDeck = await isar.isarDeckModels.filter().deckNameEqualTo(deckName).findFirst();
-    if (isarDeck != null) {
-      _currentDeck = isarDeck.toDomain();
-    } else {
+  Future<DeckModel> loadDeckByName(String deckName) async {
+    final isarDeck = await isar.isarDeckModels.filter().deckNameEqualTo(deckName).findFirst();
+
+    if (isarDeck == null) {
       throw Exception('Deck $deckName is unknown.');
     }
+
+    _currentDeck = isarDeck.toDomain();
+    return _currentDeck!;
   }
 
-  String getCurrentDeck() {
+  String getCurrentDeckName() {
     if (_currentDeck != null) {
       return _currentDeck!.deckName;
     } else {
@@ -62,47 +60,51 @@ class DeckRepository {
     }
   }
 
-  void setCurrentFlashCard({int? cardId}) {
+  void setCurrentFlashCard({required int? cardId}) {
+    if (_currentDeck == null) {
+      throw Exception('CurrentDeck was null.');
+    }
+
     if (cardId == null) {
-      _currentFlashCard = null;
+      _currentFlashCard == null;
     } else {
-      if (_currentDeck == null) {
-        throw Exception('CurrentDeck was null.');
-      } else {
-        for (FlashCardModel flashCard in _currentDeck!.flashCards) {
-          if (flashCard.id == cardId) {
-            _currentFlashCard = flashCard;
-          }
-        }
-      }
+      final foundCard = _currentDeck!.flashCards.firstWhere(
+        (flashCard) => flashCard.id == cardId,
+        orElse: () => throw Exception('FlashCard with id=$cardId not found.'),
+      );
+      _currentFlashCard = foundCard;
     }
   }
 
   FlashCardModel? getCurrentFlashCard() {
-    // ignore: unnecessary_null_comparison
-    if (_currentFlashCard == null || _currentFlashCard!.question == null || _currentFlashCard!.answer == null) {
-      return null;
-    }
-    return _currentFlashCard!;
+    return _currentFlashCard;
   }
 
-  Future<void> addFlashCard({required String question, required String answer}) async {
-    if (_currentDeck != null) {
-      final flashCard = FlashCardModel(id: _getIdForNewFlashCard(), question: question, answer: answer);
-      _currentDeck!.flashCards = List<FlashCardModel>.from(_currentDeck!.flashCards);
-      _currentDeck!.flashCards.add(flashCard);
+  Future<DeckModel> addFlashCard({required String question, required String answer}) async {
+    if (_currentDeck == null) {
+      throw Exception('No deck selected.');
+    }
 
-      IsarDeckModel isarDeckModel = _currentDeck!.toIsar();
-      await isar.writeTxn(() async {
-        await isar.isarDeckModels.put(isarDeckModel);
-      });
+    final newCard = FlashCardModel(
+      id: _getIdForNewFlashCard(),
+      question: question,
+      answer: answer,
+    );
 
-      final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
-      if (updatedDeck != null) {
-        _currentDeck = updatedDeck.toDomain();
-      }
+    _currentDeck!.flashCards = [..._currentDeck!.flashCards, newCard];
+    final isarDeckModel = _currentDeck!.toIsar();
+
+    await isar.writeTxn(() async {
+      await isar.isarDeckModels.put(isarDeckModel);
+    });
+
+    final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
+
+    if (updatedDeck != null) {
+      _currentDeck = updatedDeck.toDomain();
+      return _currentDeck!;
     } else {
-      throw Exception('No deck selected');
+      throw Exception('Adding Flashcard did not work.');
     }
   }
 
@@ -115,6 +117,37 @@ class DeckRepository {
     return maxId + 1;
   }
 
+  Future<void> editFlashCard({
+    required int cardId,
+    required String question,
+    required String answer,
+  }) async {
+    if (_currentDeck == null) {
+      throw Exception('No deck selected.');
+    }
+
+    final index = _currentDeck!.flashCards.indexWhere((fc) => fc.id == cardId);
+    if (index == -1) {
+      throw Exception('Flashcard with id $cardId not found.');
+    }
+
+    final updatedFlashCard = FlashCardModel(id: cardId, question: question, answer: answer);
+
+    _currentDeck!.flashCards = List<FlashCardModel>.from(_currentDeck!.flashCards);
+    _currentDeck!.flashCards[index] = updatedFlashCard;
+
+    final isarDeckModel = _currentDeck!.toIsar();
+    await isar.writeTxn(() async {
+      await isar.isarDeckModels.put(isarDeckModel);
+    });
+
+    final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
+
+    if (updatedDeck != null) {
+      _currentDeck = updatedDeck.toDomain();
+    }
+  }
+
   List<FlashCardModel> getFlashCardsFromSelectedDeck() {
     if (_currentDeck != null) {
       return _currentDeck!.flashCards;
@@ -124,21 +157,14 @@ class DeckRepository {
   }
 
   FlashCardModel getFlashCardsFromSelectedDeckById(int cardId) {
-    if (_currentDeck != null) {
-      FlashCardModel? flashCard;
-      for (FlashCardModel flashCardModel in _currentDeck!.flashCards) {
-        if (flashCardModel.id == cardId) {
-          flashCard = flashCardModel;
-        }
-      }
-      if (flashCard == null) {
-        throw Exception('Flashcard with $cardId not found. Sync missmatch!');
-      } else {
-        return flashCard;
-      }
-    } else {
+    if (_currentDeck == null) {
       throw Exception('No deck selected');
     }
+    final flashCard = _currentDeck!.flashCards.firstWhere(
+      (fc) => fc.id == cardId,
+      orElse: () => throw Exception('Flashcard with $cardId not found. Sync mismatch!'),
+    );
+    return flashCard;
   }
 
   Future<void> removeFlashCardFromSelectedDeckById(int cardId) async {
@@ -146,19 +172,20 @@ class DeckRepository {
       throw Exception('No deck selected');
     }
 
-    final int index = _currentDeck!.flashCards.indexWhere((flashCard) => flashCard.id == cardId);
+    final index = _currentDeck!.flashCards.indexWhere((fc) => fc.id == cardId);
     if (index == -1) {
       throw Exception('Flashcard with id $cardId not found in current deck.');
     }
 
     _currentDeck!.flashCards = List<FlashCardModel>.from(_currentDeck!.flashCards)..removeAt(index);
 
-    final IsarDeckModel isarDeckModel = _currentDeck!.toIsar();
+    final isarDeckModel = _currentDeck!.toIsar();
     await isar.writeTxn(() async {
       await isar.isarDeckModels.put(isarDeckModel);
     });
 
     final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
+
     if (updatedDeck != null) {
       _currentDeck = updatedDeck.toDomain();
     }

@@ -7,8 +7,7 @@ import 'package:bloc/bloc.dart';
 part 'authentication_event.dart';
 part 'authentication_state.dart';
 
-class AuthenticationBloc
-    extends Bloc<AuthenticationEvent, AuthenticationState> {
+class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> {
   final AuthenticationRepository _authenticationRepository;
 
   AuthenticationBloc({
@@ -19,9 +18,7 @@ class AuthenticationBloc
     on<AuthenticationLogoutPressed>(_onLogoutPressed);
   }
 
-  Future<void> _onSubscriptionRequested(
-      AuthenticationSubscriptionRequested event,
-      Emitter<AuthenticationState> emit) {
+  Future<void> _onSubscriptionRequested(AuthenticationSubscriptionRequested event, Emitter<AuthenticationState> emit) {
     return emit.onEach(
       _authenticationRepository.status,
       onData: (status) async {
@@ -29,13 +26,9 @@ class AuthenticationBloc
           case AuthenticationStatus.unauthenticated:
             return emit(const AuthenticationState.unauthenticated());
           case AuthenticationStatus.authenticated:
-            final user = await getUser();
+            final user = getUser();
             return emit(
-              // ignore: unnecessary_null_comparison
-
-              user != null
-                  ? AuthenticationState.authenticated('user')
-                  : const AuthenticationState.unauthenticated(),
+              user != null ? AuthenticationState.authenticated('user') : const AuthenticationState.unauthenticated(),
             );
           case AuthenticationStatus.unknown:
             return emit(const AuthenticationState.unknown());
@@ -45,8 +38,7 @@ class AuthenticationBloc
     );
   }
 
-  void _onLogoutPressed(
-      AuthenticationLogoutPressed event, Emitter<AuthenticationState> emit) {
+  void _onLogoutPressed(AuthenticationLogoutPressed event, Emitter<AuthenticationState> emit) {
     _authenticationRepository.logOut();
   }
 

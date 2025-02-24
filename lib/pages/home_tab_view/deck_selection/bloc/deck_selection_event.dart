@@ -18,8 +18,8 @@ final class CreateDeck extends DeckSelectionEvent {
   const CreateDeck({required this.deckName});
 }
 
-final class SelectDeck extends DeckSelectionEvent {
+final class SelectDeckEvent extends DeckSelectionEvent {
   final String deckName;
 
-  const SelectDeck({required this.deckName});
+  const SelectDeckEvent({required this.deckName});
 }

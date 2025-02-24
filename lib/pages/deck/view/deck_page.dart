@@ -1,4 +1,4 @@
-import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
+import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,9 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'widgets/flashcard.dart';
 
 class DeckPage extends StatefulWidget {
-  DeckPage({super.key}) {
-    print('fef');
-  }
+  const DeckPage({super.key});
 
   @override
   State<DeckPage> createState() => _DeckPageState();
@@ -16,9 +14,8 @@ class DeckPage extends StatefulWidget {
 
 class _DeckPageState extends State<DeckPage> {
   @override
-  void didUpdateWidget(covariant DeckPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    context.read<DeckBloc>().add(GetCurrentDeckFromRepository());
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -34,7 +31,7 @@ class _DeckPageState extends State<DeckPage> {
           },
         ),
       ),
-      body: BlocBuilder<DeckBloc, DeckState>(
+      body: BlocBuilder<CardDeckBloc, CardDeckState>(
         builder: (context, state) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -49,9 +46,9 @@ class _DeckPageState extends State<DeckPage> {
                 ),
                 const SizedBox(height: 16.0),
                 Expanded(
-                  child: state.isLoading || state.deckName == null
+                  child: state.isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : state.flashCards.isEmpty
+                      : state.deck!.flashCards.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -61,19 +58,18 @@ class _DeckPageState extends State<DeckPage> {
                               ),
                             )
                           : ListView.builder(
-                              itemCount: state.flashCards.length,
+                              itemCount: state.deck!.flashCards.length,
                               itemBuilder: (context, index) {
                                 return InkWell(
                                   onTap: () {
-                                    context
-                                        .read<DeckBloc>()
-                                        .add(SetCurrentFlashCardForEditing(cardId: state.flashCards[index].id));
+                                    context.read<CardDeckBloc>().add(
+                                        SetFlashCardForEditingOrCreating(cardId: state.deck!.flashCards[index].id));
                                     return context.go('/HomeTabView/DeckPage/CreateCardPage');
                                   },
                                   child: FlashCard(
                                     id: index,
-                                    question: state.flashCards[index].question,
-                                    answer: state.flashCards[index].answer,
+                                    question: state.deck!.flashCards[index].question,
+                                    answer: state.deck!.flashCards[index].answer,
                                   ),
                                 );
                               },
@@ -92,7 +88,7 @@ class _DeckPageState extends State<DeckPage> {
   Widget _addNewCardButton(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-        context.read<DeckBloc>().add(CreateNewCard());
+        context.read<CardDeckBloc>().add(SetFlashCardForEditingOrCreating());
         context.go('/HomeTabView/DeckPage/CreateCardPage');
       },
       child: const Text('Create card'),

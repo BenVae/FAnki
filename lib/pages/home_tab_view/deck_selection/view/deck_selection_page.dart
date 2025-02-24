@@ -1,3 +1,4 @@
+import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/home_tab_view/deck_selection/deck_selection.dart';
@@ -23,6 +24,7 @@ class DeckSelectionPage extends StatelessWidget {
                     itemCount: state.decks.length,
                     itemBuilder: (context, index) => Card(
                       child: ListTile(
+                        onTap: () => context.go('/HomeTabView/LearningPage'),
                         title: Text(state.decks[index].value),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -31,7 +33,8 @@ class DeckSelectionPage extends StatelessWidget {
                               icon: const Icon(Icons.edit),
                               onPressed: () {
                                 String deckName = state.decks[index].value;
-                                context.go('/HomeTabView/DeckPage', extra: deckName);
+                                context.read<CardDeckBloc>().add(GetDeckFromRepository(deckName: deckName));
+                                context.go('/HomeTabView/DeckPage');
                               },
                             ),
                             const SizedBox(width: 20),
@@ -110,7 +113,9 @@ class DeckSelectionPage extends StatelessWidget {
                             ElevatedButton(
                               onPressed: state.deckNameIsValid
                                   ? () {
-                                      context.read<DeckSelectionBloc>().add(CreateDeck(deckName: state.deckName.value));
+                                      context
+                                          .read<DeckSelectionBloc>()
+                                          .add(CreateDeck(deckName: state.deckModel!.deckName));
                                       Navigator.of(context).pop();
                                     }
                                   : null,

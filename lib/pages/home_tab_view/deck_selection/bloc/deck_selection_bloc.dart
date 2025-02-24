@@ -15,7 +15,7 @@ class DeckSelectionBloc extends Bloc<DeckSelectionEvent, DeckSelectionState> {
     on<FetchDecks>(_onFetchDecks);
     on<DeckNameInputChange>(_onDeckNameInputChanged);
     on<CreateDeck>(_createDeck);
-    on<SelectDeck>(_selectDeck);
+    on<SelectDeckEvent>(_selectDeck);
   }
 
   Future<void> _onFetchDecks(FetchDecks event, Emitter<DeckSelectionState> emit) async {
@@ -34,17 +34,22 @@ class DeckSelectionBloc extends Bloc<DeckSelectionEvent, DeckSelectionState> {
     final deckName = DeckName.dirty(event.deckName);
     final deckNameIsUsed = await _deckRepository.isDeckNameUsed(event.deckName);
     final deckNameIsValid = deckName.isValid && !deckNameIsUsed;
-    emit(state.copyWith(deckName: deckName, deckNameIsValid: deckNameIsValid));
+    emit(state.copyWith(currentDeckName: deckName, deckNameIsValid: deckNameIsValid));
   }
 
   Future<void> _createDeck(CreateDeck event, Emitter<DeckSelectionState> emit) async {
     String deckName = event.deckName;
     await _deckRepository.createDeck(deckName);
     add(FetchDecks());
-    emit(state.copyWith(deckName: DeckName.pure()));
+    emit(state.copyWith(currentDeckName: DeckName.pure()));
   }
 
-  Future<void> _selectDeck(SelectDeck event, Emitter<DeckSelectionState> emit) async {
-    await _deckRepository.setCurrentDeck(event.deckName);
+  Future<void> _selectDeck(SelectDeckEvent event, Emitter<DeckSelectionState> emit) async {
+    emit(state.copyWith(isLoading: true));
+    DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
+    emit(state.copyWith(
+      isLoading: false,
+      deckModel: deck,
+    ));
   }
 }
