@@ -1,4 +1,5 @@
 import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
+import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/home_tab_view/deck_selection/deck_selection.dart';
@@ -24,7 +25,11 @@ class DeckSelectionPage extends StatelessWidget {
                     itemCount: state.decks.length,
                     itemBuilder: (context, index) => Card(
                       child: ListTile(
-                        onTap: () => context.go('/HomeTabView/LearningPage'),
+                        onTap: () {
+                          String deckName = state.decks[index].value;
+                          context.read<LearningBloc>().add(InitializeLearning(deckName: deckName));
+                          context.go('/HomeTabView/LearningPage');
+                        },
                         title: Text(state.decks[index].value),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,

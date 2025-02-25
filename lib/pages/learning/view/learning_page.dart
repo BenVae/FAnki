@@ -11,14 +11,11 @@ class LearningPage extends StatefulWidget {
 }
 
 class _LearningPageState extends State<LearningPage> {
-  // Local list to hold revealed flashcards so you can scroll through previous ones.
   final List<FlashCardModel> _revealedCards = [];
 
   @override
   void initState() {
     super.initState();
-    // Initialize learning. Make sure the LearningBloc is provided above this widget.
-    context.read<LearningBloc>().add(InitializeLearning());
   }
 
   @override
@@ -27,7 +24,6 @@ class _LearningPageState extends State<LearningPage> {
       appBar: AppBar(title: const Text('Learning')),
       body: BlocConsumer<LearningBloc, LearningState>(
         listener: (context, state) {
-          // When a new card is selected, add it to the list if it's not already there.
           if (state.currentFlashCard != null && !_revealedCards.any((card) => card.id == state.currentFlashCard!.id)) {
             setState(() {
               _revealedCards.add(state.currentFlashCard!);
@@ -37,7 +33,9 @@ class _LearningPageState extends State<LearningPage> {
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
-          }
+          } else if (state.flashCards.isEmpty) {
+            return const Center(child: Text('There are no cards in this deck.'));
+          } else {}
 
           // Display all revealed cards in a scrollable list.
           return ListView.builder(

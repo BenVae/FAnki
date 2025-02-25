@@ -16,12 +16,12 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
     on<GetNextCard>(_getNextCard);
   }
 
-  void _initialize(InitializeLearning event, Emitter<LearningState> emit) {
+  void _initialize(InitializeLearning event, Emitter<LearningState> emit) async {
     emit(state.copyWith(isLoading: true));
-    final flashCards = _deckRepository.getFlashCardsFromSelectedDeck();
+    DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
     emit(state.copyWith(
       isLoading: false,
-      flashCards: flashCards,
+      flashCards: deck.flashCards,
     ));
   }
 

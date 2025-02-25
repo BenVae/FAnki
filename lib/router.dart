@@ -33,6 +33,12 @@ final GoRouter router = GoRouter(
           },
           routes: <RouteBase>[
             GoRoute(
+              path: 'LearningPage',
+              builder: (BuildContext context, GoRouterState state) {
+                return const LearningPage();
+              },
+            ),
+            GoRoute(
               path: 'DeckPage',
               builder: (BuildContext context, GoRouterState state) {
                 return BlocProvider(
@@ -43,19 +49,6 @@ final GoRouter router = GoRouter(
                 );
               },
               routes: <RouteBase>[
-                GoRoute(
-                  path: 'LearningPage',
-                  builder: (BuildContext context, GoRouterState state) {
-                    DeckRepository deckRepository = RepositoryProvider.of<DeckRepository>(context);
-
-                    return BlocProvider(
-                      create: (context) {
-                        return LearningBloc(deckRepository: deckRepository)..add(InitializeLearning());
-                      },
-                      child: LearningPage(),
-                    );
-                  },
-                ),
                 GoRoute(
                   path: 'CreateCardPage',
                   builder: (BuildContext context, GoRouterState state) {

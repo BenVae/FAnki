@@ -53,6 +53,6 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
 
   Future<void> _removeCurrentCardAndDeckFromState(
       RemoveCurrentCardAndDeckFromState event, Emitter<CardDeckState> emit) async {
-    emit(state.copyWith(currentCard: () => null, deckName: () => null));
+    emit(state.copyWith(currentCard: () => null));
   }
 }
