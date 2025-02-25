@@ -4,12 +4,14 @@ class FlashCard extends StatelessWidget {
   final int id;
   final String question;
   final String answer;
+  final bool visible;
 
   const FlashCard({
     super.key,
     required this.id,
     required this.question,
     required this.answer,
+    this.visible = false,
   });
 
   @override
@@ -42,13 +44,16 @@ class FlashCard extends StatelessWidget {
             const SizedBox(height: 16),
             Divider(color: Colors.grey[300]),
             const SizedBox(height: 16),
-            Text(
-              answer,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
+            Visibility(
+              visible: visible,
+              child: Text(
+                answer,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                ),
               ),
-            ),
+            )
           ],
         ),
       ),

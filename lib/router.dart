@@ -1,7 +1,5 @@
 import 'package:authentication_repository/authentication_repository.dart';
-import 'package:deck_repository/deck_repository.dart';
 import 'package:fanki/blocs/authentication/bloc/authentication_bloc.dart';
-import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:fanki/pages/learning/view/learning_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

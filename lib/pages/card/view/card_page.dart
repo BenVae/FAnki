@@ -45,6 +45,7 @@ class _CardPageState extends State<CardPage> {
     return Scaffold(
       appBar: AppBar(
         title: cardDeckState.isNewCard ? Text('Create Flashcard') : Text('Edit Flashcard'),
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
