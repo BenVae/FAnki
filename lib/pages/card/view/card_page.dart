@@ -40,9 +40,11 @@ class _CardPageState extends State<CardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cardDeckState = context.watch<CardDeckBloc>().state;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create/Edit Flashcard'),
+        title: cardDeckState.isNewCard ? Text('Create Flashcard') : Text('Edit Flashcard'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -102,16 +104,14 @@ class _CardPageState extends State<CardPage> {
                                               answer: cardState.answer!,
                                             ),
                                           );
-                                    } else {
-                                      if (cardDeckState.currentCard != null) {
-                                        context.read<CardDeckBloc>().add(
-                                              EditCardEvent(
-                                                cardId: cardDeckState.currentCard!.id,
-                                                question: cardState.question!,
-                                                answer: cardState.answer!,
-                                              ),
-                                            );
-                                      }
+                                    } else if (cardDeckState.currentCard != null) {
+                                      context.read<CardDeckBloc>().add(
+                                            EditCardEvent(
+                                              cardId: cardDeckState.currentCard!.id,
+                                              question: cardState.question!,
+                                              answer: cardState.answer!,
+                                            ),
+                                          );
                                     }
                                     context.go('/HomeTabView/DeckPage');
                                   }
