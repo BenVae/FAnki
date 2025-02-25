@@ -3,77 +3,87 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/login/login.dart';
 import 'package:formz/formz.dart';
 
-class LoginForm extends StatelessWidget {
+class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<LoginBloc, LoginState>(
-      listenWhen: (previous, current) => previous.status.isFailure != current.status.isFailure,
-      listener: (context, state) {
-        if (state.status.isFailure) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(content: Text('Authentication Failure')),
-            );
-        }
-      },
-      child: Align(
-        alignment: const Alignment(0, -1 / 3),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _UsernameInput(),
-            const Padding(padding: EdgeInsets.all(12)),
-            _PasswordInput(),
-            const Padding(padding: EdgeInsets.all(12)),
-            _LoginButton(),
-          ],
-        ),
-      ),
-    );
-  }
+  State<LoginForm> createState() => _LoginFormState();
 }
 
-class _UsernameInput extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final displayError = context.select(
-      (LoginBloc bloc) => bloc.state.username.displayError,
-    );
+class _LoginFormState extends State<LoginForm> {
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
 
-    return TextField(
-      key: const Key('loginForm_usernameInput_textField'),
-      onChanged: (username) {
-        context.read<LoginBloc>().add(LoginUsernameChanged(username));
-      },
-      decoration: InputDecoration(
-        labelText: 'Username',
-        errorText: displayError != null ? 'invalid username' : null,
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    final initialUsername = context.read<LoginBloc>().state.email.value;
+    final initialPassword = context.read<LoginBloc>().state.password.value;
+    _emailController = TextEditingController(text: initialUsername);
+    _passwordController = TextEditingController(text: initialPassword);
   }
-}
 
-class _PasswordInput extends StatelessWidget {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final displayError = context.select(
-      (LoginBloc bloc) => bloc.state.password.displayError,
-    );
-
-    return TextField(
-      key: const Key('loginForm_passwordInput_textField'),
-      onChanged: (password) {
-        context.read<LoginBloc>().add(LoginPasswordChanged(password));
-      },
-      obscureText: true,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        errorText: displayError != null ? 'invalid password' : null,
-      ),
-    );
+    return BlocConsumer<LoginBloc, LoginState>(
+        listenWhen: (previous, current) =>
+            previous.email.value != current.email.value || previous.status.isFailure != current.status.isFailure,
+        listener: (context, state) {
+          if (state.status.isFailure) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(content: Text('Authentication Failure')),
+              );
+          }
+          if (_emailController.text != state.email.value) {
+            _emailController.text = state.email.value;
+            _passwordController.text = state.password.value;
+          }
+        },
+        builder: (context, state) {
+          return Align(
+            alignment: const Alignment(0, -1 / 3),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  key: const Key('loginForm_usernameInput_textField'),
+                  controller: _emailController,
+                  onChanged: (username) {
+                    context.read<LoginBloc>().add(LoginUsernameChanged(username));
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    errorText: state.email.displayError != null ? 'invalid username' : null,
+                  ),
+                ),
+                const Padding(padding: EdgeInsets.all(12)),
+                TextField(
+                  key: const Key('loginForm_passwordInput_textField'),
+                  controller: _passwordController,
+                  onChanged: (password) {
+                    context.read<LoginBloc>().add(LoginPasswordChanged(password));
+                  },
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    errorText: state.password.displayError != null ? 'invalid password' : null,
+                  ),
+                ),
+                const Padding(padding: EdgeInsets.all(12)),
+                _LoginButton(),
+              ],
+            ),
+          );
+        });
   }
 }
 
