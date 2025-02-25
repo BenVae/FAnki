@@ -118,7 +118,7 @@ class DeckRepository {
     return maxId + 1;
   }
 
-  Future<void> editFlashCard({
+  Future<DeckModel> editFlashCard({
     required int cardId,
     required String question,
     required String answer,
@@ -146,6 +146,9 @@ class DeckRepository {
 
     if (updatedDeck != null) {
       _currentDeck = updatedDeck.toDomain();
+      return _currentDeck!;
+    } else {
+      throw Exception('No updatedDeck in editFlashCard.');
     }
   }
 

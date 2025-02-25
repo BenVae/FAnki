@@ -95,12 +95,24 @@ class _CardPageState extends State<CardPage> {
                           child: ElevatedButton(
                             onPressed: cardState.isCardValid
                                 ? () {
-                                    context.read<CardDeckBloc>().add(
-                                          CreateNewCard(
-                                            question: cardState.question!,
-                                            answer: cardState.answer!,
-                                          ),
-                                        );
+                                    if (cardDeckState.isNewCard) {
+                                      context.read<CardDeckBloc>().add(
+                                            CreateNewCard(
+                                              question: cardState.question!,
+                                              answer: cardState.answer!,
+                                            ),
+                                          );
+                                    } else {
+                                      if (cardDeckState.currentCard != null) {
+                                        context.read<CardDeckBloc>().add(
+                                              EditCardEvent(
+                                                cardId: cardDeckState.currentCard!.id,
+                                                question: cardState.question!,
+                                                answer: cardState.answer!,
+                                              ),
+                                            );
+                                      }
+                                    }
                                     context.go('/HomeTabView/DeckPage');
                                   }
                                 : null,

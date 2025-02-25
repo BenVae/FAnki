@@ -13,6 +13,7 @@ final class CardState {
     String? question,
     String? answer,
     bool? isCardValid,
+    bool? isNewCard,
   }) {
     return CardState(
       isLoading: isLoading ?? this.isLoading,
