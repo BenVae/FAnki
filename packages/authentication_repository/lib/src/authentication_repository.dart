@@ -21,7 +21,7 @@ class AuthenticationRepository {
   }) async {
     if (username == 'w' && password == 'w') {
       await Future.delayed(
-        const Duration(milliseconds: 300),
+        const Duration(milliseconds: 1),
         () => _controller.add(AuthenticationStatus.authenticated),
       );
     } else {

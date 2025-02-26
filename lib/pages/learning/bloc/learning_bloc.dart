@@ -33,8 +33,8 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
 
     final randomIndex = Random().nextInt(state.flashCards.length);
     final nextFlashCard = state.flashCards[randomIndex];
-    final newRevealedCards = List<FlashCardModel>.from(state.revealedCards)..add(nextFlashCard);
-    List<bool> newRevealedCardsVisibility = List<bool>.from(state.revealedCardsVisibility)..add(false);
+    final newRevealedCards = List<FlashCardModel>.from(state.revealedCards)..insert(0, nextFlashCard);
+    List<bool> newRevealedCardsVisibility = List<bool>.from(state.revealedCardsVisibility)..insert(0, false);
 
     emit(state.copyWith(
       revealedCards: newRevealedCards,

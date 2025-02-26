@@ -1,3 +1,4 @@
+import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
 import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:fanki/pages/widgets/flashcard.dart';
 import 'package:flutter/material.dart';
@@ -11,37 +12,61 @@ class LearningPage extends StatefulWidget {
 }
 
 class _LearningPageState extends State<LearningPage> {
+  late final GlobalKey<AnimatedListState> _animatedListKey = GlobalKey();
+  late final ScrollController _scrollController;
+
+  void _addItem(int index) {
+    index = 0;
+    _animatedListKey.currentState?.insertItem(
+      index,
+      duration: const Duration(milliseconds: 100),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LearningBloc>().add(GetNextCard());
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Learning'),
+        title: Text(context.read<CardDeckBloc>().state.deckName ?? 'Learning'),
         centerTitle: true,
       ),
-      body: BlocBuilder<LearningBloc, LearningState>(
+      body: BlocConsumer<LearningBloc, LearningState>(
+        listenWhen: (previous, current) {
+          return current.revealedCards.isNotEmpty && previous.revealedCards.length < current.revealedCards.length;
+        },
+        listener: (context, state) => _addItem(state.revealedCards.length - 1),
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state.flashCards.isEmpty) {
             return const Center(child: Text('There are no cards in this deck.'));
           } else {
-            return ListView.builder(
-              shrinkWrap: true,
-              itemCount: state.revealedCards.length,
-              itemBuilder: (context, index) {
+            return AnimatedList(
+              key: _animatedListKey,
+              controller: _scrollController,
+              // reverse: true,
+              initialItemCount: state.revealedCards.length,
+              itemBuilder: (context, index, animation) {
                 final flashCard = state.revealedCards[index];
-                return GestureDetector(
-                  onTap: () => context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: index)),
-                  child: FlashCard(
-                    id: flashCard.id,
-                    question: flashCard.question,
-                    answer: flashCard.answer,
-                    visible: state.revealedCardsVisibility.isEmpty ? false : state.revealedCardsVisibility[index],
+                return SizeTransition(
+                  sizeFactor: animation,
+                  child: GestureDetector(
+                    onTap: () => context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: index)),
+                    child: FlashCard(
+                      id: flashCard.id,
+                      question: flashCard.question,
+                      answer: flashCard.answer,
+                      visible: state.revealedCardsVisibility.isEmpty ? false : state.revealedCardsVisibility[index],
+                    ),
                   ),
                 );
               },
@@ -54,63 +79,32 @@ class _LearningPageState extends State<LearningPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (context.read<LearningBloc>().state.revealedCardsVisibility.last) {
-                    context.read<LearningBloc>().add(GetNextCard());
-                  } else {
-                    int cardIndex = context.read<LearningBloc>().state.revealedCardsVisibility.length - 1;
-                    context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
-                  }
-                },
-                child: const Text('Easy'),
-              ),
-            ),
+            _buildOptionButton(context, 'Easy'),
             const SizedBox(width: 8),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (context.read<LearningBloc>().state.revealedCardsVisibility.last) {
-                    context.read<LearningBloc>().add(GetNextCard());
-                  } else {
-                    int cardIndex = context.read<LearningBloc>().state.revealedCardsVisibility.length - 1;
-                    context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
-                  }
-                },
-                child: const Text('Normal'),
-              ),
-            ),
+            _buildOptionButton(context, 'Normal'),
             const SizedBox(width: 8),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (context.read<LearningBloc>().state.revealedCardsVisibility.last) {
-                    context.read<LearningBloc>().add(GetNextCard());
-                  } else {
-                    int cardIndex = context.read<LearningBloc>().state.revealedCardsVisibility.length - 1;
-                    context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
-                  }
-                },
-                child: const Text('Hard'),
-              ),
-            ),
+            _buildOptionButton(context, 'Hard'),
             const SizedBox(width: 8),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  if (context.read<LearningBloc>().state.revealedCardsVisibility.last) {
-                    context.read<LearningBloc>().add(GetNextCard());
-                  } else {
-                    int cardIndex = context.read<LearningBloc>().state.revealedCardsVisibility.length - 1;
-                    context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
-                  }
-                },
-                child: const Text('Difficult'),
-              ),
-            ),
+            _buildOptionButton(context, 'Difficult'),
           ],
         ),
+      ),
+    );
+  }
+
+  Expanded _buildOptionButton(BuildContext context, String label) {
+    return Expanded(
+      child: ElevatedButton(
+        onPressed: () {
+          final revealedCardsVisibility = context.read<LearningBloc>().state.revealedCardsVisibility;
+          if (revealedCardsVisibility.isEmpty || revealedCardsVisibility.first) {
+            context.read<LearningBloc>().add(GetNextCard());
+          } else {
+            final cardIndex = 0;
+            context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
+          }
+        },
+        child: Text(label),
       ),
     );
   }
