@@ -11,7 +11,7 @@ class FlashCard extends StatelessWidget {
     required this.id,
     required this.question,
     required this.answer,
-    this.visible = false,
+    this.visible = true,
   });
 
   @override
@@ -46,6 +46,9 @@ class FlashCard extends StatelessWidget {
             const SizedBox(height: 16),
             Visibility(
               visible: visible,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: true,
               child: Text(
                 answer,
                 style: TextStyle(

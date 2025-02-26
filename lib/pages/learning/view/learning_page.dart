@@ -53,7 +53,7 @@ class _LearningPageState extends State<LearningPage> {
             return AnimatedList(
               key: _animatedListKey,
               controller: _scrollController,
-              // reverse: true,
+              reverse: true,
               initialItemCount: state.revealedCards.length,
               itemBuilder: (context, index, animation) {
                 final flashCard = state.revealedCards[index];
