@@ -25,8 +25,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     Username username = Username.dirty('w@w.de');
     Password password = Password.dirty('w');
 
-    // add(LoginUsernameChanged('w@w.de'));
-
     emit(
       state.copyWith(
         username: username,

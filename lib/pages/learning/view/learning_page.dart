@@ -1,4 +1,5 @@
-import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
+import 'package:fanki/blocs/card_deck/card_deck.dart';
+import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
 import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:fanki/pages/widgets/flashcard.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,11 @@ class _LearningPageState extends State<LearningPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.read<CardDeckBloc>().state.deckName ?? 'Learning'),
+        title: BlocBuilder<LearningBloc, LearningState>(
+          builder: (context, state) {
+            return Text(state.deckName);
+          },
+        ),
         centerTitle: true,
       ),
       body: BlocConsumer<LearningBloc, LearningState>(

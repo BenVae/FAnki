@@ -1,4 +1,5 @@
 import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
+import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,14 +38,44 @@ class _DeckPageState extends State<DeckPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Text(
-                  state.deckName ?? 'No Name Error',
+                TextFormField(
+                  initialValue: state.deckName ?? 'No Name Error',
+                  onChanged: (deckName) => context.read<DeckBloc>().add(DeckNameChanged(deckName: deckName)),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
+                  decoration: InputDecoration(
+                    suffixIcon: SizedBox(
+                      width: 100,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.check),
+                            onPressed: context.read<DeckBloc>().state.newDeckNameIsValid
+                                ? () => context.read<CardDeckBloc>().add(SetFlashCardForEditingOrCreating())
+                                : null,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.cancel),
+                            onPressed: () => context.read<DeckBloc>().add(DeckNameChanged(deckName: '')),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
+                Text(
+                  '${state.deck?.flashCards.length ?? '_'} cards',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                Divider(),
                 Expanded(
                   child: state.isLoading
                       ? const Center(child: CircularProgressIndicator())
