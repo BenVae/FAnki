@@ -1,5 +1,3 @@
-import 'package:fanki/blocs/card_deck/card_deck.dart';
-import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
 import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:fanki/pages/widgets/flashcard.dart';
 import 'package:flutter/material.dart';

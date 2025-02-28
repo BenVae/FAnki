@@ -23,6 +23,12 @@ final class CreateNewCard extends CardDeckEvent {
   CreateNewCard({required this.question, required this.answer});
 }
 
+final class RenameDeck extends CardDeckEvent {
+  final String deckName;
+
+  RenameDeck({required this.deckName});
+}
+
 final class EditCardEvent extends CardDeckEvent {
   final int cardId;
   final String question;

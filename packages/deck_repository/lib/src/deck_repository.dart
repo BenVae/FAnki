@@ -60,6 +60,24 @@ class DeckRepository {
     }
   }
 
+  Future<void> renameDeck({
+    required String newDeckName,
+  }) async {
+    if (_currentDeck == null) {
+      throw Exception('CurrentDeck not found.');
+    }
+    final existingDeck = await isar.isarDeckModels.filter().deckNameEqualTo(newDeckName).findFirst();
+    if (existingDeck != null) {
+      throw Exception('Deck name "$newDeckName" is already in use.');
+    }
+
+    _currentDeck!.deckName = newDeckName;
+
+    await isar.writeTxn(() async {
+      await isar.isarDeckModels.put(_currentDeck!.toIsar());
+    });
+  }
+
   FlashCardModel? setCurrentFlashCard({required int? cardId}) {
     if (_currentDeck == null) {
       throw Exception('CurrentDeck was null.');

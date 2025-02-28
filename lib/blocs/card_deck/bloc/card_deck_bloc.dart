@@ -15,6 +15,7 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
     on<GetDeckFromRepository>(_getDeckFromRepository);
     on<RemoveCardFromDeckById>(_removeCard);
     on<CreateNewCard>(_createNewFlashCard);
+    on<RenameDeck>(_renamedDeck);
     on<EditCardEvent>(_editCard);
     on<SetFlashCardForEditingOrCreating>(_setCurrentFlashCard);
     on<RemoveCurrentCardAndDeckFromState>(_removeCurrentCardAndDeckFromState);
@@ -35,6 +36,13 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
   Future<void> _createNewFlashCard(CreateNewCard event, Emitter<CardDeckState> emit) async {
     emit(state.copyWith(isLoading: true));
     DeckModel deck = await _deckRepository.addFlashCard(question: event.question, answer: event.answer);
+    emit(state.copyWith(isLoading: false, deck: () => deck));
+  }
+
+  Future<void> _renamedDeck(RenameDeck event, Emitter<CardDeckState> emit) async {
+    emit(state.copyWith(isLoading: true));
+    await _deckRepository.renameDeck(newDeckName: event.deckName);
+    DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
     emit(state.copyWith(isLoading: false, deck: () => deck));
   }
 
