@@ -55,10 +55,10 @@ class _LoginFormState extends State<LoginForm> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Image.asset(
-                //   'assets/bloc_logo_small.png',
-                //   height: 120,
-                // ),
+                Image.asset(
+                  'assets/fanki_logo.png',
+                  height: 120,
+                ),
                 TextFormField(
                   key: const Key('loginForm_usernameInput_textField'),
                   controller: _emailController,
