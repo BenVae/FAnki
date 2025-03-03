@@ -29,12 +29,19 @@ final class RenameDeck extends CardDeckEvent {
   RenameDeck({required this.deckName});
 }
 
+final class DeleteDeckEvent extends CardDeckEvent {
+  final String deckName;
+
+  DeleteDeckEvent({required this.deckName});
+}
+
 final class EditCardEvent extends CardDeckEvent {
   final int cardId;
   final String question;
   final String answer;
 
-  EditCardEvent({required this.cardId, required this.question, required this.answer});
+  EditCardEvent(
+      {required this.cardId, required this.question, required this.answer});
 }
 
 final class SetFlashCardForEditingOrCreating extends CardDeckEvent {

@@ -10,56 +10,66 @@ class DeckSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DeckSelectionBloc, DeckSelectionState>(
-      builder: (context, state) {
-        if (state.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        } else {
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Flexible(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: state.decks.length,
-                    itemBuilder: (context, index) => Card(
-                      child: ListTile(
-                        onTap: () {
-                          String deckName = state.decks[index].value;
-                          context.read<LearningBloc>().add(InitializeLearning(deckName: deckName));
-                          context.go('/HomeTabView/LearningPage');
-                        },
-                        title: Text(state.decks[index].value),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                String deckName = state.decks[index].value;
-                                context.read<CardDeckBloc>().add(GetDeckFromRepository(deckName: deckName));
-                                context.go('/HomeTabView/DeckPage');
-                              },
-                            ),
-                            const SizedBox(width: 20),
-                          ],
+    return BlocListener<CardDeckBloc, CardDeckState>(
+      listenWhen: (previous, current) => previous.deck != current.deck,
+      listener: (context, state) {
+        context.read<DeckSelectionBloc>().add(FetchDecks());
+      },
+      child: BlocBuilder<DeckSelectionBloc, DeckSelectionState>(
+        builder: (context, state) {
+          if (state.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Flexible(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      itemCount: state.decks.length,
+                      itemBuilder: (context, index) => Card(
+                        child: ListTile(
+                          onTap: () {
+                            String deckName = state.decks[index].value;
+                            context
+                                .read<LearningBloc>()
+                                .add(InitializeLearning(deckName: deckName));
+                            context.go('/HomeTabView/LearningPage');
+                          },
+                          title: Text(state.decks[index].value),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () {
+                                  String deckName = state.decks[index].value;
+                                  context.read<CardDeckBloc>().add(
+                                      GetDeckFromRepository(
+                                          deckName: deckName));
+                                  context.go('/HomeTabView/DeckPage');
+                                },
+                              ),
+                              const SizedBox(width: 20),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _createDeckDialog(context);
-                  },
-                  child: const Text('Create new deck'),
-                ),
-              ],
-            ),
-          );
-        }
-      },
+                  ElevatedButton(
+                    onPressed: () {
+                      _createDeckDialog(context);
+                    },
+                    child: const Text('Create new deck'),
+                  ),
+                ],
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -105,7 +115,9 @@ class DeckSelectionPage extends StatelessWidget {
                         const SizedBox(height: 20),
                         TextField(
                           onChanged: (deckName) {
-                            context.read<DeckSelectionBloc>().add(DeckNameInputChange(deckName: deckName));
+                            context
+                                .read<DeckSelectionBloc>()
+                                .add(DeckNameInputChange(deckName: deckName));
                           },
                           decoration: const InputDecoration(
                             labelText: 'Deck Title',
@@ -118,7 +130,9 @@ class DeckSelectionPage extends StatelessWidget {
                             ElevatedButton(
                               onPressed: state.newDeckNameIsValid
                                   ? () {
-                                      context.read<DeckSelectionBloc>().add(CreateDeck());
+                                      context
+                                          .read<DeckSelectionBloc>()
+                                          .add(CreateDeck());
                                       Navigator.of(context).pop();
                                     }
                                   : null,
@@ -126,7 +140,9 @@ class DeckSelectionPage extends StatelessWidget {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                context.read<DeckSelectionBloc>().add(DeckNameInputChange(deckName: ''));
+                                context
+                                    .read<DeckSelectionBloc>()
+                                    .add(DeckNameInputChange(deckName: ''));
                                 Navigator.of(context).pop();
                               },
                               child: const Text('Abort'),

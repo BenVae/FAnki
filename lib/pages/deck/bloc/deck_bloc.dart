@@ -5,7 +5,18 @@ part 'deck_state.dart';
 
 class DeckBloc extends Bloc<DeckEvent, DeckState> {
   DeckBloc() : super(const DeckState()) {
+    on<InitDeckEvent>(_onInitBlocState);
     on<DeckNameChanged>(_onDeckNameChanged);
+  }
+
+  void _onInitBlocState(InitDeckEvent event, Emitter<DeckState> emit) {
+    emit(
+      state.copyWith(
+        originalName: event.deckName,
+        newDeckName: event.deckName,
+        newDeckNameIsValid: _isValidDeckName(event.deckName),
+      ),
+    );
   }
 
   void _onDeckNameChanged(DeckNameChanged event, Emitter<DeckState> emit) {
@@ -18,6 +29,6 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
   }
 
   bool _isValidDeckName(String deckName) {
-    return deckName.isNotEmpty;
+    return deckName.isNotEmpty && deckName != state.originalName;
   }
 }

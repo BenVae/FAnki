@@ -10,6 +10,8 @@ import 'pages/deck/deck.dart';
 import 'pages/home_tab_view/view.dart';
 import 'pages/login/login.dart';
 
+final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
+
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
     GoRoute(
