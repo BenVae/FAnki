@@ -45,9 +45,14 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
   Future<void> _deleteDeck(
       DeleteDeckEvent event, Emitter<CardDeckState> emit) async {
     emit(state.copyWith(isLoading: true));
-    await _deckRepository.deleteDeckByName(event.deckName);
-    emit(state.copyWith(
-        isLoading: false, deckName: () => null, deck: () => null));
+    try {
+      await _deckRepository.deleteDeckByName(event.deckName);
+      emit(state.copyWith(
+          isLoading: false, deckName: () => null, deck: () => null));
+    } catch (_) {
+      //TODO
+      emit(state.copyWith(isLoading: false));
+    }
   }
 
   Future<void> _createNewFlashCard(

@@ -20,10 +20,11 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
   }
 
   void _onDeckNameChanged(DeckNameChanged event, Emitter<DeckState> emit) {
+    bool isValidDeckName = _isValidDeckName(event.deckName);
     emit(
       state.copyWith(
         newDeckName: event.deckName,
-        newDeckNameIsValid: _isValidDeckName(event.deckName),
+        newDeckNameIsValid: isValidDeckName,
       ),
     );
   }

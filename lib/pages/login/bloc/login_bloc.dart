@@ -21,30 +21,31 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthenticationRepository _authenticationRepository;
 
   void _initializeLoginPage(InitializeLogin event, Emitter<LoginState> emit) {
-    // Fetch credentials from somewhere
-    Username username = Username.dirty('w@w.de');
+    Email email = Email.dirty('w@w.de');
     Password password = Password.dirty('w');
 
     emit(
       state.copyWith(
-        username: username,
+        email: email,
         password: password,
-        isValid: Formz.validate([username, password]),
+        isValid: Formz.validate([email, password]),
       ),
     );
   }
 
-  void _onUsernameChanged(LoginUsernameChanged event, Emitter<LoginState> emit) {
-    final username = Username.dirty(event.username);
+  void _onUsernameChanged(
+      LoginUsernameChanged event, Emitter<LoginState> emit) {
+    final email = Email.dirty(event.username);
     emit(
       state.copyWith(
-        username: username,
-        isValid: Formz.validate([state.password, username]),
+        email: email,
+        isValid: Formz.validate([state.password, email]),
       ),
     );
   }
 
-  void _onPasswordChanged(LoginPasswordChanged event, Emitter<LoginState> emit) {
+  void _onPasswordChanged(
+      LoginPasswordChanged event, Emitter<LoginState> emit) {
     final password = Password.dirty(event.password);
     emit(
       state.copyWith(

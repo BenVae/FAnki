@@ -43,6 +43,8 @@ class _DeckPageState extends State<DeckPage> {
         listener: (context, state) =>
             _deckNameController.text = state.deck?.deckName ?? '',
         builder: (context, state) {
+          bool isDeckNameValid =
+              context.read<DeckBloc>().state.newDeckNameIsValid;
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -64,10 +66,7 @@ class _DeckPageState extends State<DeckPage> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.check),
-                            onPressed: context
-                                    .read<DeckBloc>()
-                                    .state
-                                    .newDeckNameIsValid
+                            onPressed: isDeckNameValid
                                 ? () => context.read<CardDeckBloc>().add(
                                     RenameDeck(
                                         deckName: _deckNameController.text))
