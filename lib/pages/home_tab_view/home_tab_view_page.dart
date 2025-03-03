@@ -13,12 +13,14 @@ class HomeTabView extends StatefulWidget {
   State<HomeTabView> createState() => _HomeTabViewState();
 }
 
-class _HomeTabViewState extends State<HomeTabView> with SingleTickerProviderStateMixin {
+class _HomeTabViewState extends State<HomeTabView>
+    with SingleTickerProviderStateMixin {
   late TabController tabController;
 
   @override
   void initState() {
-    tabController = TabController(length: 2, vsync: this);
+    tabController = TabController(
+        length: 2, vsync: this, animationDuration: Duration(milliseconds: 200));
     tabController.addListener(() {
       setState(() {});
     });
@@ -35,13 +37,16 @@ class _HomeTabViewState extends State<HomeTabView> with SingleTickerProviderStat
           )..add(FetchDecks()),
         ),
         BlocProvider<SettingsCubit>(
-          create: (context) =>
-              SettingsCubit(SettingsState(), authenticationRepository: context.read<AuthenticationRepository>()),
+          create: (context) => SettingsCubit(SettingsState(),
+              authenticationRepository:
+                  context.read<AuthenticationRepository>()),
         ),
       ],
       child: Scaffold(
         appBar: AppBar(
-          title: tabController.index == 0 ? const Text('Deck Selection') : const Text('Settings'),
+          title: tabController.index == 0
+              ? const Text('Deck Selection')
+              : const Text('Settings'),
           centerTitle: true,
           automaticallyImplyLeading: false,
           bottom: TabBar(

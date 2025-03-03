@@ -64,6 +64,9 @@ class DeckSelectionPage extends StatelessWidget {
                     },
                     child: const Text('Create new deck'),
                   ),
+                  const SizedBox(
+                    height: 40,
+                  )
                 ],
               ),
             );

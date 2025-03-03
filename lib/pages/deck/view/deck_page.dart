@@ -145,6 +145,7 @@ class _DeckPageState extends State<DeckPage> {
                 const SizedBox(height: 16.0),
                 const Divider(),
                 _addNewCardButton(),
+                const SizedBox(height: 30.0),
               ],
             ),
           );
@@ -176,7 +177,6 @@ class _DeckPageState extends State<DeckPage> {
             backgroundColor: Colors.red,
           ),
           onPressed: () async {
-            // Show a confirmation dialog
             final bool? confirmDelete = await showDialog<bool>(
               context: context,
               builder: (BuildContext context) {

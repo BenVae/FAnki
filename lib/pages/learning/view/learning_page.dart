@@ -44,14 +44,16 @@ class _LearningPageState extends State<LearningPage> {
       ),
       body: BlocConsumer<LearningBloc, LearningState>(
         listenWhen: (previous, current) {
-          return current.revealedCards.isNotEmpty && previous.revealedCards.length < current.revealedCards.length;
+          return current.revealedCards.isNotEmpty &&
+              previous.revealedCards.length < current.revealedCards.length;
         },
         listener: (context, state) => _addItem(state.revealedCards.length - 1),
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state.flashCards.isEmpty) {
-            return const Center(child: Text('There are no cards in this deck.'));
+            return const Center(
+                child: Text('There are no cards in this deck.'));
           } else {
             return AnimatedList(
               key: _animatedListKey,
@@ -63,12 +65,16 @@ class _LearningPageState extends State<LearningPage> {
                 return SizeTransition(
                   sizeFactor: animation,
                   child: GestureDetector(
-                    onTap: () => context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: index)),
+                    onTap: () => context
+                        .read<LearningBloc>()
+                        .add(ToggleAnswerVisibility(cardIndex: index)),
                     child: FlashCard(
                       id: flashCard.id,
                       question: flashCard.question,
                       answer: flashCard.answer,
-                      visible: state.revealedCardsVisibility.isEmpty ? false : state.revealedCardsVisibility[index],
+                      visible: state.revealedCardsVisibility.isEmpty
+                          ? false
+                          : state.revealedCardsVisibility[index],
                     ),
                   ),
                 );
@@ -78,7 +84,7 @@ class _LearningPageState extends State<LearningPage> {
         },
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 30),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -99,12 +105,16 @@ class _LearningPageState extends State<LearningPage> {
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
-          final revealedCardsVisibility = context.read<LearningBloc>().state.revealedCardsVisibility;
-          if (revealedCardsVisibility.isEmpty || revealedCardsVisibility.first) {
+          final revealedCardsVisibility =
+              context.read<LearningBloc>().state.revealedCardsVisibility;
+          if (revealedCardsVisibility.isEmpty ||
+              revealedCardsVisibility.first) {
             context.read<LearningBloc>().add(GetNextCard());
           } else {
             final cardIndex = 0;
-            context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
+            context
+                .read<LearningBloc>()
+                .add(ToggleAnswerVisibility(cardIndex: cardIndex));
           }
         },
         child: Text(label),
