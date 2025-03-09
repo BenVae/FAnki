@@ -21,14 +21,15 @@ Future<void> main() async {
     anonKey: NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
 
-  final deckRepository = await DeckRepository.init();
   final authenticationRepository = AuthenticationRepository();
+  final deckRepository = await DeckRepository.init();
 
   runApp(
     MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<AuthenticationRepository>.value(
+            value: authenticationRepository),
         RepositoryProvider<DeckRepository>.value(value: deckRepository),
-        RepositoryProvider<AuthenticationRepository>.value(value: authenticationRepository),
       ],
       child: FankiApp(router: router),
     ),

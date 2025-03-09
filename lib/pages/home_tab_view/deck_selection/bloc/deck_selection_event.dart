@@ -6,6 +6,12 @@ sealed class DeckSelectionEvent {
 
 final class FetchDecks extends DeckSelectionEvent {}
 
+final class GetDeckFromRepository extends DeckSelectionEvent {
+  final String deckName;
+
+  GetDeckFromRepository({required this.deckName});
+}
+
 final class DeckNameInputChange extends DeckSelectionEvent {
   final String deckName;
 

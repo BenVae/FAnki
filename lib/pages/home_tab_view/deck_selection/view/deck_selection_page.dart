@@ -1,78 +1,87 @@
-import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
 import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/home_tab_view/deck_selection/deck_selection.dart';
 import 'package:go_router/go_router.dart';
 
-class DeckSelectionPage extends StatelessWidget {
+class DeckSelectionPage extends StatefulWidget {
   const DeckSelectionPage({super.key});
 
   @override
+  State<DeckSelectionPage> createState() => _DeckSelectionPageState();
+}
+
+class _DeckSelectionPageState extends State<DeckSelectionPage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<DeckSelectionBloc>().add(FetchDecks());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocListener<CardDeckBloc, CardDeckState>(
-      listenWhen: (previous, current) => previous.deck != current.deck,
+    return BlocConsumer<DeckSelectionBloc, DeckSelectionState>(
+      listenWhen: (_, current) => current.isCurrentDeckSelected,
       listener: (context, state) {
-        context.read<DeckSelectionBloc>().add(FetchDecks());
+        if (state.isCurrentDeckSelected) {
+          context.go('/DeckPage');
+        }
       },
-      child: BlocBuilder<DeckSelectionBloc, DeckSelectionState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Flexible(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(8.0),
-                      itemCount: state.decks.length,
-                      itemBuilder: (context, index) => Card(
-                        child: ListTile(
-                          onTap: () {
-                            String deckName = state.decks[index].value;
-                            context
-                                .read<LearningBloc>()
-                                .add(InitializeLearning(deckName: deckName));
-                            context.go('/HomeTabView/LearningPage');
-                          },
-                          title: Text(state.decks[index].value),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  String deckName = state.decks[index].value;
-                                  context.read<CardDeckBloc>().add(
-                                      GetDeckFromRepository(
-                                          deckName: deckName));
-                                  context.go('/HomeTabView/DeckPage');
-                                },
-                              ),
-                              const SizedBox(width: 20),
-                            ],
-                          ),
+      builder: (context, state) {
+        if (state.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Flexible(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: state.decks.length,
+                    itemBuilder: (context, index) => Card(
+                      child: ListTile(
+                        onTap: () {
+                          String deckName = state.decks[index].value;
+                          context
+                              .read<LearningBloc>()
+                              .add(InitializeLearning(deckName: deckName));
+                          context.go('/LearningPage');
+                        },
+                        title: Text(state.decks[index].value),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                String deckName = state.decks[index].value;
+                                context
+                                    .read<DeckSelectionBloc>()
+                                    .add(SelectDeckEvent(deckName: deckName));
+                              },
+                            ),
+                            const SizedBox(width: 20),
+                          ],
                         ),
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      _createDeckDialog(context);
-                    },
-                    child: const Text('Create new deck'),
-                  ),
-                  const SizedBox(
-                    height: 40,
-                  )
-                ],
-              ),
-            );
-          }
-        },
-      ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _createDeckDialog(context);
+                  },
+                  child: const Text('Create new deck'),
+                ),
+                const SizedBox(
+                  height: 40,
+                )
+              ],
+            ),
+          );
+        }
+      },
     );
   }
 

@@ -57,7 +57,7 @@ class DeckRepository {
     return deckModel != null;
   }
 
-  Future<DeckModel> loadDeckByName(String deckName) async {
+  Future<void> setCurrentDeckByName(String deckName) async {
     final isarDeck = await isar.isarDeckModels
         .filter()
         .deckNameEqualTo(deckName)
@@ -68,12 +68,19 @@ class DeckRepository {
     }
 
     _currentDeck = isarDeck.toDomain();
-    return _currentDeck!;
   }
 
   String getCurrentDeckName() {
     if (_currentDeck != null) {
       return _currentDeck!.deckName;
+    } else {
+      throw Exception('No deck selected.');
+    }
+  }
+
+  DeckModel getCurrentDeck() {
+    if (_currentDeck != null) {
+      return _currentDeck!;
     } else {
       throw Exception('No deck selected.');
     }

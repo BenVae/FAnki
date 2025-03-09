@@ -1,4 +1,5 @@
 import 'package:authentication_repository/authentication_repository.dart';
+import 'package:deck_repository/deck_repository.dart';
 import 'package:fanki/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:fanki/pages/learning/view/learning_page.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,8 @@ import 'pages/home_tab_view/view.dart';
 import 'pages/login/login.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
+
+final String routeCreateCardPage = '/DeckPage/CreateCardPage';
 
 final GoRouter router = GoRouter(
   routes: <RouteBase>[
@@ -31,36 +34,36 @@ final GoRouter router = GoRouter(
           builder: (BuildContext context, GoRouterState state) {
             return const HomeTabView();
           },
+        ),
+        GoRoute(
+          path: 'LearningPage',
+          builder: (BuildContext context, GoRouterState state) {
+            return const LearningPage();
+          },
+        ),
+        GoRoute(
+          path: 'DeckPage',
+          builder: (BuildContext context, GoRouterState state) {
+            return BlocProvider(
+              create: (context) {
+                return DeckBloc(
+                  deckRepository: context.read<DeckRepository>(),
+                );
+              },
+              child: DeckPage(),
+            );
+          },
           routes: <RouteBase>[
             GoRoute(
-              path: 'LearningPage',
-              builder: (BuildContext context, GoRouterState state) {
-                return const LearningPage();
-              },
-            ),
-            GoRoute(
-              path: 'DeckPage',
+              path: 'CreateCardPage',
               builder: (BuildContext context, GoRouterState state) {
                 return BlocProvider(
                   create: (context) {
-                    return DeckBloc();
+                    return CardBloc();
                   },
-                  child: DeckPage(),
+                  child: CardPage(),
                 );
               },
-              routes: <RouteBase>[
-                GoRoute(
-                  path: 'CreateCardPage',
-                  builder: (BuildContext context, GoRouterState state) {
-                    return BlocProvider(
-                      create: (context) {
-                        return CardBloc();
-                      },
-                      child: CardPage(),
-                    );
-                  },
-                ),
-              ],
             ),
           ],
         ),

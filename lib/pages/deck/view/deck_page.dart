@@ -1,5 +1,6 @@
 import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
 import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
+import 'package:fanki/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,14 +15,13 @@ class DeckPage extends StatefulWidget {
 }
 
 class _DeckPageState extends State<DeckPage> {
-  late final TextEditingController _deckNameController;
+  late final TextEditingController _deckNameController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    String deckName = context.read<CardDeckBloc>().state.deckName ?? '';
-    context.read<DeckBloc>().add(InitDeckEvent(deckName: deckName));
-    _deckNameController = TextEditingController(text: deckName);
+    context.read<DeckBloc>().add(InitDeckEvent());
   }
 
   @override
@@ -33,15 +33,17 @@ class _DeckPageState extends State<DeckPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            GoRouter.of(context).pop();
+            context.go('/HomeTabView');
           },
         ),
       ),
-      body: BlocConsumer<CardDeckBloc, CardDeckState>(
+      body: BlocConsumer<DeckBloc, DeckState>(
         listenWhen: (previous, current) =>
-            previous.deckName != current.deckName,
-        listener: (context, state) =>
-            _deckNameController.text = state.deck?.deckName ?? '',
+            previous.originalName != current.originalName,
+        listener: (context, state) {
+          String deckName = state.originalName;
+          _deckNameController.text = deckName;
+        },
         builder: (context, state) {
           bool isDeckNameValid =
               context.read<DeckBloc>().state.newDeckNameIsValid;
@@ -69,9 +71,9 @@ class _DeckPageState extends State<DeckPage> {
                                 ? Icon(Icons.check)
                                 : Icon(Icons.check_box_outline_blank),
                             onPressed: isDeckNameValid
-                                ? () => context.read<CardDeckBloc>().add(
-                                    RenameDeck(
-                                        deckName: _deckNameController.text))
+                                ? () => context.read<DeckBloc>().add(
+                                    RenameDeckEvent(
+                                        newDeckName: _deckNameController.text))
                                 : null,
                           ),
                           IconButton(
@@ -122,8 +124,7 @@ class _DeckPageState extends State<DeckPage> {
                                                   .deck!.flashCards[index].id,
                                             ),
                                           );
-                                      return context.go(
-                                          '/HomeTabView/DeckPage/CreateCardPage');
+                                      context.push(routeCreateCardPage);
                                     },
                                     child: FlashCard(
                                       id: index,
@@ -159,7 +160,7 @@ class _DeckPageState extends State<DeckPage> {
     return ElevatedButton(
       onPressed: () {
         context.read<CardDeckBloc>().add(SetFlashCardForEditingOrCreating());
-        context.go('/HomeTabView/DeckPage/CreateCardPage');
+        context.push(routeCreateCardPage);
       },
       child: const Text('Create card'),
     );

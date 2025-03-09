@@ -27,7 +27,8 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
   Future<void> _getDeckFromRepository(
       GetDeckFromRepository event, Emitter<CardDeckState> emit) async {
     emit(state.copyWith(isLoading: true));
-    DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
+    await _deckRepository.setCurrentDeckByName(event.deckName);
+    DeckModel deck = _deckRepository.getCurrentDeck();
     emit(state.copyWith(
         isLoading: false,
         deckName: () => _deckRepository.getCurrentDeckName(),
@@ -38,7 +39,7 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
       RenameDeck event, Emitter<CardDeckState> emit) async {
     emit(state.copyWith(isLoading: true));
     await _deckRepository.renameDeck(newDeckName: event.deckName);
-    DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
+    DeckModel deck = _deckRepository.getCurrentDeck();
     emit(state.copyWith(isLoading: false, deck: () => deck));
   }
 

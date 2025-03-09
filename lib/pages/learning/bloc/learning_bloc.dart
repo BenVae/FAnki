@@ -12,14 +12,14 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
   LearningBloc({required DeckRepository deckRepository})
       : _deckRepository = deckRepository,
         super(const LearningState()) {
-    on<InitializeLearning>(_initialize);
-    on<GetNextCard>(_getNextCard);
-    on<ToggleAnswerVisibility>(_toggleAnswerVisibility);
+    on<InitializeLearning>(_onInitialize);
+    on<GetNextCard>(_onGetNextCard);
+    on<ToggleAnswerVisibility>(_onToggleAnswerVisibility);
   }
 
-  void _initialize(InitializeLearning event, Emitter<LearningState> emit) async {
+  void _onInitialize(InitializeLearning event, Emitter<LearningState> emit) {
     emit(LearningState());
-    DeckModel deck = await _deckRepository.loadDeckByName(event.deckName);
+    DeckModel deck = _deckRepository.getCurrentDeck();
     emit(
       state.copyWith(
         isLoading: false,
@@ -29,15 +29,17 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
     );
   }
 
-  void _getNextCard(GetNextCard event, Emitter<LearningState> emit) {
+  void _onGetNextCard(GetNextCard event, Emitter<LearningState> emit) {
     if (state.flashCards.isEmpty) {
       return;
     }
 
     final randomIndex = Random().nextInt(state.flashCards.length);
     final nextFlashCard = state.flashCards[randomIndex];
-    final newRevealedCards = List<FlashCardModel>.from(state.revealedCards)..insert(0, nextFlashCard);
-    List<bool> newRevealedCardsVisibility = List<bool>.from(state.revealedCardsVisibility)..insert(0, false);
+    final newRevealedCards = List<FlashCardModel>.from(state.revealedCards)
+      ..insert(0, nextFlashCard);
+    List<bool> newRevealedCardsVisibility =
+        List<bool>.from(state.revealedCardsVisibility)..insert(0, false);
 
     emit(state.copyWith(
       revealedCards: newRevealedCards,
@@ -45,9 +47,12 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
     ));
   }
 
-  void _toggleAnswerVisibility(ToggleAnswerVisibility event, Emitter<LearningState> emit) {
-    List<bool> newRevealedCardsVisibility = List<bool>.from(state.revealedCardsVisibility);
-    newRevealedCardsVisibility[event.cardIndex] = !newRevealedCardsVisibility[event.cardIndex];
+  void _onToggleAnswerVisibility(
+      ToggleAnswerVisibility event, Emitter<LearningState> emit) {
+    List<bool> newRevealedCardsVisibility =
+        List<bool>.from(state.revealedCardsVisibility);
+    newRevealedCardsVisibility[event.cardIndex] =
+        !newRevealedCardsVisibility[event.cardIndex];
 
     emit(state.copyWith(
       revealedCardsVisibility: newRevealedCardsVisibility,

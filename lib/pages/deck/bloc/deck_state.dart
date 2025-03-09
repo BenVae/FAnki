@@ -5,12 +5,14 @@ final class DeckState {
   final String originalName;
   final String newDeckName;
   final bool newDeckNameIsValid;
+  final DeckModel? deck;
 
   const DeckState({
     this.isLoading = false,
     this.originalName = '',
     this.newDeckName = '',
     this.newDeckNameIsValid = false,
+    this.deck,
   });
 
   DeckState copyWith({
@@ -18,12 +20,14 @@ final class DeckState {
     String? originalName,
     String? newDeckName,
     bool? newDeckNameIsValid,
+    DeckModel? deck,
   }) {
     return DeckState(
       isLoading: isLoading ?? this.isLoading,
       originalName: originalName ?? this.originalName,
       newDeckName: newDeckName ?? this.newDeckName,
       newDeckNameIsValid: newDeckNameIsValid ?? this.newDeckNameIsValid,
+      deck: deck ?? this.deck,
     );
   }
 }

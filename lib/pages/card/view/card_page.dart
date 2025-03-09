@@ -20,11 +20,13 @@ class _CardPageState extends State<CardPage> {
     super.initState();
     final currentFlashCard = context.read<CardDeckBloc>().state.currentCard;
     if (currentFlashCard != null) {
-      context
-          .read<CardBloc>()
-          .add(QuestionAnswerChanged(question: currentFlashCard.question, answer: currentFlashCard.answer));
-      _questionTextEditingController = TextEditingController(text: currentFlashCard.question);
-      _answerTextEditingController = TextEditingController(text: currentFlashCard.answer);
+      context.read<CardBloc>().add(QuestionAnswerChanged(
+          question: currentFlashCard.question,
+          answer: currentFlashCard.answer));
+      _questionTextEditingController =
+          TextEditingController(text: currentFlashCard.question);
+      _answerTextEditingController =
+          TextEditingController(text: currentFlashCard.answer);
     } else {
       _questionTextEditingController = TextEditingController();
       _answerTextEditingController = TextEditingController();
@@ -44,12 +46,16 @@ class _CardPageState extends State<CardPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: cardDeckState.isNewCard ? Text('Create Flashcard') : Text('Edit Flashcard'),
+        title: cardDeckState.isNewCard
+            ? Text('Create Flashcard')
+            : Text('Edit Flashcard'),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            context.read<CardDeckBloc>().add(RemoveCurrentCardAndDeckFromState());
+            context
+                .read<CardDeckBloc>()
+                .add(RemoveCurrentCardAndDeckFromState());
             context.pop();
           },
         ),
@@ -73,7 +79,9 @@ class _CardPageState extends State<CardPage> {
                             border: OutlineInputBorder(),
                           ),
                           controller: _questionTextEditingController,
-                          onChanged: (question) => context.read<CardBloc>().add(QuestionChanged(question)),
+                          onChanged: (question) => context
+                              .read<CardBloc>()
+                              .add(QuestionChanged(question)),
                         ),
                       ),
                     ),
@@ -88,7 +96,9 @@ class _CardPageState extends State<CardPage> {
                             border: OutlineInputBorder(),
                           ),
                           controller: _answerTextEditingController,
-                          onChanged: (answer) => context.read<CardBloc>().add(AnswerChanged(answer)),
+                          onChanged: (answer) => context
+                              .read<CardBloc>()
+                              .add(AnswerChanged(answer)),
                         ),
                       ),
                     ),
@@ -105,33 +115,39 @@ class _CardPageState extends State<CardPage> {
                                               answer: cardState.answer!,
                                             ),
                                           );
-                                    } else if (cardDeckState.currentCard != null) {
+                                    } else if (cardDeckState.currentCard !=
+                                        null) {
                                       context.read<CardDeckBloc>().add(
                                             EditCardEvent(
-                                              cardId: cardDeckState.currentCard!.id,
+                                              cardId:
+                                                  cardDeckState.currentCard!.id,
                                               question: cardState.question!,
                                               answer: cardState.answer!,
                                             ),
                                           );
                                     }
-                                    context.go('/HomeTabView/DeckPage');
+                                    context.go('/DeckPage');
                                   }
                                 : null,
                             child: const Text('Save Flashcard'),
                           ),
                         ),
                         const SizedBox(width: 16.0),
-                        if (!cardDeckState.isNewCard && cardDeckState.currentCard != null)
+                        if (!cardDeckState.isNewCard &&
+                            cardDeckState.currentCard != null)
                           Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(255, 206, 76, 66),
+                                backgroundColor:
+                                    const Color.fromARGB(255, 206, 76, 66),
                               ),
                               onPressed: () {
                                 context.read<CardDeckBloc>().add(
-                                      RemoveCardFromDeckById(cardId: cardDeckState.currentCard!.id),
+                                      RemoveCardFromDeckById(
+                                          cardId:
+                                              cardDeckState.currentCard!.id),
                                     );
-                                context.go('/HomeTabView/DeckPage');
+                                context.go('/DeckPage');
                               },
                               child: const Text('Delete Card'),
                             ),
