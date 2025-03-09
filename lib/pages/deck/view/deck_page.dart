@@ -65,7 +65,9 @@ class _DeckPageState extends State<DeckPage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.check),
+                            icon: isDeckNameValid
+                                ? Icon(Icons.check)
+                                : Icon(Icons.check_box_outline_blank),
                             onPressed: isDeckNameValid
                                 ? () => context.read<CardDeckBloc>().add(
                                     RenameDeck(

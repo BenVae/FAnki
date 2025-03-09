@@ -12,11 +12,7 @@ final class DeckNameInputChange extends DeckSelectionEvent {
   const DeckNameInputChange({required this.deckName});
 }
 
-final class CreateDeck extends DeckSelectionEvent {
-  // final String deckName;
-
-  // const CreateDeck({required this.deckName});
-}
+final class CreateDeck extends DeckSelectionEvent {}
 
 final class SelectDeckEvent extends DeckSelectionEvent {
   final String deckName;
