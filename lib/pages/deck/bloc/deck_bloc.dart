@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:deck_repository/deck_repository.dart';
+import 'package:flutter/foundation.dart';
 
 part 'deck_event.dart';
 part 'deck_state.dart';
@@ -13,6 +14,9 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
     on<InitDeckEvent>(_onInitBlocState);
     on<DeckNameChanged>(_onDeckNameChanged);
     on<RenameDeckEvent>(_onRenameDeck);
+    on<DeleteDeckEvent>(_onDeleteDeck);
+    on<EditCardEvent>(_onEditCard);
+    on<CreateCardEvent>(_onCreateCard);
   }
 
   void _onInitBlocState(InitDeckEvent event, Emitter<DeckState> emit) {
@@ -23,7 +27,7 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
         state.copyWith(
           originalName: deckName,
           newDeckName: deckName,
-          newDeckNameIsValid: _isValidDeckName(deckName),
+          isNewDeckNameValid: _isValidDeckName(deckName),
           deck: deck,
         ),
       );
@@ -41,7 +45,7 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
     emit(
       state.copyWith(
         newDeckName: event.deckName,
-        newDeckNameIsValid: isValidDeckName,
+        isNewDeckNameValid: isValidDeckName,
       ),
     );
   }
@@ -56,5 +60,27 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
     await _deckRepository.renameDeck(newDeckName: event.newDeckName);
     DeckModel deck = _deckRepository.getCurrentDeck();
     emit(state.copyWith(isLoading: false, deck: deck));
+  }
+
+  Future<void> _onDeleteDeck(
+      DeleteDeckEvent event, Emitter<DeckState> emit) async {
+    emit(state.copyWith(isLoading: true));
+    await _deckRepository.deleteCurrentDeck();
+    emit(state.copyWith(isLoading: false, deck: null));
+  }
+
+  Future<void> _onEditCard(EditCardEvent event, Emitter<DeckState> emit) async {
+    try {
+      _deckRepository.setCurrentFlashCard(cardId: event.cardId);
+    } catch (e) {
+      //TODO Fehlermeldung hinzufügen
+      emit(state.copyWith(isLoading: false, isCardForEditingSelected: false));
+    }
+    emit(state.copyWith(isLoading: false, isCardForEditingSelected: true));
+  }
+
+  Future<void> _onCreateCard(
+      CreateCardEvent event, Emitter<DeckState> emit) async {
+    emit(state.copyWith(isLoading: false));
   }
 }

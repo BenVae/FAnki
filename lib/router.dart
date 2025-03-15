@@ -59,7 +59,9 @@ final GoRouter router = GoRouter(
               builder: (BuildContext context, GoRouterState state) {
                 return BlocProvider(
                   create: (context) {
-                    return CardBloc();
+                    return CardBloc(
+                      deckRepository: context.read<DeckRepository>(),
+                    );
                   },
                   child: CardPage(),
                 );

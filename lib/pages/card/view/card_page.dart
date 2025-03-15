@@ -1,5 +1,4 @@
-import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
-import 'package:fanki/pages/card/card.dart';
+import 'package:fanki/pages/card/bloc/card_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -18,11 +17,13 @@ class _CardPageState extends State<CardPage> {
   @override
   void initState() {
     super.initState();
-    final currentFlashCard = context.read<CardDeckBloc>().state.currentCard;
+
+    final currentFlashCard = context.read<CardBloc>().state.card;
+
     if (currentFlashCard != null) {
-      context.read<CardBloc>().add(QuestionAnswerChanged(
-          question: currentFlashCard.question,
-          answer: currentFlashCard.answer));
+      context.read<CardBloc>().add(QuestionChanged(currentFlashCard.question));
+      context.read<CardBloc>().add(AnswerChanged(currentFlashCard.answer));
+
       _questionTextEditingController =
           TextEditingController(text: currentFlashCard.question);
       _answerTextEditingController =
@@ -42,121 +43,108 @@ class _CardPageState extends State<CardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cardDeckState = context.watch<CardDeckBloc>().state;
+    final cardBlocState = context.watch<CardBloc>().state;
 
     return Scaffold(
       appBar: AppBar(
-        title: cardDeckState.isNewCard
-            ? Text('Create Flashcard')
-            : Text('Edit Flashcard'),
+        title: cardBlocState.card == null
+            ? const Text('Create Flashcard')
+            : const Text('Edit Flashcard'),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            context
-                .read<CardDeckBloc>()
-                .add(RemoveCurrentCardAndDeckFromState());
+            context.read<CardBloc>().add(RemoveCurrentCardAndDeckFromState());
             context.pop();
           },
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: BlocBuilder<CardDeckBloc, CardDeckState>(
-          builder: (context, cardDeckState) {
-            return BlocBuilder<CardBloc, CardState>(
-              builder: (context, cardState) {
-                return ListView(
+        child: BlocBuilder<CardBloc, CardState>(
+          builder: (context, cardState) {
+            return ListView(
+              children: [
+                Card(
+                  elevation: 2.0,
+                  margin: const EdgeInsets.only(bottom: 16.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Question',
+                        border: OutlineInputBorder(),
+                      ),
+                      controller: _questionTextEditingController,
+                      onChanged: (question) => context
+                          .read<CardBloc>()
+                          .add(QuestionChanged(question)),
+                    ),
+                  ),
+                ),
+                Card(
+                  elevation: 2.0,
+                  margin: const EdgeInsets.only(bottom: 16.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Answer',
+                        border: OutlineInputBorder(),
+                      ),
+                      controller: _answerTextEditingController,
+                      onChanged: (answer) =>
+                          context.read<CardBloc>().add(AnswerChanged(answer)),
+                    ),
+                  ),
+                ),
+                Row(
                   children: [
-                    Card(
-                      elevation: 2.0,
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Question',
-                            border: OutlineInputBorder(),
-                          ),
-                          controller: _questionTextEditingController,
-                          onChanged: (question) => context
-                              .read<CardBloc>()
-                              .add(QuestionChanged(question)),
-                        ),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: cardState.isCardValid
+                            ? () {
+                                if (cardBlocState.card == null) {
+                                  context.read<CardBloc>().add(
+                                        CreateNewCard(
+                                          question: cardState.question ?? '',
+                                          answer: cardState.answer ?? '',
+                                        ),
+                                      );
+                                } else {
+                                  context.read<CardBloc>().add(
+                                        UpdateCard(
+                                          question: cardState.question ?? '',
+                                          answer: cardState.answer ?? '',
+                                        ),
+                                      );
+                                }
+                                context.pop();
+                              }
+                            : null,
+                        child: const Text('Save Flashcard'),
                       ),
                     ),
-                    Card(
-                      elevation: 2.0,
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Answer',
-                            border: OutlineInputBorder(),
+                    const SizedBox(width: 16.0),
+                    if (cardBlocState.card != null)
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 206, 76, 66),
                           ),
-                          controller: _answerTextEditingController,
-                          onChanged: (answer) => context
-                              .read<CardBloc>()
-                              .add(AnswerChanged(answer)),
+                          onPressed: () {
+                            context
+                                .read<CardBloc>()
+                                .add(RemoveCurrentCardAndDeckFromState());
+                            context.pop();
+                          },
+                          child: const Text('Delete Card'),
                         ),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: cardState.isCardValid
-                                ? () {
-                                    if (cardDeckState.isNewCard) {
-                                      context.read<CardDeckBloc>().add(
-                                            CreateNewCard(
-                                              question: cardState.question!,
-                                              answer: cardState.answer!,
-                                            ),
-                                          );
-                                    } else if (cardDeckState.currentCard !=
-                                        null) {
-                                      context.read<CardDeckBloc>().add(
-                                            EditCardEvent(
-                                              cardId:
-                                                  cardDeckState.currentCard!.id,
-                                              question: cardState.question!,
-                                              answer: cardState.answer!,
-                                            ),
-                                          );
-                                    }
-                                    context.go('/DeckPage');
-                                  }
-                                : null,
-                            child: const Text('Save Flashcard'),
-                          ),
-                        ),
-                        const SizedBox(width: 16.0),
-                        if (!cardDeckState.isNewCard &&
-                            cardDeckState.currentCard != null)
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromARGB(255, 206, 76, 66),
-                              ),
-                              onPressed: () {
-                                context.read<CardDeckBloc>().add(
-                                      RemoveCardFromDeckById(
-                                          cardId:
-                                              cardDeckState.currentCard!.id),
-                                    );
-                                context.go('/DeckPage');
-                              },
-                              child: const Text('Delete Card'),
-                            ),
-                          ),
-                      ],
-                    ),
                   ],
-                );
-              },
+                ),
+              ],
             );
           },
         ),

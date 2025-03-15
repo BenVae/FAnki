@@ -20,7 +20,7 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
     on<EditCardEvent>(_editCard);
     on<RemoveCardFromDeckById>(_removeCard);
 
-    on<SetFlashCardForEditingOrCreating>(_setCurrentFlashCard);
+    // on<SetFlashCardForEditingOrCreating>(_setCurrentFlashCard);
     on<RemoveCurrentCardAndDeckFromState>(_removeCurrentCardAndDeckFromState);
   }
 
@@ -47,7 +47,7 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
       DeleteDeckEvent event, Emitter<CardDeckState> emit) async {
     emit(state.copyWith(isLoading: true));
     try {
-      await _deckRepository.deleteDeckByName(event.deckName);
+      await _deckRepository.deleteCurrentDeck();
       emit(state.copyWith(
           isLoading: false, deckName: () => null, deck: () => null));
     } catch (_) {
@@ -67,7 +67,7 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
   Future<void> _editCard(
       EditCardEvent event, Emitter<CardDeckState> emit) async {
     emit(state.copyWith(isLoading: true));
-    DeckModel deck = await _deckRepository.editFlashCard(
+    DeckModel deck = await _deckRepository.updateFlashCard(
         cardId: event.cardId, question: event.question, answer: event.answer);
     emit(state.copyWith(isLoading: false, deck: () => deck));
   }
@@ -80,14 +80,14 @@ class CardDeckBloc extends Bloc<CardDeckEvent, CardDeckState> {
     emit(state.copyWith(isLoading: false, deck: () => deck));
   }
 
-  Future<void> _setCurrentFlashCard(SetFlashCardForEditingOrCreating event,
-      Emitter<CardDeckState> emit) async {
-    bool isNewCard = event.cardId == null ? true : false;
-    FlashCardModel? card =
-        _deckRepository.setCurrentFlashCard(cardId: event.cardId);
-    emit(state.copyWith(
-        isLoading: false, isNewCard: isNewCard, currentCard: () => card));
-  }
+  // Future<void> _setCurrentFlashCard(SetFlashCardForEditingOrCreating event,
+  //     Emitter<CardDeckState> emit) async {
+  //   bool isNewCard = event.cardId == null ? true : false;
+  //   FlashCardModel? card =
+  //       _deckRepository.setCurrentFlashCard(cardId: event.cardId);
+  //   emit(state.copyWith(
+  //       isLoading: false, isNewCard: isNewCard, currentCard: () => card));
+  // }
 
   Future<void> _removeCurrentCardAndDeckFromState(
       RemoveCurrentCardAndDeckFromState event,

@@ -1,4 +1,3 @@
-import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
 import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
 import 'package:fanki/router.dart';
 import 'package:flutter/material.dart';
@@ -39,14 +38,19 @@ class _DeckPageState extends State<DeckPage> {
       ),
       body: BlocConsumer<DeckBloc, DeckState>(
         listenWhen: (previous, current) =>
-            previous.originalName != current.originalName,
+            previous.originalName != current.originalName ||
+            previous.isCardForEditingSelected !=
+                current.isCardForEditingSelected,
         listener: (context, state) {
-          String deckName = state.originalName;
-          _deckNameController.text = deckName;
+          _deckNameController.text = state.originalName;
+
+          if (state.isCardForEditingSelected) {
+            context.push(routeCreateCardPage);
+          }
         },
         builder: (context, state) {
           bool isDeckNameValid =
-              context.read<DeckBloc>().state.newDeckNameIsValid;
+              context.read<DeckBloc>().state.isNewDeckNameValid;
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -69,7 +73,7 @@ class _DeckPageState extends State<DeckPage> {
                           IconButton(
                             icon: isDeckNameValid
                                 ? Icon(Icons.check)
-                                : Icon(Icons.check_box_outline_blank),
+                                : Icon(Icons.check_box),
                             onPressed: isDeckNameValid
                                 ? () => context.read<DeckBloc>().add(
                                     RenameDeckEvent(
@@ -91,7 +95,7 @@ class _DeckPageState extends State<DeckPage> {
                 ),
                 const SizedBox(height: 16.0),
                 Text(
-                  '${state.deck?.flashCards.length ?? '_'} cards',
+                  '${state.deck?.flashCards.length ?? '0'} cards',
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
@@ -118,13 +122,12 @@ class _DeckPageState extends State<DeckPage> {
                                 if (state.deck!.flashCards.length > index) {
                                   return GestureDetector(
                                     onTap: () {
-                                      context.read<CardDeckBloc>().add(
-                                            SetFlashCardForEditingOrCreating(
+                                      context.read<DeckBloc>().add(
+                                            EditCardEvent(
                                               cardId: state
                                                   .deck!.flashCards[index].id,
                                             ),
                                           );
-                                      context.push(routeCreateCardPage);
                                     },
                                     child: FlashCard(
                                       id: index,
@@ -159,7 +162,7 @@ class _DeckPageState extends State<DeckPage> {
   Widget _addNewCardButton() {
     return ElevatedButton(
       onPressed: () {
-        context.read<CardDeckBloc>().add(SetFlashCardForEditingOrCreating());
+        context.read<DeckBloc>().add(CreateCardEvent());
         context.push(routeCreateCardPage);
       },
       child: const Text('Create card'),
@@ -207,9 +210,7 @@ class _DeckPageState extends State<DeckPage> {
 
             if (confirmDelete == true && mounted) {
               context.go('/HomeTabView');
-              context
-                  .read<CardDeckBloc>()
-                  .add(DeleteDeckEvent(deckName: deckName));
+              context.read<DeckBloc>().add(DeleteDeckEvent());
             }
           },
           child: const Text('Delete Deck'),

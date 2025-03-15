@@ -17,3 +17,13 @@ final class RenameDeckEvent extends DeckEvent {
 
   const RenameDeckEvent({required this.newDeckName});
 }
+
+final class DeleteDeckEvent extends DeckEvent {}
+
+final class EditCardEvent extends DeckEvent {
+  final int cardId;
+
+  const EditCardEvent({required this.cardId});
+}
+
+final class CreateCardEvent extends DeckEvent {}

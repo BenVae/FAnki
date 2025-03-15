@@ -7,11 +7,20 @@ import 'package:path_provider/path_provider.dart';
 import 'data_models/flash_card_model.dart';
 import 'isar_data_models/isar_deck_model.dart';
 
+enum EditingCardStatus { notEditingCurrently, editingCurrently }
+
 class DeckRepository {
   late final Isar isar;
 
+  final _controller = StreamController<EditingCardStatus>();
+
   DeckModel? _currentDeck;
   FlashCardModel? _currentFlashCard;
+
+  Stream<EditingCardStatus> get status async* {
+    yield EditingCardStatus.notEditingCurrently;
+    yield* _controller.stream;
+  }
 
   DeckRepository._create(this.isar);
 
@@ -36,16 +45,12 @@ class DeckRepository {
     });
   }
 
-  Future<void> deleteDeckByName(String deckName) async {
-    final deck = await isar.isarDeckModels
-        .filter()
-        .deckNameEqualTo(deckName)
-        .findFirst();
-    if (deck == null) {
-      throw Exception('Deck "$deckName" not found.');
+  Future<void> deleteCurrentDeck() async {
+    if (_currentDeck == null) {
+      throw Exception('Delete current deck error, because deck was not found.');
     }
     await isar.writeTxn(() async {
-      await isar.isarDeckModels.delete(deck.id);
+      await isar.isarDeckModels.delete(_currentDeck!.id);
     });
   }
 
@@ -107,21 +112,16 @@ class DeckRepository {
     });
   }
 
-  FlashCardModel? setCurrentFlashCard({required int? cardId}) {
+  void setCurrentFlashCard({required int cardId}) {
     if (_currentDeck == null) {
       throw Exception('CurrentDeck was null.');
     }
 
-    if (cardId == null) {
-      _currentFlashCard = null;
-    } else {
-      final foundCard = _currentDeck!.flashCards.firstWhere(
-        (flashCard) => flashCard.id == cardId,
-        orElse: () => throw Exception('FlashCard with id=$cardId not found.'),
-      );
-      _currentFlashCard = foundCard;
-    }
-    return _currentFlashCard;
+    final foundCard = _currentDeck!.flashCards.firstWhere(
+      (flashCard) => flashCard.id == cardId,
+      orElse: () => throw Exception('FlashCard with id=$cardId not found.'),
+    );
+    _currentFlashCard = foundCard;
   }
 
   FlashCardModel? getCurrentFlashCard() {
@@ -170,7 +170,7 @@ class DeckRepository {
     return maxId + 1;
   }
 
-  Future<DeckModel> editFlashCard({
+  Future<DeckModel> updateFlashCard({
     required int cardId,
     required String question,
     required String answer,
