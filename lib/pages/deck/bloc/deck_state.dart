@@ -6,7 +6,7 @@ final class DeckState {
   final String newDeckName;
   final bool isNewDeckNameValid;
   final DeckModel? deck;
-  final bool isCardForEditingSelected;
+  final EditingCardStatus isCardForEditingSelected;
 
   const DeckState({
     this.isLoading = false,
@@ -14,7 +14,7 @@ final class DeckState {
     this.newDeckName = '',
     this.isNewDeckNameValid = false,
     this.deck,
-    this.isCardForEditingSelected = false,
+    this.isCardForEditingSelected = EditingCardStatus.init,
   });
 
   DeckState copyWith({
@@ -24,7 +24,7 @@ final class DeckState {
     bool? isNewDeckNameValid,
     DeckModel? deck,
     ValueGetter<FlashCardModel?>? currentCard,
-    bool? isCardForEditingSelected,
+    EditingCardStatus? isCardForEditingSelected,
   }) {
     return DeckState(
       isLoading: isLoading ?? this.isLoading,
@@ -32,8 +32,7 @@ final class DeckState {
       newDeckName: newDeckName ?? this.newDeckName,
       isNewDeckNameValid: isNewDeckNameValid ?? this.isNewDeckNameValid,
       deck: deck ?? this.deck,
-      isCardForEditingSelected:
-          isCardForEditingSelected ?? this.isCardForEditingSelected,
+      isCardForEditingSelected: isCardForEditingSelected ?? this.isCardForEditingSelected,
     );
   }
 }

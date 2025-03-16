@@ -13,6 +13,7 @@ import 'pages/login/login.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
 
+final String routeDeckPage = '/DeckPage';
 final String routeCreateCardPage = '/DeckPage/CreateCardPage';
 
 final GoRouter router = GoRouter(

@@ -1,3 +1,4 @@
+import 'package:deck_repository/deck_repository.dart';
 import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
 import 'package:fanki/router.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +15,7 @@ class DeckPage extends StatefulWidget {
 }
 
 class _DeckPageState extends State<DeckPage> {
-  late final TextEditingController _deckNameController =
-      TextEditingController();
+  late final TextEditingController _deckNameController = TextEditingController();
 
   @override
   void initState() {
@@ -39,27 +39,30 @@ class _DeckPageState extends State<DeckPage> {
       body: BlocConsumer<DeckBloc, DeckState>(
         listenWhen: (previous, current) =>
             previous.originalName != current.originalName ||
-            previous.isCardForEditingSelected !=
-                current.isCardForEditingSelected,
+            previous.isCardForEditingSelected != current.isCardForEditingSelected,
         listener: (context, state) {
           _deckNameController.text = state.originalName;
 
-          if (state.isCardForEditingSelected) {
-            context.push(routeCreateCardPage);
+          switch (state.isCardForEditingSelected) {
+            case EditingCardStatus.init:
+              break;
+            case EditingCardStatus.editing:
+              context.push(routeCreateCardPage);
+              break;
+            case EditingCardStatus.notEditing:
+              context.pop();
+              break;
           }
         },
         builder: (context, state) {
-          bool isDeckNameValid =
-              context.read<DeckBloc>().state.isNewDeckNameValid;
+          bool isDeckNameValid = context.read<DeckBloc>().state.isNewDeckNameValid;
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 TextFormField(
                   controller: _deckNameController,
-                  onChanged: (deckName) => context
-                      .read<DeckBloc>()
-                      .add(DeckNameChanged(deckName: deckName)),
+                  onChanged: (deckName) => context.read<DeckBloc>().add(DeckNameChanged(deckName: deckName)),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -71,21 +74,16 @@ class _DeckPageState extends State<DeckPage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           IconButton(
-                            icon: isDeckNameValid
-                                ? Icon(Icons.check)
-                                : Icon(Icons.check_box),
+                            icon: Icon(Icons.check),
                             onPressed: isDeckNameValid
-                                ? () => context.read<DeckBloc>().add(
-                                    RenameDeckEvent(
-                                        newDeckName: _deckNameController.text))
+                                ? () =>
+                                    context.read<DeckBloc>().add(RenameDeckEvent(newDeckName: _deckNameController.text))
                                 : null,
                           ),
                           IconButton(
                               icon: const Icon(Icons.cancel),
                               onPressed: () {
-                                context
-                                    .read<DeckBloc>()
-                                    .add(DeckNameChanged(deckName: ''));
+                                context.read<DeckBloc>().add(DeckNameChanged(deckName: ''));
                                 _deckNameController.text = '';
                               }),
                         ],
@@ -124,23 +122,18 @@ class _DeckPageState extends State<DeckPage> {
                                     onTap: () {
                                       context.read<DeckBloc>().add(
                                             EditCardEvent(
-                                              cardId: state
-                                                  .deck!.flashCards[index].id,
+                                              cardId: state.deck!.flashCards[index].id,
                                             ),
                                           );
                                     },
                                     child: FlashCard(
                                       id: index,
-                                      question: state
-                                          .deck!.flashCards[index].question,
-                                      answer:
-                                          state.deck!.flashCards[index].answer,
+                                      question: state.deck!.flashCards[index].question,
+                                      answer: state.deck!.flashCards[index].answer,
                                     ),
                                   );
-                                } else if (state.deck!.flashCards.length ==
-                                    index) {
-                                  return _addDeleteDeckButton(
-                                      state.deck!.deckName);
+                                } else if (state.deck!.flashCards.length == index) {
+                                  return _addDeleteDeckButton(state.deck!.deckName);
                                 } else {
                                   return Text('Error: Should never come here.');
                                 }
