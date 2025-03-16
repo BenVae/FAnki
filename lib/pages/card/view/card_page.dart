@@ -17,19 +17,9 @@ class _CardPageState extends State<CardPage> {
   @override
   void initState() {
     super.initState();
-
-    final currentFlashCard = context.read<CardBloc>().state.card;
-
-    if (currentFlashCard != null) {
-      context.read<CardBloc>().add(QuestionChanged(currentFlashCard.question));
-      context.read<CardBloc>().add(AnswerChanged(currentFlashCard.answer));
-
-      _questionTextEditingController = TextEditingController(text: currentFlashCard.question);
-      _answerTextEditingController = TextEditingController(text: currentFlashCard.answer);
-    } else {
-      _questionTextEditingController = TextEditingController();
-      _answerTextEditingController = TextEditingController();
-    }
+    context.read<CardBloc>().add(InitCard());
+    _questionTextEditingController = TextEditingController();
+    _answerTextEditingController = TextEditingController();
   }
 
   @override
@@ -56,7 +46,11 @@ class _CardPageState extends State<CardPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: BlocBuilder<CardBloc, CardState>(
+        child: BlocConsumer<CardBloc, CardState>(
+          listener: (context, state) {
+            _questionTextEditingController.text = state.question ?? '';
+            _answerTextEditingController.text = state.answer ?? '';
+          },
           builder: (context, cardState) {
             return ListView(
               children: [

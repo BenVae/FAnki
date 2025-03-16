@@ -2,11 +2,7 @@ part of 'card_bloc.dart';
 
 sealed class CreateCard {}
 
-final class InitCard extends CreateCard {
-  final FlashCardModel? card;
-
-  InitCard({this.card});
-}
+final class InitCard extends CreateCard {}
 
 final class RemoveCurrentCardAndDeckFromState extends CreateCard {}
 

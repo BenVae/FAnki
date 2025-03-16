@@ -9,7 +9,6 @@ part 'deck_state.dart';
 
 class DeckBloc extends Bloc<DeckEvent, DeckState> {
   final DeckRepository _deckRepository;
-  late final StreamSubscription<EditingCardStatus> _subscription;
 
   DeckBloc({required DeckRepository deckRepository})
       : _deckRepository = deckRepository,
@@ -88,7 +87,7 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
     emit(state.copyWith(isLoading: false, deck: null));
   }
 
-  Future<void> _onEditCard(EditCardEvent event, Emitter<DeckState> emit) async {
+  void _onEditCard(EditCardEvent event, Emitter<DeckState> emit) {
     try {
       _deckRepository.setCurrentFlashCard(cardId: event.cardId);
     } catch (e) {
@@ -100,11 +99,5 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
 
   Future<void> _onCreateCard(CreateCardEvent event, Emitter<DeckState> emit) async {
     emit(state.copyWith(isLoading: false));
-  }
-
-  @override
-  Future<void> close() async {
-    // await _subscription.cancel();
-    super.close();
   }
 }

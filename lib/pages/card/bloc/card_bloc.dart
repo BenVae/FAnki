@@ -21,7 +21,7 @@ class CardBloc extends Bloc<CreateCard, CardState> {
   }
 
   void _onInitBlocState(InitCard event, Emitter<CardState> emit) {
-    final card = event.card;
+    final card = _deckRepository.getCurrentFlashCard();
     emit(
       state.copyWith(
         question: card?.question,

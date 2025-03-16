@@ -2,6 +2,7 @@ import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:fanki/pages/widgets/flashcard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class LearningPage extends StatefulWidget {
   const LearningPage({super.key});
@@ -41,19 +42,23 @@ class _LearningPageState extends State<LearningPage> {
           },
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            context.go('/HomeTabView');
+          },
+        ),
       ),
       body: BlocConsumer<LearningBloc, LearningState>(
         listenWhen: (previous, current) {
-          return current.revealedCards.isNotEmpty &&
-              previous.revealedCards.length < current.revealedCards.length;
+          return current.revealedCards.isNotEmpty && previous.revealedCards.length < current.revealedCards.length;
         },
         listener: (context, state) => _addItem(state.revealedCards.length - 1),
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state.flashCards.isEmpty) {
-            return const Center(
-                child: Text('There are no cards in this deck.'));
+            return const Center(child: Text('There are no cards in this deck.'));
           } else {
             return AnimatedList(
               key: _animatedListKey,
@@ -65,16 +70,12 @@ class _LearningPageState extends State<LearningPage> {
                 return SizeTransition(
                   sizeFactor: animation,
                   child: GestureDetector(
-                    onTap: () => context
-                        .read<LearningBloc>()
-                        .add(ToggleAnswerVisibility(cardIndex: index)),
+                    onTap: () => context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: index)),
                     child: FlashCard(
                       id: flashCard.id,
                       question: flashCard.question,
                       answer: flashCard.answer,
-                      visible: state.revealedCardsVisibility.isEmpty
-                          ? false
-                          : state.revealedCardsVisibility[index],
+                      visible: state.revealedCardsVisibility.isEmpty ? false : state.revealedCardsVisibility[index],
                     ),
                   ),
                 );
@@ -105,16 +106,12 @@ class _LearningPageState extends State<LearningPage> {
     return Expanded(
       child: ElevatedButton(
         onPressed: () {
-          final revealedCardsVisibility =
-              context.read<LearningBloc>().state.revealedCardsVisibility;
-          if (revealedCardsVisibility.isEmpty ||
-              revealedCardsVisibility.first) {
+          final revealedCardsVisibility = context.read<LearningBloc>().state.revealedCardsVisibility;
+          if (revealedCardsVisibility.isEmpty || revealedCardsVisibility.first) {
             context.read<LearningBloc>().add(GetNextCard());
           } else {
             final cardIndex = 0;
-            context
-                .read<LearningBloc>()
-                .add(ToggleAnswerVisibility(cardIndex: cardIndex));
+            context.read<LearningBloc>().add(ToggleAnswerVisibility(cardIndex: cardIndex));
           }
         },
         child: Text(label),
