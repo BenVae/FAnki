@@ -1,3 +1,4 @@
+import 'package:fanki/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/home_tab_view/deck_selection/deck_selection.dart';
@@ -27,7 +28,7 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
             case SelectDeckPurpose.selecting:
               break;
             case SelectDeckPurpose.editing:
-              context.go('/DeckEditingPage');
+              context.go(routeDeckPage);
               break;
             case SelectDeckPurpose.learning:
               context.go('/LearningPage');

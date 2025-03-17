@@ -27,6 +27,8 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
         flashCards: deck.flashCards,
       ),
     );
+
+    add(GetNextCard());
   }
 
   void _onGetNextCard(GetNextCard event, Emitter<LearningState> emit) {

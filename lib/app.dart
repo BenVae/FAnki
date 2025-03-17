@@ -1,9 +1,6 @@
 import 'package:authentication_repository/authentication_repository.dart';
-import 'package:deck_repository/deck_repository.dart';
 
 import 'package:fanki/blocs/authentication/authentication.dart';
-import 'package:fanki/blocs/card_deck/bloc/card_deck_bloc.dart';
-import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,16 +44,6 @@ class FankiAppState extends State<FankiApp> {
           create: (context) => AuthenticationBloc(
             authenticationRepository: context.read<AuthenticationRepository>(),
           )..add(AuthenticationSubscriptionRequested()),
-        ),
-        BlocProvider<CardDeckBloc>(
-          create: (context) => CardDeckBloc(
-            deckRepository: context.read<DeckRepository>(),
-          ),
-        ),
-        BlocProvider<LearningBloc>(
-          create: (context) => LearningBloc(
-            deckRepository: context.read<DeckRepository>(),
-          ),
         ),
       ],
       child: BlocListener<AuthenticationBloc, AuthenticationState>(

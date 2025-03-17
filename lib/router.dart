@@ -1,7 +1,7 @@
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:deck_repository/deck_repository.dart';
 import 'package:fanki/blocs/authentication/bloc/authentication_bloc.dart';
-import 'package:fanki/pages/learning/view/learning_page.dart';
+import 'package:fanki/pages/learning/learning.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'pages/card/card.dart';
 import 'pages/deck/deck.dart';
 import 'pages/home_tab_view/view.dart';
+import 'pages/learning/bloc/learning_bloc.dart';
 import 'pages/login/login.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
@@ -39,7 +40,12 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: 'LearningPage',
           builder: (BuildContext context, GoRouterState state) {
-            return const LearningPage();
+            return BlocProvider(
+              create: (context) => LearningBloc(
+                deckRepository: context.read<DeckRepository>(),
+              ),
+              child: LearningPage(),
+            );
           },
         ),
         GoRoute(

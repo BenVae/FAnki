@@ -13,10 +13,10 @@ class LearningPage extends StatefulWidget {
 
 class _LearningPageState extends State<LearningPage> {
   late final GlobalKey<AnimatedListState> _animatedListKey = GlobalKey();
-  late final ScrollController _scrollController;
+  late final ScrollController _scrollController = ScrollController();
 
   void _addItem(int index) {
-    index = 0;
+    // index = 0;
     _animatedListKey.currentState?.insertItem(
       index,
       duration: const Duration(milliseconds: 100),
@@ -26,11 +26,14 @@ class _LearningPageState extends State<LearningPage> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
     context.read<LearningBloc>().add(InitializeLearning());
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<LearningBloc>().add(GetNextCard());
-    // });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    // context.read<LearningBloc>().close();
+    super.dispose();
   }
 
   @override
