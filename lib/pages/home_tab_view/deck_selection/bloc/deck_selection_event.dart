@@ -1,5 +1,7 @@
 part of 'deck_selection_bloc.dart';
 
+enum SelectDeckPurpose { selecting, learning, editing }
+
 sealed class DeckSelectionEvent {
   const DeckSelectionEvent();
 }
@@ -22,6 +24,9 @@ final class CreateDeck extends DeckSelectionEvent {}
 
 final class SelectDeckEvent extends DeckSelectionEvent {
   final String deckName;
+  final SelectDeckPurpose purpose;
 
-  const SelectDeckEvent({required this.deckName});
+  const SelectDeckEvent({required this.deckName, required this.purpose});
 }
+
+final class ResetState extends DeckSelectionEvent {}

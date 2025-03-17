@@ -27,9 +27,10 @@ class _LearningPageState extends State<LearningPage> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LearningBloc>().add(GetNextCard());
-    });
+    context.read<LearningBloc>().add(InitializeLearning());
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   context.read<LearningBloc>().add(GetNextCard());
+    // });
   }
 
   @override

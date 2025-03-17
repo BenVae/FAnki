@@ -1,4 +1,3 @@
-import 'package:fanki/pages/learning/bloc/learning_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/home_tab_view/deck_selection/deck_selection.dart';
@@ -24,8 +23,18 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
       listenWhen: (_, current) => current.isCurrentDeckSelected,
       listener: (context, state) {
         if (state.isCurrentDeckSelected) {
-          context.go('/DeckPage');
+          switch (state.purpose) {
+            case SelectDeckPurpose.selecting:
+              break;
+            case SelectDeckPurpose.editing:
+              context.go('/DeckEditingPage');
+              break;
+            case SelectDeckPurpose.learning:
+              context.go('/LearningPage');
+              break;
+          }
         }
+        context.read<DeckSelectionBloc>().add(ResetState());
       },
       builder: (context, state) {
         if (state.isLoading) {
@@ -44,9 +53,8 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                         onTap: () {
                           String deckName = state.decks[index].value;
                           context
-                              .read<LearningBloc>()
-                              .add(InitializeLearning(deckName: deckName));
-                          context.go('/LearningPage');
+                              .read<DeckSelectionBloc>()
+                              .add(SelectDeckEvent(deckName: deckName, purpose: SelectDeckPurpose.learning));
                         },
                         title: Text(state.decks[index].value),
                         trailing: Row(
@@ -58,7 +66,7 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                                 String deckName = state.decks[index].value;
                                 context
                                     .read<DeckSelectionBloc>()
-                                    .add(SelectDeckEvent(deckName: deckName));
+                                    .add(SelectDeckEvent(deckName: deckName, purpose: SelectDeckPurpose.editing));
                               },
                             ),
                             const SizedBox(width: 20),
@@ -127,9 +135,7 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                         const SizedBox(height: 20),
                         TextField(
                           onChanged: (deckName) {
-                            context
-                                .read<DeckSelectionBloc>()
-                                .add(DeckNameInputChange(deckName: deckName));
+                            context.read<DeckSelectionBloc>().add(DeckNameInputChange(deckName: deckName));
                           },
                           decoration: const InputDecoration(
                             labelText: 'Deck Title',
@@ -142,9 +148,7 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                             ElevatedButton(
                               onPressed: state.newDeckNameIsValid
                                   ? () {
-                                      context
-                                          .read<DeckSelectionBloc>()
-                                          .add(CreateDeck());
+                                      context.read<DeckSelectionBloc>().add(CreateDeck());
                                       Navigator.of(context).pop();
                                     }
                                   : null,
@@ -152,9 +156,7 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                context
-                                    .read<DeckSelectionBloc>()
-                                    .add(DeckNameInputChange(deckName: ''));
+                                context.read<DeckSelectionBloc>().add(DeckNameInputChange(deckName: ''));
                                 Navigator.of(context).pop();
                               },
                               child: const Text('Abort'),

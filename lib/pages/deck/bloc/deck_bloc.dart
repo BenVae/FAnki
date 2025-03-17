@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:deck_repository/deck_repository.dart';
-import 'package:flutter/foundation.dart';
 
 part 'deck_event.dart';
 part 'deck_state.dart';
@@ -50,16 +49,6 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
         addError(error, stackTrace);
       },
     );
-
-    // await emit.onEach<FlashCardModel?>(
-    //   _deckRepository.currentCardStream,
-    //   onData: (currentCard) {
-    //     emit(state.copyWith(card: currentCard));
-    //   },
-    //   onError: (error, stackTrace) {
-    //     addError(error, stackTrace);
-    //   },
-    // );
   }
 
   void _onDeckNameChanged(DeckNameChanged event, Emitter<DeckState> emit) {

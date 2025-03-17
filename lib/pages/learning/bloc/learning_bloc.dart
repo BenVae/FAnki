@@ -23,7 +23,7 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
     emit(
       state.copyWith(
         isLoading: false,
-        deckName: event.deckName,
+        deckName: deck.deckName,
         flashCards: deck.flashCards,
       ),
     );
@@ -36,10 +36,8 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
 
     final randomIndex = Random().nextInt(state.flashCards.length);
     final nextFlashCard = state.flashCards[randomIndex];
-    final newRevealedCards = List<FlashCardModel>.from(state.revealedCards)
-      ..insert(0, nextFlashCard);
-    List<bool> newRevealedCardsVisibility =
-        List<bool>.from(state.revealedCardsVisibility)..insert(0, false);
+    final newRevealedCards = List<FlashCardModel>.from(state.revealedCards)..insert(0, nextFlashCard);
+    List<bool> newRevealedCardsVisibility = List<bool>.from(state.revealedCardsVisibility)..insert(0, false);
 
     emit(state.copyWith(
       revealedCards: newRevealedCards,
@@ -47,12 +45,9 @@ class LearningBloc extends Bloc<LearningEvent, LearningState> {
     ));
   }
 
-  void _onToggleAnswerVisibility(
-      ToggleAnswerVisibility event, Emitter<LearningState> emit) {
-    List<bool> newRevealedCardsVisibility =
-        List<bool>.from(state.revealedCardsVisibility);
-    newRevealedCardsVisibility[event.cardIndex] =
-        !newRevealedCardsVisibility[event.cardIndex];
+  void _onToggleAnswerVisibility(ToggleAnswerVisibility event, Emitter<LearningState> emit) {
+    List<bool> newRevealedCardsVisibility = List<bool>.from(state.revealedCardsVisibility);
+    newRevealedCardsVisibility[event.cardIndex] = !newRevealedCardsVisibility[event.cardIndex];
 
     emit(state.copyWith(
       revealedCardsVisibility: newRevealedCardsVisibility,
