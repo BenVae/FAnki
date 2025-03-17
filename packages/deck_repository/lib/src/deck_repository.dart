@@ -7,32 +7,24 @@ import 'package:path_provider/path_provider.dart';
 import 'data_models/flash_card_model.dart';
 import 'isar_data_models/isar_deck_model.dart';
 
-enum EditingCardStatus { init, editing, notEditing }
+enum EditCard { init, editing, notEditing }
 
 class DeckRepository {
   late final Isar isar;
-
-  final _editingCardStatusController = StreamController<EditingCardStatus>.broadcast();
-
   DeckModel? _currentDeck;
-  FlashCardModel? _currentFlashCard;
+  FlashCardModel? _currentCard;
 
-  Stream<EditingCardStatus> get editingCardStatus async* {
-    yield EditingCardStatus.init;
-    yield* _editingCardStatusController.stream;
+  final _deckController = StreamController<DeckModel?>.broadcast();
+  Stream<DeckModel?> get currentDeckStream async* {
+    yield null;
+    yield* _deckController.stream;
   }
 
-  void startEditingCard() {
-    _editingCardStatusController.add(EditingCardStatus.editing);
-  }
-
-  void finishEditingCard() {
-    _editingCardStatusController.add(EditingCardStatus.notEditing);
-  }
-
-  void resetEditingCard() {
-    _editingCardStatusController.add(EditingCardStatus.init);
-  }
+  // final _cardController = StreamController<FlashCardModel?>.broadcast();
+  // Stream<FlashCardModel?> get currentCardStream async* {
+  //   yield null;
+  //   yield* _cardController.stream;
+  // }
 
   DeckRepository._create(this.isar);
 
@@ -80,6 +72,7 @@ class DeckRepository {
     }
 
     _currentDeck = isarDeck.toDomain();
+    _deckController.add(_currentDeck);
   }
 
   String getCurrentDeckName() {
@@ -110,6 +103,7 @@ class DeckRepository {
     }
 
     _currentDeck!.deckName = newDeckName;
+    _deckController.add(_currentDeck);
 
     await isar.writeTxn(() async {
       await isar.isarDeckModels.put(_currentDeck!.toIsar());
@@ -125,15 +119,14 @@ class DeckRepository {
       (flashCard) => flashCard.id == cardId,
       orElse: () => throw Exception('FlashCard with id=$cardId not found.'),
     );
-    _currentFlashCard = foundCard;
-    _editingCardStatusController.add(EditingCardStatus.editing);
+    _currentCard = foundCard;
   }
 
   FlashCardModel? getCurrentFlashCard() {
-    return _currentFlashCard;
+    return _currentCard;
   }
 
-  Future<DeckModel> addFlashCard({required String question, required String answer}) async {
+  Future<bool> addFlashCard({required String question, required String answer}) async {
     if (_currentDeck == null) {
       throw Exception('No deck selected.');
     }
@@ -155,22 +148,14 @@ class DeckRepository {
 
     if (updatedDeck != null) {
       _currentDeck = updatedDeck.toDomain();
-      return _currentDeck!;
+      _deckController.add(_currentDeck);
+      return true;
     } else {
       throw Exception('Adding Flashcard did not work.');
     }
   }
 
-  int _getIdForNewFlashCard() {
-    if (_currentDeck == null || _currentDeck!.flashCards.isEmpty) {
-      return 1;
-    }
-    final maxId =
-        _currentDeck!.flashCards.map((fc) => fc.id).reduce((value, element) => value > element ? value : element);
-    return maxId + 1;
-  }
-
-  Future<DeckModel> updateFlashCard({
+  Future<bool> updateFlashCard({
     required int cardId,
     required String question,
     required String answer,
@@ -198,14 +183,23 @@ class DeckRepository {
 
     if (updatedDeck != null) {
       _currentDeck = updatedDeck.toDomain();
-      _editingCardStatusController.add(EditingCardStatus.notEditing);
-      return _currentDeck!;
+      _deckController.add(_currentDeck);
+      return true;
     } else {
       throw Exception('No updatedDeck in editFlashCard.');
     }
   }
 
-  List<FlashCardModel> getFlashCardsFromSelectedDeck() {
+  int _getIdForNewFlashCard() {
+    if (_currentDeck == null || _currentDeck!.flashCards.isEmpty) {
+      return 1;
+    }
+    final maxId =
+        _currentDeck!.flashCards.map((fc) => fc.id).reduce((value, element) => value > element ? value : element);
+    return maxId + 1;
+  }
+
+  List<FlashCardModel> getFlashCardsFromCurrentDeck() {
     if (_currentDeck != null) {
       return _currentDeck!.flashCards;
     } else {
@@ -224,7 +218,7 @@ class DeckRepository {
     return flashCard;
   }
 
-  Future<DeckModel> removeFlashCardFromSelectedDeckById(int cardId) async {
+  Future<void> removeFlashCardFromSelectedDeckById(int cardId) async {
     if (_currentDeck == null) {
       throw Exception('No deck selected');
     }
@@ -245,7 +239,7 @@ class DeckRepository {
 
     if (updatedDeck != null) {
       _currentDeck = updatedDeck.toDomain();
-      return _currentDeck!;
+      _deckController.add(_currentDeck);
     } else {
       throw Exception('Removing card did not work.');
     }

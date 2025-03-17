@@ -41,23 +41,25 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
       );
     }
 
-    await emit.forEach<EditingCardStatus>(
-      _deckRepository.editingCardStatus,
+    await emit.onEach<DeckModel?>(
+      _deckRepository.currentDeckStream,
       onData: (status) {
-        switch (status) {
-          case EditingCardStatus.init:
-            return state.copyWith(isCardForEditingSelected: EditingCardStatus.init);
-          case EditingCardStatus.editing:
-            return state.copyWith(isCardForEditingSelected: EditingCardStatus.editing);
-          case EditingCardStatus.notEditing:
-            return state.copyWith(isCardForEditingSelected: EditingCardStatus.notEditing);
-        }
+        emit(state.copyWith(deck: status));
       },
       onError: (error, stackTrace) {
         addError(error, stackTrace);
-        return state;
       },
     );
+
+    // await emit.onEach<FlashCardModel?>(
+    //   _deckRepository.currentCardStream,
+    //   onData: (currentCard) {
+    //     emit(state.copyWith(card: currentCard));
+    //   },
+    //   onError: (error, stackTrace) {
+    //     addError(error, stackTrace);
+    //   },
+    // );
   }
 
   void _onDeckNameChanged(DeckNameChanged event, Emitter<DeckState> emit) {
@@ -92,9 +94,9 @@ class DeckBloc extends Bloc<DeckEvent, DeckState> {
       _deckRepository.setCurrentFlashCard(cardId: event.cardId);
     } catch (e) {
       //TODO Fehlermeldung hinzufügen
-      emit(state.copyWith(isLoading: false, isCardForEditingSelected: EditingCardStatus.notEditing));
+      emit(state.copyWith(isLoading: false));
     }
-    emit(state.copyWith(isLoading: false, isCardForEditingSelected: EditingCardStatus.editing));
+    emit(state.copyWith(isLoading: false));
   }
 
   Future<void> _onCreateCard(CreateCardEvent event, Emitter<DeckState> emit) async {

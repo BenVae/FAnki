@@ -40,16 +40,22 @@ class _CardPageState extends State<CardPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            context.read<CardBloc>().onGoingBack();
+            context.pop();
           },
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: BlocConsumer<CardBloc, CardState>(
+          listenWhen: (previous, current) =>
+              previous.card != current.card || previous.isEditingDone != current.isEditingDone,
           listener: (context, state) {
             _questionTextEditingController.text = state.question ?? '';
             _answerTextEditingController.text = state.answer ?? '';
+
+            if (state.isEditingDone) {
+              context.pop();
+            }
           },
           builder: (context, cardState) {
             return ListView(

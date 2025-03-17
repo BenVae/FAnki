@@ -4,6 +4,8 @@ import 'package:deck_repository/deck_repository.dart';
 part 'card_event.dart';
 part 'card_state.dart';
 
+enum EditingCardStatus { init, editing, notEditing }
+
 class CardBloc extends Bloc<CreateCard, CardState> {
   final DeckRepository _deckRepository;
 
@@ -24,6 +26,7 @@ class CardBloc extends Bloc<CreateCard, CardState> {
     final card = _deckRepository.getCurrentFlashCard();
     emit(
       state.copyWith(
+        card: card,
         question: card?.question,
         answer: card?.answer,
         isCardValid: _isCardValid(question: card?.question, answer: card?.answer),
@@ -38,18 +41,17 @@ class CardBloc extends Bloc<CreateCard, CardState> {
     emit(state.copyWith(isLoading: false, card: null, question: null, answer: null));
   }
 
-  void _onCreateNewCard(CreateNewCard event, Emitter<CardState> emit) {
+  Future<void> _onCreateNewCard(CreateNewCard event, Emitter<CardState> emit) async {
     emit(state.copyWith(isLoading: true));
-    _deckRepository.addFlashCard(question: event.question, answer: event.answer);
-    _deckRepository.finishEditingCard();
-    emit(state.copyWith(isLoading: false));
+    bool success = await _deckRepository.addFlashCard(question: event.question, answer: event.answer);
+    emit(state.copyWith(isLoading: false, isEditingDone: success));
   }
 
-  void _onUpdateCard(UpdateCard event, Emitter<CardState> emit) {
+  Future<void> _onUpdateCard(UpdateCard event, Emitter<CardState> emit) async {
     emit(state.copyWith(isLoading: true));
-    _deckRepository.updateFlashCard(cardId: state.card!.id, question: state.question!, answer: state.answer!);
-    _deckRepository.finishEditingCard();
-    emit(state.copyWith(isLoading: true));
+    bool success =
+        await _deckRepository.updateFlashCard(cardId: state.card!.id, question: state.question!, answer: state.answer!);
+    emit(state.copyWith(isLoading: false, isEditingDone: success));
   }
 
   void _onQuestionAndAnswerChanged(QuestionAnswerChanged event, Emitter<CardState> emit) {
@@ -85,7 +87,7 @@ class CardBloc extends Bloc<CreateCard, CardState> {
   }
 
   void onGoingBack() {
-    _deckRepository.finishEditingCard();
+    // _deckRepository.startEditingCard(EditingCardStatus.notEditing);
   }
 
   bool _isCardValid({String? question, String? answer}) {

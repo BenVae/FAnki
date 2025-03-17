@@ -6,6 +6,7 @@ final class CardState {
   final String? question;
   final String? answer;
   final bool isCardValid;
+  final bool isEditingDone;
 
   const CardState({
     this.isLoading = false,
@@ -13,6 +14,7 @@ final class CardState {
     this.question,
     this.answer,
     this.isCardValid = false,
+    this.isEditingDone = false,
   });
 
   CardState copyWith({
@@ -22,6 +24,7 @@ final class CardState {
     String? answer,
     bool? isCardValid,
     bool? isNewCard,
+    bool? isEditingDone,
   }) {
     return CardState(
       isLoading: isLoading ?? this.isLoading,
@@ -29,6 +32,7 @@ final class CardState {
       question: question ?? this.question,
       answer: answer ?? this.answer,
       isCardValid: isCardValid ?? this.isCardValid,
+      isEditingDone: isEditingDone ?? this.isEditingDone,
     );
   }
 }

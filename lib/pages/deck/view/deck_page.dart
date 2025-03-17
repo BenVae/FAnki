@@ -1,4 +1,3 @@
-import 'package:deck_repository/deck_repository.dart';
 import 'package:fanki/pages/deck/bloc/deck_bloc.dart';
 import 'package:fanki/router.dart';
 import 'package:flutter/material.dart';
@@ -37,22 +36,9 @@ class _DeckPageState extends State<DeckPage> {
         ),
       ),
       body: BlocConsumer<DeckBloc, DeckState>(
-        listenWhen: (previous, current) =>
-            previous.originalName != current.originalName ||
-            previous.isCardForEditingSelected != current.isCardForEditingSelected,
+        listenWhen: (previous, current) => previous.originalName != current.originalName,
         listener: (context, state) {
           _deckNameController.text = state.originalName;
-
-          switch (state.isCardForEditingSelected) {
-            case EditingCardStatus.init:
-              break;
-            case EditingCardStatus.editing:
-              context.push(routeCreateCardPage);
-              break;
-            case EditingCardStatus.notEditing:
-              context.pop();
-              break;
-          }
         },
         builder: (context, state) {
           bool isDeckNameValid = context.read<DeckBloc>().state.isNewDeckNameValid;
@@ -125,6 +111,7 @@ class _DeckPageState extends State<DeckPage> {
                                               cardId: state.deck!.flashCards[index].id,
                                             ),
                                           );
+                                      context.go(routeCreateCardPage);
                                     },
                                     child: FlashCard(
                                       id: index,
