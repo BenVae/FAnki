@@ -15,20 +15,6 @@ class AuthenticationRepository {
     yield* _controller.stream;
   }
 
-  Future<void> logIn({
-    required String username,
-    required String password,
-  }) async {
-    if (username == 'w' && password == 'w') {
-      await Future.delayed(
-        const Duration(milliseconds: 1),
-        () => _controller.add(AuthenticationStatus.authenticated),
-      );
-    } else {
-      throw Exception('Invalid credentials');
-    }
-  }
-
   Future<void> logInWithEmailAndPassword({
     required String email,
     required String password,
@@ -54,5 +40,5 @@ class AuthenticationRepository {
     _controller.add(AuthenticationStatus.unauthenticated);
   }
 
-  //void dispose() => _controller.close();
+  void dispose() => _controller.close();
 }
