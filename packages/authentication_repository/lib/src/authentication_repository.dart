@@ -10,8 +10,30 @@ class AuthenticationRepository {
   final supabase = Supabase.instance.client;
   AuthResponse? authReponse;
 
+  AuthenticationRepository() {
+    _initialize();
+  }
+
+  void _initialize() {
+    supabase.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session == null) {
+        _controller.add(AuthenticationStatus.unauthenticated);
+      } else {
+        _controller.add(AuthenticationStatus.authenticated);
+      }
+    });
+  }
+
   Stream<AuthenticationStatus> get status async* {
-    yield AuthenticationStatus.unauthenticated;
+    final session = supabase.auth.currentSession;
+
+    if (session != null) {
+      yield AuthenticationStatus.authenticated;
+    } else {
+      yield AuthenticationStatus.unauthenticated;
+    }
+
     yield* _controller.stream;
   }
 

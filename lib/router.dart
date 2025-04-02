@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'pages/card/card.dart';
 import 'pages/deck/deck.dart';
 import 'pages/home_tab_view/view.dart';
-import 'pages/learning/bloc/learning_bloc.dart';
 import 'pages/login/login.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
