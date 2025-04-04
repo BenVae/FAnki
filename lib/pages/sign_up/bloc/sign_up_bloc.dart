@@ -1,3 +1,4 @@
+import 'package:authentication_repository/authentication_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -5,7 +6,11 @@ part 'sign_up_event.dart';
 part 'sign_up_state.dart';
 
 class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
-  SignUpBloc() : super(const SignUpState()) {
+  final AuthenticationRepository _authenticationRepository;
+
+  SignUpBloc({required AuthenticationRepository authenticationRepository})
+      : _authenticationRepository = authenticationRepository,
+        super(const SignUpState()) {
     on<EmailChanged>(_onEmailChanged);
     on<PasswordChanged>(_onPasswordChanged);
     on<SignUpSubmitted>(_onSignUpSubmitted);
@@ -23,13 +28,9 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     );
   }
 
-  Future<void> _onSignUpSubmitted(
-      SignUpSubmitted event, Emitter<SignUpState> emit) async {
+  Future<void> _onSignUpSubmitted(SignUpSubmitted event, Emitter<SignUpState> emit) async {
     // Start submitting
     emit(state.copyWith(status: SignUpStatus.submitting, errorMessage: null));
-
-    // Fake a 2-second delay to simulate network call
-    await Future.delayed(const Duration(seconds: 2));
 
     // Validate
     if (!state.isValidEmail) {
@@ -48,10 +49,11 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
       return;
     }
 
-    // If all good, you could call your real sign-up service here. For now:
     try {
-      // Example: await authRepository.signUp(email: state.email, password: state.password);
-      // If success, yield success
+      _authenticationRepository.signUpWithEmailAndPassword(
+        email: state.email,
+        password: state.password,
+      );
       emit(state.copyWith(status: SignUpStatus.success));
     } catch (e) {
       emit(state.copyWith(

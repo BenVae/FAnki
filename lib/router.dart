@@ -2,6 +2,7 @@ import 'package:authentication_repository/authentication_repository.dart';
 import 'package:deck_repository/deck_repository.dart';
 import 'package:fanki/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:fanki/pages/learning/learning.dart';
+import 'package:fanki/pages/sign_up/bloc/sign_up_bloc.dart';
 import 'package:fanki/pages/sign_up/view/sign_up_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,7 +39,12 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: 'SignUpPage',
           builder: (BuildContext context, GoRouterState state) {
-            return const SignUpPage();
+            return BlocProvider(
+              create: (context) => SignUpBloc(
+                authenticationRepository: context.read<AuthenticationRepository>(),
+              ),
+              child: const SignUpPage(),
+            );
           },
         ),
         GoRoute(

@@ -37,6 +37,22 @@ class AuthenticationRepository {
     yield* _controller.stream;
   }
 
+  Future<void> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    authReponse = await Supabase.instance.client.auth.signUp(
+      email: email,
+      password: password,
+    );
+
+    if (authReponse?.user != null) {
+      _controller.add(AuthenticationStatus.authenticated);
+    } else {
+      _controller.add(AuthenticationStatus.unauthenticated);
+    }
+  }
+
   Future<void> logInWithEmailAndPassword({
     required String email,
     required String password,
@@ -53,12 +69,14 @@ class AuthenticationRepository {
   }
 
   UserModel getUser() {
-    String userId = authReponse?.user?.id ?? '';
-    String userEmail = authReponse?.user?.email ?? '';
+    final user = supabase.auth.currentUser;
+    String userId = user?.id ?? '';
+    String userEmail = user?.email ?? '';
     return UserModel(id: userId, email: userEmail);
   }
 
-  void logOut() {
+  Future<void> logOut() async {
+    await supabase.auth.signOut();
     _controller.add(AuthenticationStatus.unauthenticated);
   }
 

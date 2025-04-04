@@ -36,8 +36,7 @@ class _LoginFormState extends State<LoginForm> {
   Widget build(BuildContext context) {
     return BlocConsumer<LoginBloc, LoginState>(
         listenWhen: (previous, current) =>
-            previous.email.value != current.email.value ||
-            previous.status.isFailure != current.status.isFailure,
+            previous.email.value != current.email.value || previous.status.isFailure != current.status.isFailure,
         listener: (context, state) {
           if (state.status.isFailure) {
             ScaffoldMessenger.of(context)
@@ -65,15 +64,11 @@ class _LoginFormState extends State<LoginForm> {
                   key: const Key('loginForm_usernameInput_textField'),
                   controller: _emailController,
                   onChanged: (username) {
-                    context
-                        .read<LoginBloc>()
-                        .add(LoginUsernameChanged(username));
+                    context.read<LoginBloc>().add(LoginUsernameChanged(username));
                   },
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    errorText: state.email.displayError != null
-                        ? 'invalid username'
-                        : null,
+                    errorText: state.email.displayError != null ? 'invalid username' : null,
                   ),
                 ),
                 const Padding(padding: EdgeInsets.all(12)),
@@ -81,16 +76,12 @@ class _LoginFormState extends State<LoginForm> {
                   key: const Key('loginForm_passwordInput_textField'),
                   controller: _passwordController,
                   onChanged: (password) {
-                    context
-                        .read<LoginBloc>()
-                        .add(LoginPasswordChanged(password));
+                    context.read<LoginBloc>().add(LoginPasswordChanged(password));
                   },
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    errorText: state.password.displayError != null
-                        ? 'invalid password'
-                        : null,
+                    errorText: state.password.displayError != null ? 'invalid password' : null,
                   ),
                 ),
                 const Padding(padding: EdgeInsets.all(12)),
@@ -117,9 +108,7 @@ class _LoginButton extends StatelessWidget {
 
     return ElevatedButton(
       key: const Key('loginForm_continue_raisedButton'),
-      onPressed: isValid
-          ? () => context.read<LoginBloc>().add(const LoginSubmitted())
-          : null,
+      onPressed: isValid ? () => context.read<LoginBloc>().add(const LoginSubmitted()) : null,
       child: const Text('Login'),
     );
   }
@@ -128,7 +117,7 @@ class _LoginButton extends StatelessWidget {
 class _SignUpButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return TextButton(
       key: const Key('loginForm_signUp_textButton'),
       onPressed: () {
         context.push(routeSignUpPage);

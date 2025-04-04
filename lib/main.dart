@@ -27,8 +27,7 @@ Future<void> main() async {
   runApp(
     MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<AuthenticationRepository>.value(
-            value: authenticationRepository),
+        RepositoryProvider<AuthenticationRepository>.value(value: authenticationRepository),
         RepositoryProvider<DeckRepository>.value(value: deckRepository),
       ],
       child: FankiApp(router: router),
