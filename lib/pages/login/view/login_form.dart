@@ -1,7 +1,9 @@
+import 'package:fanki/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fanki/pages/login/login.dart';
 import 'package:formz/formz.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -93,6 +95,8 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 const Padding(padding: EdgeInsets.all(12)),
                 _LoginButton(),
+                const Padding(padding: EdgeInsets.all(12)),
+                _SignUpButton(),
               ],
             ),
           );
@@ -117,6 +121,19 @@ class _LoginButton extends StatelessWidget {
           ? () => context.read<LoginBloc>().add(const LoginSubmitted())
           : null,
       child: const Text('Login'),
+    );
+  }
+}
+
+class _SignUpButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      key: const Key('loginForm_signUp_textButton'),
+      onPressed: () {
+        context.push(routeSignUpPage);
+      },
+      child: const Text('Sign Up'),
     );
   }
 }

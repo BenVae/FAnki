@@ -16,19 +16,19 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<LoginUsernameChanged>(_onUsernameChanged);
     on<LoginPasswordChanged>(_onPasswordChanged);
     on<LoginSubmitted>(_onSubmitted);
+    on<SignUpButtonPressed>(_onSignUpButtonPressed);
   }
 
   final AuthenticationRepository _authenticationRepository;
 
   void _initializeLoginPage(InitializeLogin event, Emitter<LoginState> emit) {
     Email email = Email.dirty('w@w.de');
-    Password password = Password.dirty('w');
 
     emit(
       state.copyWith(
         email: email,
-        password: password,
-        isValid: Formz.validate([email, password]),
+        password: Password.pure(),
+        isValid: Formz.validate([email]),
       ),
     );
   }
@@ -71,5 +71,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         emit(state.copyWith(status: FormzSubmissionStatus.failure));
       }
     }
+  }
+
+  void _onSignUpButtonPressed(
+      SignUpButtonPressed event, Emitter<LoginState> emit) {
+    emit(state.copyWith(status: FormzSubmissionStatus.success));
   }
 }
