@@ -8,7 +8,6 @@ enum AuthenticationStatus { unknown, authenticated, unauthenticated }
 class AuthenticationRepository {
   final _controller = StreamController<AuthenticationStatus>();
   final supabase = Supabase.instance.client;
-  AuthResponse? authReponse;
 
   AuthenticationRepository() {
     _initialize();
@@ -41,12 +40,12 @@ class AuthenticationRepository {
     required String email,
     required String password,
   }) async {
-    authReponse = await Supabase.instance.client.auth.signUp(
+    final response = await Supabase.instance.client.auth.signUp(
       email: email,
       password: password,
     );
 
-    if (authReponse?.user != null) {
+    if (response.user != null) {
       _controller.add(AuthenticationStatus.authenticated);
     } else {
       _controller.add(AuthenticationStatus.unauthenticated);
@@ -57,7 +56,7 @@ class AuthenticationRepository {
     required String email,
     required String password,
   }) async {
-    authReponse = await Supabase.instance.client.auth.signInWithPassword(
+    await Supabase.instance.client.auth.signInWithPassword(
       email: email,
       password: password,
     );

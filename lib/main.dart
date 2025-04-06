@@ -1,9 +1,12 @@
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:deck_repository/deck_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fanki/app.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'router.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,6 +22,11 @@ Future<void> main() async {
   await Supabase.initialize(
     url: NEXT_PUBLIC_SUPABASE_URL,
     anonKey: NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory:
+        kIsWeb ? HydratedStorageDirectory.web : HydratedStorageDirectory((await getTemporaryDirectory()).path),
   );
 
   final authenticationRepository = AuthenticationRepository();

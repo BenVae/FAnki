@@ -20,9 +20,9 @@ class _LoginFormState extends State<LoginForm> {
   void initState() {
     super.initState();
     final initialUsername = context.read<LoginBloc>().state.email.value;
-    final initialPassword = context.read<LoginBloc>().state.password.value;
+    // final initialPassword = context.read<LoginBloc>().state.password.value;
     _emailController = TextEditingController(text: initialUsername);
-    _passwordController = TextEditingController(text: initialPassword);
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -44,7 +44,10 @@ class _LoginFormState extends State<LoginForm> {
               ..showSnackBar(
                 const SnackBar(content: Text('Authentication Failure')),
               );
+          } else if (state.status.isInProgress) {
+            _passwordController.clear();
           }
+
           if (_emailController.text != state.email.value) {
             _emailController.text = state.email.value;
             _passwordController.text = state.password.value;
@@ -108,7 +111,11 @@ class _LoginButton extends StatelessWidget {
 
     return ElevatedButton(
       key: const Key('loginForm_continue_raisedButton'),
-      onPressed: isValid ? () => context.read<LoginBloc>().add(const LoginSubmitted()) : null,
+      onPressed: isValid
+          ? () {
+              context.read<LoginBloc>().add(const LoginSubmitted());
+            }
+          : null,
       child: const Text('Login'),
     );
   }

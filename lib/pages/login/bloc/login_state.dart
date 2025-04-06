@@ -27,6 +27,24 @@ final class LoginState extends Equatable {
     );
   }
 
+  factory LoginState.fromJson(Map<String, dynamic> json) {
+    return LoginState(
+      status: FormzSubmissionStatus.values[json['status'] as int],
+      email: Email.dirty(json['email'] as String),
+      password: Password.dirty(json['password'] as String),
+      isValid: json['isValid'] as bool,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'status': status.index,
+      'email': email.value,
+      'password': password.value,
+      'isValid': isValid,
+    };
+  }
+
   @override
   List<Object> get props => [status, email, password];
 }
