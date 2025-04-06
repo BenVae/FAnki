@@ -1,152 +1,166 @@
+// deck_repository.dart
 import 'dart:async';
-
-import 'package:deck_repository/src/data_models/deck_model.dart';
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
-
-import 'data_models/flash_card_model.dart';
-import 'isar_data_models/isar_deck_model.dart';
+import 'package:drift/drift.dart';
+import 'deck_database.dart'; // The Drift db + tables
+import 'data_models/deck_model.dart'; // DeckModel
+import 'data_models/flash_card_model.dart'; // FlashCardModel
 
 enum EditCard { init, editing, notEditing }
 
 class DeckRepository {
-  late final Isar isar;
+  final AppDatabase _db;
+
   DeckModel? _currentDeck;
   FlashCardModel? _currentCard;
 
   final _deckController = StreamController<DeckModel?>.broadcast();
   Stream<DeckModel?> get currentDeckStream async* {
+    // By yielding null first, you match the original behavior
     yield null;
     yield* _deckController.stream;
   }
 
-  DeckRepository._create(this.isar);
+  DeckRepository._create(this._db);
 
+  // -------------
+  //   INIT
+  // -------------
   static Future<DeckRepository> init() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final isar = await Isar.open(
-      [IsarDeckModelSchema],
-      directory: dir.path,
-    );
-
-    return DeckRepository._create(isar);
+    final db = AppDatabase();
+    return DeckRepository._create(db);
   }
 
+  // -------------
+  //   DECKS
+  // -------------
+
   Future<List<String>> getDeckNames() async {
-    final decks = await isar.isarDeckModels.where().findAll();
-    return decks.map((deck) => deck.deckName).toList();
+    final allDeckRows = await _db.select(_db.decks).get();
+    return allDeckRows.map((row) => row.deckName).toList();
   }
 
   Future<void> createDeck(String deckName) async {
-    final deckModel = IsarDeckModel(deckName: deckName, flashCards: []);
-    await isar.writeTxn(() async {
-      await isar.isarDeckModels.put(deckModel);
-    });
+    await _db.into(_db.decks).insert(
+          DecksCompanion.insert(deckName: deckName),
+        );
   }
 
   Future<void> deleteCurrentDeck() async {
     if (_currentDeck == null) {
-      throw Exception('Delete current deck error, because deck was not found.');
+      throw Exception('Delete current deck error, because no deck is selected.');
     }
-    await isar.writeTxn(() async {
-      await isar.isarDeckModels.delete(_currentDeck!.id);
-    });
+    await (_db.delete(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id))).go();
+
+    // Clear our in-memory state
+    _currentDeck = null;
+    _currentCard = null;
+    _deckController.add(null);
   }
 
   Future<bool> isDeckNameUsed(String deckName) async {
-    final deckModel = await isar.isarDeckModels.filter().deckNameEqualTo(deckName).findFirst();
-    return deckModel != null;
+    final existing = await (_db.select(_db.decks)..where((tbl) => tbl.deckName.equals(deckName))).getSingleOrNull();
+    return existing != null;
   }
 
   Future<void> setCurrentDeckByName(String deckName) async {
-    final isarDeck = await isar.isarDeckModels.filter().deckNameEqualTo(deckName).findFirst();
+    final foundDeck = await (_db.select(_db.decks)..where((tbl) => tbl.deckName.equals(deckName))).getSingleOrNull();
 
-    if (isarDeck == null) {
-      throw Exception('Deck $deckName is unknown.');
+    if (foundDeck == null) {
+      throw Exception('Deck "$deckName" does not exist.');
     }
 
-    _currentDeck = isarDeck.toDomain();
+    // Fetch all flashcards for that deck
+    final flashcardRows = await (_db.select(_db.flashcards)..where((tbl) => tbl.deckId.equals(foundDeck.id))).get();
+
+    _currentDeck = DeckModel(
+      id: foundDeck.id,
+      deckName: foundDeck.deckName,
+      flashCards: flashcardRows
+          .map((fc) => FlashCardModel(
+                id: fc.id,
+                question: fc.question,
+                answer: fc.answer,
+              ))
+          .toList(),
+    );
+
     _deckController.add(_currentDeck);
   }
 
   String getCurrentDeckName() {
-    if (_currentDeck != null) {
-      return _currentDeck!.deckName;
-    } else {
+    if (_currentDeck == null) {
       throw Exception('No deck selected.');
     }
+    return _currentDeck!.deckName;
   }
 
   DeckModel getCurrentDeck() {
-    if (_currentDeck != null) {
-      return _currentDeck!;
-    } else {
+    if (_currentDeck == null) {
       throw Exception('No deck selected.');
     }
+    return _currentDeck!;
   }
 
   Future<void> renameDeck({
     required String newDeckName,
   }) async {
     if (_currentDeck == null) {
-      throw Exception('CurrentDeck not found.');
+      throw Exception('No current deck to rename.');
     }
-    final existingDeck = await isar.isarDeckModels.filter().deckNameEqualTo(newDeckName).findFirst();
+
+    // Check if new name is taken
+    final existingDeck =
+        await (_db.select(_db.decks)..where((tbl) => tbl.deckName.equals(newDeckName))).getSingleOrNull();
     if (existingDeck != null) {
       throw Exception('Deck name "$newDeckName" is already in use.');
     }
 
+    // Update deck name in DB
+    await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id)))
+        .write(DecksCompanion(deckName: Value(newDeckName)));
+
+    // Update in-memory model
     _currentDeck!.deckName = newDeckName;
     _deckController.add(_currentDeck);
-
-    await isar.writeTxn(() async {
-      await isar.isarDeckModels.put(_currentDeck!.toIsar());
-    });
   }
+
+  // -------------
+  //   FLASHCARDS
+  // -------------
 
   void setCurrentFlashCard({required int cardId}) {
     if (_currentDeck == null) {
-      throw Exception('CurrentDeck was null.');
+      throw Exception('No deck selected.');
     }
-
     final foundCard = _currentDeck!.flashCards.firstWhere(
-      (flashCard) => flashCard.id == cardId,
+      (c) => c.id == cardId,
       orElse: () => throw Exception('FlashCard with id=$cardId not found.'),
     );
     _currentCard = foundCard;
   }
 
-  FlashCardModel? getCurrentFlashCard() {
-    return _currentCard;
-  }
+  FlashCardModel? getCurrentFlashCard() => _currentCard;
 
-  Future<bool> addFlashCard({required String question, required String answer}) async {
+  Future<bool> addFlashCard({
+    required String question,
+    required String answer,
+  }) async {
     if (_currentDeck == null) {
       throw Exception('No deck selected.');
     }
 
-    final newCard = FlashCardModel(
-      id: _getIdForNewFlashCard(),
-      question: question,
-      answer: answer,
-    );
+    // Insert new flashcard into DB
+    await _db.into(_db.flashcards).insert(
+          FlashcardsCompanion.insert(
+            deckId: _currentDeck!.id,
+            question: question,
+            answer: answer,
+          ),
+        );
 
-    _currentDeck!.flashCards = [..._currentDeck!.flashCards, newCard];
-    final isarDeckModel = _currentDeck!.toIsar();
-
-    await isar.writeTxn(() async {
-      await isar.isarDeckModels.put(isarDeckModel);
-    });
-
-    final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
-
-    if (updatedDeck != null) {
-      _currentDeck = updatedDeck.toDomain();
-      _deckController.add(_currentDeck);
-      return true;
-    } else {
-      throw Exception('Adding Flashcard did not work.');
-    }
+    // Refresh current deck from DB
+    await _reloadCurrentDeck();
+    return true;
   }
 
   Future<bool> updateFlashCard({
@@ -158,58 +172,23 @@ class DeckRepository {
       throw Exception('No deck selected.');
     }
 
+    // Check existence in local model (not strictly required, but consistent with old code)
     final index = _currentDeck!.flashCards.indexWhere((fc) => fc.id == cardId);
     if (index == -1) {
       throw Exception('Flashcard with id $cardId not found.');
     }
 
-    final updatedFlashCard = FlashCardModel(id: cardId, question: question, answer: answer);
-
-    _currentDeck!.flashCards = List<FlashCardModel>.from(_currentDeck!.flashCards);
-    _currentDeck!.flashCards[index] = updatedFlashCard;
-
-    final isarDeckModel = _currentDeck!.toIsar();
-    await isar.writeTxn(() async {
-      await isar.isarDeckModels.put(isarDeckModel);
-    });
-
-    final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
-
-    if (updatedDeck != null) {
-      _currentDeck = updatedDeck.toDomain();
-      _deckController.add(_currentDeck);
-      return true;
-    } else {
-      throw Exception('No updatedDeck in editFlashCard.');
-    }
-  }
-
-  int _getIdForNewFlashCard() {
-    if (_currentDeck == null || _currentDeck!.flashCards.isEmpty) {
-      return 1;
-    }
-    final maxId =
-        _currentDeck!.flashCards.map((fc) => fc.id).reduce((value, element) => value > element ? value : element);
-    return maxId + 1;
-  }
-
-  List<FlashCardModel> getFlashCardsFromCurrentDeck() {
-    if (_currentDeck != null) {
-      return _currentDeck!.flashCards;
-    } else {
-      throw Exception('No deck selected');
-    }
-  }
-
-  FlashCardModel getFlashCardsFromSelectedDeckById(int cardId) {
-    if (_currentDeck == null) {
-      throw Exception('No deck selected');
-    }
-    final flashCard = _currentDeck!.flashCards.firstWhere(
-      (fc) => fc.id == cardId,
-      orElse: () => throw Exception('Flashcard with $cardId not found. Sync mismatch!'),
+    // Update in DB
+    await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(cardId))).write(
+      FlashcardsCompanion(
+        question: Value(question),
+        answer: Value(answer),
+      ),
     );
-    return flashCard;
+
+    // Refresh current deck
+    await _reloadCurrentDeck();
+    return true;
   }
 
   Future<void> removeFlashCardFromSelectedDeckById(int cardId) async {
@@ -217,25 +196,62 @@ class DeckRepository {
       throw Exception('No deck selected');
     }
 
-    final index = _currentDeck!.flashCards.indexWhere((fc) => fc.id == cardId);
-    if (index == -1) {
-      throw Exception('Flashcard with id $cardId not found in current deck.');
+    await (_db.delete(_db.flashcards)..where((tbl) => tbl.id.equals(cardId))).go();
+
+    // Refresh current deck
+    await _reloadCurrentDeck();
+  }
+
+  List<FlashCardModel> getFlashCardsFromCurrentDeck() {
+    if (_currentDeck == null) {
+      throw Exception('No deck selected');
+    }
+    return _currentDeck!.flashCards;
+  }
+
+  FlashCardModel getFlashCardsFromSelectedDeckById(int cardId) {
+    if (_currentDeck == null) {
+      throw Exception('No deck selected');
+    }
+    return _currentDeck!.flashCards.firstWhere(
+      (fc) => fc.id == cardId,
+      orElse: () => throw Exception('Flashcard with id $cardId not found.'),
+    );
+  }
+
+  // ---------------------------
+  //   Private Helper Methods
+  // ---------------------------
+  Future<void> _reloadCurrentDeck() async {
+    if (_currentDeck == null) return;
+
+    // Re-query deck
+    final deckRow = await (_db.select(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id))).getSingleOrNull();
+
+    if (deckRow == null) {
+      // Deck was removed entirely
+      _currentDeck = null;
+      _currentCard = null;
+      _deckController.add(null);
+      return;
     }
 
-    _currentDeck!.flashCards = List<FlashCardModel>.from(_currentDeck!.flashCards)..removeAt(index);
+    final flashcardRows = await (_db.select(_db.flashcards)..where((tbl) => tbl.deckId.equals(deckRow.id))).get();
 
-    final isarDeckModel = _currentDeck!.toIsar();
-    await isar.writeTxn(() async {
-      await isar.isarDeckModels.put(isarDeckModel);
-    });
+    _currentDeck = DeckModel(
+      id: deckRow.id,
+      deckName: deckRow.deckName,
+      flashCards: flashcardRows
+          .map(
+            (fc) => FlashCardModel(
+              id: fc.id,
+              question: fc.question,
+              answer: fc.answer,
+            ),
+          )
+          .toList(),
+    );
 
-    final updatedDeck = await isar.isarDeckModels.filter().deckNameEqualTo(_currentDeck!.deckName).findFirst();
-
-    if (updatedDeck != null) {
-      _currentDeck = updatedDeck.toDomain();
-      _deckController.add(_currentDeck);
-    } else {
-      throw Exception('Removing card did not work.');
-    }
+    _deckController.add(_currentDeck);
   }
 }
