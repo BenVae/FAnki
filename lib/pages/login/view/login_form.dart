@@ -20,7 +20,6 @@ class _LoginFormState extends State<LoginForm> {
   void initState() {
     super.initState();
     final initialUsername = context.read<LoginBloc>().state.email.value;
-    // final initialPassword = context.read<LoginBloc>().state.password.value;
     _emailController = TextEditingController(text: initialUsername);
     _passwordController = TextEditingController();
   }
