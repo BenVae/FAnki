@@ -16,8 +16,21 @@ class DeckSelectionBloc extends Bloc<DeckSelectionEvent, DeckSelectionState> {
     on<SelectDeckEvent>(_onSelectDeck);
     on<ResetState>(_onResetState);
 
+    on<SyncDecksEvent>(_onSyncDecksEvent);
+
     on<DeckNameInputChange>(_onDeckNameInputChanged);
     on<CreateDeck>(_onCreateDeck);
+  }
+
+  Future<void> _onSyncDecksEvent(SyncDecksEvent event, Emitter<DeckSelectionState> emit) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _deckRepository.syncWithSupabase();
+    } catch (e) {
+      emit(state.copyWith(isLoading: false));
+      return;
+    }
+    emit(state.copyWith(isLoading: false));
   }
 
   Future<void> _onFetchDecks(FetchDecks event, Emitter<DeckSelectionState> emit) async {

@@ -30,3 +30,5 @@ final class SelectDeckEvent extends DeckSelectionEvent {
 }
 
 final class ResetState extends DeckSelectionEvent {}
+
+final class SyncDecksEvent extends DeckSelectionEvent {}

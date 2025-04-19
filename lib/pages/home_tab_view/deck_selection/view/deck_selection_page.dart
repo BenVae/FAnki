@@ -77,11 +77,22 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                     ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    _createDeckDialog(context);
-                  },
-                  child: const Text('Create new deck'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        _createDeckDialog();
+                      },
+                      child: const Text('Create deck'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        _syncDecksDialog();
+                      },
+                      child: const Text('Sync decks'),
+                    ),
+                  ],
                 ),
                 const SizedBox(
                   height: 40,
@@ -94,7 +105,7 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
     );
   }
 
-  void _createDeckDialog(BuildContext context) {
+  void _createDeckDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -167,6 +178,37 @@ class _DeckSelectionPageState extends State<DeckSelectionPage> {
                       ],
                     ),
                   ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _syncDecksDialog() {
+    final deckSelectionBloc = context.read<DeckSelectionBloc>();
+    deckSelectionBloc.add(SyncDecksEvent());
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return BlocProvider.value(
+          value: deckSelectionBloc,
+          child: BlocBuilder<DeckSelectionBloc, DeckSelectionState>(
+            builder: (context, state) {
+              if (!state.isLoading) {
+                Navigator.of(dialogContext).pop();
+              }
+              return const AlertDialog(
+                content: Row(
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(width: 20),
+                    Text('Synchronizing decks...'),
+                  ],
                 ),
               );
             },

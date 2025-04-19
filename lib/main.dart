@@ -19,7 +19,7 @@ final NEXT_PUBLIC_SUPABASE_ANON_KEY =
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
+  Supabase supabase = await Supabase.initialize(
     url: NEXT_PUBLIC_SUPABASE_URL,
     anonKey: NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
@@ -30,7 +30,7 @@ Future<void> main() async {
   );
 
   final authenticationRepository = AuthenticationRepository();
-  final deckRepository = await DeckRepository.init();
+  final deckRepository = await DeckRepository.init(supabase.client);
 
   runApp(
     MultiRepositoryProvider(
