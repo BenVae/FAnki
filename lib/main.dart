@@ -25,8 +25,9 @@ Future<void> main() async {
   );
 
   HydratedBloc.storage = await HydratedStorage.build(
-    storageDirectory:
-        kIsWeb ? HydratedStorageDirectory.web : HydratedStorageDirectory((await getTemporaryDirectory()).path),
+    storageDirectory: kIsWeb
+        ? HydratedStorageDirectory.web
+        : HydratedStorageDirectory((await getTemporaryDirectory()).path),
   );
 
   final authenticationRepository = AuthenticationRepository();
@@ -35,7 +36,8 @@ Future<void> main() async {
   runApp(
     MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<AuthenticationRepository>.value(value: authenticationRepository),
+        RepositoryProvider<AuthenticationRepository>.value(
+            value: authenticationRepository),
         RepositoryProvider<DeckRepository>.value(value: deckRepository),
       ],
       child: FankiApp(router: router),

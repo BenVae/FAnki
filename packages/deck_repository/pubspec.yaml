@@ -8,6 +8,8 @@ dependencies:
   path_provider: ^2.1.5
   drift: ^2.16.0
   supabase_flutter: ^2.8.3
+  brick_offline_first_with_supabase: ^2.0.0
+  brick_sqlite: ^4.0.2
 dev_dependencies:
   drift_dev: ^2.26.0
   build_runner: ^2.4.15
