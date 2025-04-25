@@ -1,4 +1,10 @@
 import 'dart:async';
+import 'package:brick_offline_first_with_supabase/brick_offline_first_with_supabase.dart';
+import 'package:brick_sqlite/brick_sqlite.dart';
+import 'package:brick_supabase/brick_supabase.dart' hide Supabase;
+import 'package:sqflite_common/sqlite_api.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'deck_database.dart'; // The Drift db + tables
@@ -20,6 +26,36 @@ class DeckRepository extends DeckRepositoryInterface {
   Stream<DeckModel?> get currentDeckStream async* {
     yield null;
     yield* _deckController.stream;
+  }
+
+  static Future<void> configure(DatabaseFactory databaseFactory, SupabaseClient supabaseClient) async {
+    final (client, queue) = OfflineFirstWithSupabaseRepository.clientQueue(
+      databaseFactory: databaseFactory,
+    );
+
+    // await Supabase.initialize(
+    //   url: supabaseUrl,
+    //   anonKey: supabaseAnonKey,
+    //   httpClient: client,
+    // );
+
+    // final provider = SupabaseProvider(
+    //   supabaseClient,
+    //   modelDictionary: supabaseModelDictionary,
+    // );
+
+    // _instance = Repository._(
+    //   supabaseProvider: provider,
+    //   sqliteProvider: SqliteProvider(
+    //     'my_repository.sqlite',
+    //     databaseFactory: databaseFactory,
+    //     modelDictionary: sqliteModelDictionary,
+    //   ),
+    //   migrations: migrations,
+    //   offlineRequestQueue: queue,
+    //   // Specify class types that should be cached in memory
+    //   memoryCacheProvider: MemoryCacheProvider(),
+    // );
   }
 
   DeckRepository._create(this._db, this._supabaseClient);
@@ -61,14 +97,12 @@ class DeckRepository extends DeckRepositoryInterface {
   @override
   Future<void> deleteCurrentDeck() async {
     if (_currentDeck == null) {
-      throw Exception(
-          'Delete current deck error, because no deck is selected.');
+      throw Exception('Delete current deck error, because no deck is selected.');
     }
     final deletingDeckId = _currentDeck!.id;
 
     // 1) Delete locally
-    await (_db.delete(_db.decks)..where((tbl) => tbl.id.equals(deletingDeckId)))
-        .go();
+    await (_db.delete(_db.decks)..where((tbl) => tbl.id.equals(deletingDeckId))).go();
 
     // 2) Delete remotely
     await _supabaseClient.from('decks').delete().match({'id': deletingDeckId});
@@ -81,26 +115,20 @@ class DeckRepository extends DeckRepositoryInterface {
 
   @override
   Future<bool> isDeckNameUsed(String deckName) async {
-    final existing = await (_db.select(_db.decks)
-          ..where((tbl) => tbl.deckName.equals(deckName)))
-        .getSingleOrNull();
+    final existing = await (_db.select(_db.decks)..where((tbl) => tbl.deckName.equals(deckName))).getSingleOrNull();
     return existing != null;
   }
 
   @override
   Future<void> setCurrentDeckByName(String deckName) async {
-    final foundDeck = await (_db.select(_db.decks)
-          ..where((tbl) => tbl.deckName.equals(deckName)))
-        .getSingleOrNull();
+    final foundDeck = await (_db.select(_db.decks)..where((tbl) => tbl.deckName.equals(deckName))).getSingleOrNull();
 
     if (foundDeck == null) {
       throw Exception('Deck "$deckName" does not exist.');
     }
 
     // Fetch flashcards for that deck
-    final flashcardRows = await (_db.select(_db.flashcards)
-          ..where((tbl) => tbl.deckId.equals(foundDeck.id)))
-        .get();
+    final flashcardRows = await (_db.select(_db.flashcards)..where((tbl) => tbl.deckId.equals(foundDeck.id))).get();
 
     _currentDeck = DeckModel(
       id: foundDeck.id,
@@ -142,16 +170,14 @@ class DeckRepository extends DeckRepositoryInterface {
     }
 
     // Check if new name is taken
-    final existingDeck = await (_db.select(_db.decks)
-          ..where((tbl) => tbl.deckName.equals(newDeckName)))
-        .getSingleOrNull();
+    final existingDeck =
+        await (_db.select(_db.decks)..where((tbl) => tbl.deckName.equals(newDeckName))).getSingleOrNull();
     if (existingDeck != null) {
       throw Exception('Deck name "$newDeckName" is already in use.');
     }
 
     // 1) Update local DB
-    await (_db.update(_db.decks)
-          ..where((tbl) => tbl.id.equals(_currentDeck!.id)))
+    await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id)))
         .write(DecksCompanion(deckName: Value(newDeckName)));
 
     // 2) Update remote deck name
@@ -231,8 +257,7 @@ class DeckRepository extends DeckRepositoryInterface {
     }
 
     // 1) Update local DB
-    await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(cardId)))
-        .write(
+    await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(cardId))).write(
       FlashcardsCompanion(
         question: Value(question),
         answer: Value(answer),
@@ -240,9 +265,7 @@ class DeckRepository extends DeckRepositoryInterface {
     );
 
     // 2) Update Supabase
-    await _supabaseClient
-        .from('flashcards')
-        .update({'question': question, 'answer': answer}).match({'id': cardId});
+    await _supabaseClient.from('flashcards').update({'question': question, 'answer': answer}).match({'id': cardId});
 
     // Refresh current deck
     await _reloadCurrentDeck();
@@ -256,8 +279,7 @@ class DeckRepository extends DeckRepositoryInterface {
     }
 
     // 1) Remove locally
-    await (_db.delete(_db.flashcards)..where((tbl) => tbl.id.equals(cardId)))
-        .go();
+    await (_db.delete(_db.flashcards)..where((tbl) => tbl.id.equals(cardId))).go();
 
     // 2) Remove from Supabase
     await _supabaseClient.from('flashcards').delete().match({'id': cardId});
@@ -296,16 +318,14 @@ class DeckRepository extends DeckRepositoryInterface {
     //   1a) Fetch remote decks
     final remoteDecksResponse = await _supabaseClient.from('decks').select();
     if (remoteDecksResponse.isEmpty) {
-      throw Exception(
-          'Error fetching decks from Supabase: ${remoteDecksResponse.toString()}');
+      throw Exception('Error fetching decks from Supabase: ${remoteDecksResponse.toString()}');
     }
     final remoteDecks = remoteDecksResponse.toList();
 
     //   1b) Fetch remote flashcards
     final remoteFcResponse = await _supabaseClient.from('flashcards').select();
     if (remoteFcResponse.isEmpty) {
-      throw Exception(
-          'Error fetching flashcards from Supabase: ${remoteFcResponse.toString()}');
+      throw Exception('Error fetching flashcards from Supabase: ${remoteFcResponse.toString()}');
     }
     final remoteFlashcards = remoteFcResponse.toList();
 
@@ -325,9 +345,7 @@ class DeckRepository extends DeckRepositoryInterface {
       final remoteDeckName = rd['deck_name'] as String;
 
       // Does it exist locally?
-      final localDeck = await (_db.select(_db.decks)
-            ..where((tbl) => tbl.id.equals(remoteDeckId)))
-          .getSingleOrNull();
+      final localDeck = await (_db.select(_db.decks)..where((tbl) => tbl.id.equals(remoteDeckId))).getSingleOrNull();
 
       if (localDeck == null) {
         // Insert new deck
@@ -339,9 +357,7 @@ class DeckRepository extends DeckRepositoryInterface {
             );
       } else {
         // Update existing deck (assumes remote is the “source of truth”)
-        await (_db.update(_db.decks)
-              ..where((tbl) => tbl.id.equals(remoteDeckId)))
-            .write(
+        await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(remoteDeckId))).write(
           DecksCompanion(
             deckName: Value(remoteDeckName),
           ),
@@ -356,9 +372,7 @@ class DeckRepository extends DeckRepositoryInterface {
         final answer = remoteFc['answer'] as String;
 
         // Check if local card with same ID exists
-        final localFc = await (_db.select(_db.flashcards)
-              ..where((tbl) => tbl.id.equals(fcId)))
-            .getSingleOrNull();
+        final localFc = await (_db.select(_db.flashcards)..where((tbl) => tbl.id.equals(fcId))).getSingleOrNull();
 
         if (localFc == null) {
           // Insert
@@ -372,9 +386,7 @@ class DeckRepository extends DeckRepositoryInterface {
               );
         } else {
           // Update
-          await (_db.update(_db.flashcards)
-                ..where((tbl) => tbl.id.equals(fcId)))
-              .write(
+          await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(fcId))).write(
             FlashcardsCompanion(
               question: Value(question),
               answer: Value(answer),
@@ -430,9 +442,7 @@ class DeckRepository extends DeckRepositoryInterface {
   Future<void> _reloadCurrentDeck() async {
     if (_currentDeck == null) return;
 
-    final deckRow = await (_db.select(_db.decks)
-          ..where((tbl) => tbl.id.equals(_currentDeck!.id)))
-        .getSingleOrNull();
+    final deckRow = await (_db.select(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id))).getSingleOrNull();
     if (deckRow == null) {
       // Deck was removed entirely
       _currentDeck = null;
@@ -441,9 +451,7 @@ class DeckRepository extends DeckRepositoryInterface {
       return;
     }
 
-    final flashcardRows = await (_db.select(_db.flashcards)
-          ..where((tbl) => tbl.deckId.equals(deckRow.id)))
-        .get();
+    final flashcardRows = await (_db.select(_db.flashcards)..where((tbl) => tbl.deckId.equals(deckRow.id))).get();
 
     _currentDeck = DeckModel(
       id: deckRow.id,
