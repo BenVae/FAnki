@@ -5,7 +5,6 @@ import 'package:brick_supabase/brick_supabase.dart' hide Supabase;
 import 'package:sqflite_common/sqlite_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'deck_database.dart'; // The Drift db + tables
 import 'data_models/deck_model.dart'; // DeckModel
@@ -177,8 +176,8 @@ class DeckRepository extends DeckRepositoryInterface {
     }
 
     // 1) Update local DB
-    await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id)))
-        .write(DecksCompanion(deckName: Value(newDeckName)));
+    // await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(_currentDeck!.id)))
+    //     .write(DecksCompanion(deckName: Value(newDeckName)));
 
     // 2) Update remote deck name
     await _supabaseClient.from('decks').update({
@@ -257,12 +256,12 @@ class DeckRepository extends DeckRepositoryInterface {
     }
 
     // 1) Update local DB
-    await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(cardId))).write(
-      FlashcardsCompanion(
-        question: Value(question),
-        answer: Value(answer),
-      ),
-    );
+    // await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(cardId))).write(
+    //   FlashcardsCompanion(
+    //     question: Value(question),
+    //     answer: Value(answer),
+    //   ),
+    // );
 
     // 2) Update Supabase
     await _supabaseClient.from('flashcards').update({'question': question, 'answer': answer}).match({'id': cardId});
@@ -341,59 +340,59 @@ class DeckRepository extends DeckRepositoryInterface {
     // ---------- 2) Merge into local DB ----------
     // For each remote deck, insert/update locally
     for (final rd in remoteDecks) {
-      final remoteDeckId = rd['id'] as int;
-      final remoteDeckName = rd['deck_name'] as String;
+      // final remoteDeckId = rd['id'] as int;
+      // final remoteDeckName = rd['deck_name'] as String;
 
-      // Does it exist locally?
-      final localDeck = await (_db.select(_db.decks)..where((tbl) => tbl.id.equals(remoteDeckId))).getSingleOrNull();
+      // // Does it exist locally?
+      // final localDeck = await (_db.select(_db.decks)..where((tbl) => tbl.id.equals(remoteDeckId))).getSingleOrNull();
 
-      if (localDeck == null) {
-        // Insert new deck
-        await _db.into(_db.decks).insert(
-              DecksCompanion.insert(
-                id: Value(remoteDeckId),
-                deckName: remoteDeckName,
-              ),
-            );
-      } else {
-        // Update existing deck (assumes remote is the “source of truth”)
-        await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(remoteDeckId))).write(
-          DecksCompanion(
-            deckName: Value(remoteDeckName),
-          ),
-        );
-      }
+      // if (localDeck == null) {
+      //   // Insert new deck
+      //   await _db.into(_db.decks).insert(
+      //         DecksCompanion.insert(
+      //           id: Value(remoteDeckId),
+      //           deckName: remoteDeckName,
+      //         ),
+      //       );
+      // } else {
+      //   // Update existing deck (assumes remote is the “source of truth”)
+      //   await (_db.update(_db.decks)..where((tbl) => tbl.id.equals(remoteDeckId))).write(
+      //     DecksCompanion(
+      //       deckName: Value(remoteDeckName),
+      //     ),
+      //   );
+      // }
 
       // Now handle flashcards in this deck
-      final deckFlashcards = flashcardsByDeckId[remoteDeckId] ?? [];
-      for (final remoteFc in deckFlashcards) {
-        final fcId = remoteFc['id'] as int;
-        final question = remoteFc['question'] as String;
-        final answer = remoteFc['answer'] as String;
+      // final deckFlashcards = flashcardsByDeckId[remoteDeckId] ?? [];
+      // for (final remoteFc in deckFlashcards) {
+      //   final fcId = remoteFc['id'] as int;
+      //   final question = remoteFc['question'] as String;
+      //   final answer = remoteFc['answer'] as String;
 
-        // Check if local card with same ID exists
-        final localFc = await (_db.select(_db.flashcards)..where((tbl) => tbl.id.equals(fcId))).getSingleOrNull();
+      //   // Check if local card with same ID exists
+      //   final localFc = await (_db.select(_db.flashcards)..where((tbl) => tbl.id.equals(fcId))).getSingleOrNull();
 
-        if (localFc == null) {
-          // Insert
-          await _db.into(_db.flashcards).insert(
-                FlashcardsCompanion.insert(
-                  id: Value(fcId),
-                  deckId: remoteDeckId,
-                  question: question,
-                  answer: answer,
-                ),
-              );
-        } else {
-          // Update
-          await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(fcId))).write(
-            FlashcardsCompanion(
-              question: Value(question),
-              answer: Value(answer),
-            ),
-          );
-        }
-      }
+      //   if (localFc == null) {
+      //     // Insert
+      //     await _db.into(_db.flashcards).insert(
+      //           FlashcardsCompanion.insert(
+      //             id: Value(fcId),
+      //             deckId: remoteDeckId,
+      //             question: question,
+      //             answer: answer,
+      //           ),
+      //         );
+      //   } else {
+      //     // Update
+      //     await (_db.update(_db.flashcards)..where((tbl) => tbl.id.equals(fcId))).write(
+      //       FlashcardsCompanion(
+      //         question: Value(question),
+      //         answer: Value(answer),
+      //       ),
+      //     );
+      //   }
+      // }
     }
 
     // ---------- 3) Push local decks/flashcards that aren’t in Supabase ----------
