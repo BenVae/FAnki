@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/create_cards_cubit.dart';
+import '../../ai_import/view/ai_import_page.dart';
 
 class CreateCardsView extends StatelessWidget {
   CreateCardsView({super.key});
@@ -24,6 +25,31 @@ class CreateCardsView extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Karten verwalten',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => AiImportPage(),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.auto_awesome),
+                label: Text('AI Generate'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.0),
           Expanded(child: BlocBuilder<CreateCardsCubit, CreateCardsState>(
             builder: (context, state) {
               if (state is CreateCardLoadingState) {

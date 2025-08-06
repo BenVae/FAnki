@@ -1,0 +1,16 @@
+name: ai_service
+description: AI service for generating Anki cards from PDFs
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  dart_openai: ^5.1.0
+  syncfusion_flutter_pdf: ^30.1.42
+  card_repository:
+    path: ../card_repository
+
+dev_dependencies:
+  test: ^1.24.0

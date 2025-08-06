@@ -12,10 +12,11 @@ class CardDeckManager {
   List<String> get deckNames => decks.keys.toList();
 
   void setUserID(String userID) {
-    userID.toLowerCase();
-    this.userID = userID;
-    initDeckNames();
-    getCurrentDeck();
+    this.userID = userID.toLowerCase();
+    if (this.userID.isNotEmpty) {
+      initDeckNames();
+      getCurrentDeck();
+    }
   }
 
   Future<void> initDeckNames() async {

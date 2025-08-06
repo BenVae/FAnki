@@ -8,20 +8,20 @@ environment:
 
 dependencies:
   equatable: ^2.0.5
-  firebase_auth: ^4.14.1
-  firebase_core: ^2.23.0
+  firebase_auth: ^6.0.0
+  firebase_core: ^4.0.0
   flutter:
     sdk: flutter
-  google_sign_in: ^6.1.0
+  google_sign_in: ^7.1.1
   meta: ^1.8.0
 
 dev_dependencies:
-  firebase_auth_platform_interface: ^7.0.5
-  firebase_core_platform_interface: ^5.0.0
+  firebase_auth_platform_interface: ^8.0.0
+  firebase_core_platform_interface: ^6.0.0
   flutter_test:
     sdk: flutter
-  mocktail: ^1.0.0
+  mocktail: ^1.0.4
   plugin_platform_interface: ^2.1.7
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
   

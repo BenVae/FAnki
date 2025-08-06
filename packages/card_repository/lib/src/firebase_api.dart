@@ -6,9 +6,18 @@ class FirebaseApi {
 
   Future<String> getLastDeckFromFireStore(String userID) async {
     try {
+      if (userID.isEmpty) {
+        print('Error: userID is empty');
+        return '';
+      }
+
       DocumentSnapshot doc =
           await firestore.collection('users').doc(userID).get();
-      return doc['lastDeck'] as String;
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['lastDeck'] as String? ?? '';
+      }
+      return '';
     } catch (e) {
       print('Error getting lastDeck: $e');
       return '';
@@ -16,10 +25,18 @@ class FirebaseApi {
   }
 
   void setLastDeckInFireStore(String userID, String lastDeck) {
+    if (userID.isEmpty) {
+      print('Error: userID is empty');
+      return;
+    }
     firestore.collection('users').doc(userID).set({'lastDeck': lastDeck});
   }
 
   void createDeckInFirestore(String userID, String deckName) {
+    if (userID.isEmpty || deckName.isEmpty) {
+      print('Error: userID or deckName is empty');
+      return;
+    }
     firestore
         .collection('users')
         .doc(userID)
@@ -99,23 +116,35 @@ class FirebaseApi {
   Future<List<SingleCard>> getAllCardsOfDeckFromFirestore(
       String userID, String deckName) async {
     List<SingleCard> deck = [];
-    var userDoc = firestore.collection('users').doc(userID);
-    var docRef = userDoc.collection('decks').doc(deckName).collection('cards');
-    await docRef.get().then(
-      (QuerySnapshot querySnapshot) {
-        for (var doc in querySnapshot.docs) {
-          if (doc.exists) {
-            final cardMap = doc.data() as Map<String, dynamic>;
-            SingleCard card = SingleCard.fromMap(cardMap);
-            deck.add(card);
-          } else {
-            print('Document does not exist');
+
+    // Validate inputs
+    if (userID.isEmpty || deckName.isEmpty) {
+      print('Error: userID or deckName is empty');
+      return deck;
+    }
+
+    try {
+      var userDoc = firestore.collection('users').doc(userID);
+      var docRef =
+          userDoc.collection('decks').doc(deckName).collection('cards');
+      await docRef.get().then(
+        (QuerySnapshot querySnapshot) {
+          for (var doc in querySnapshot.docs) {
+            if (doc.exists) {
+              final cardMap = doc.data() as Map<String, dynamic>;
+              SingleCard card = SingleCard.fromMap(cardMap);
+              deck.add(card);
+            } else {
+              print('Document does not exist');
+            }
           }
-        }
-      },
-      onError: (e) => print('Error getting document: $e'),
-    );
-    print('Ending of getAllCardsOfDeckFromFirestore');
+        },
+        onError: (e) => print('Error getting document: $e'),
+      );
+      print('Ending of getAllCardsOfDeckFromFirestore');
+    } catch (e) {
+      print('Error in getAllCardsOfDeckFromFirestore: $e');
+    }
     return deck;
   }
 
@@ -138,23 +167,34 @@ class FirebaseApi {
 
   Future<List<String>> getAllDecknamesFromFirestore(String userID) async {
     List<String> deckNames = [];
-    var userDoc = firestore.collection('users').doc(userID);
-    var docRef = userDoc.collection('decks');
 
-    await docRef.get().then(
-      (QuerySnapshot querySnapshot) {
-        for (var doc in querySnapshot.docs) {
-          if (doc.exists) {
-            if (!deckNames.contains(doc.id)) {
-              deckNames.add(doc.id);
+    // Validate input
+    if (userID.isEmpty) {
+      print('Error: userID is empty');
+      return deckNames;
+    }
+
+    try {
+      var userDoc = firestore.collection('users').doc(userID);
+      var docRef = userDoc.collection('decks');
+
+      await docRef.get().then(
+        (QuerySnapshot querySnapshot) {
+          for (var doc in querySnapshot.docs) {
+            if (doc.exists) {
+              if (!deckNames.contains(doc.id)) {
+                deckNames.add(doc.id);
+              }
+            } else {
+              print('Document does not exist');
             }
-          } else {
-            print('Document does not exist');
           }
-        }
-      },
-      onError: (e) => print('Error getting document: $e'),
-    );
+        },
+        onError: (e) => print('Error getting document: $e'),
+      );
+    } catch (e) {
+      print('Error in getAllDecknamesFromFirestore: $e');
+    }
     return deckNames;
   }
 

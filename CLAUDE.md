@@ -25,6 +25,9 @@ The project is planned to be extended with AI capabilities to automatically gene
   - Card content generation with appropriate formatting
   - Deck name suggestion system
 
+## Plan development
+- focus on ui first, then add add functionality
+
 ## Technology Stack
 
 - **Flutter**: 3.29.2 (Dart 3.7.2)
