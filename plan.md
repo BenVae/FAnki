@@ -7,7 +7,7 @@
 - Modern deck management UI with card-based layout
 - Card creation interface with form validation and preview
 - Progress tracking and statistics display
-**Next Priority:** Firebase integration and spaced repetition algorithm
+**Next Priority:** Enable AI functionality with OpenAI integration
 
 ## Recent Accomplishments:
 
@@ -42,17 +42,42 @@
 
 ---
 
-## 🎯 Priority 1: Core Functionality (Demo-Ready)
-**Goal:** Complete essential features for a working demo
+## 🚨 IMMEDIATE PRIORITY: Enable AI Functionality (30 minutes)
+**Goal:** Get AI card generation working with real OpenAI API
 
-### Phase 3: Card Creation Interface ✅
-**Status:** Completed
-- [x] Redesign create cards view with modern UI matching other screens
-- [x] Add form validation for question/answer fields
-- [x] Implement card preview before saving
-- [ ] Add support for basic formatting (bold, italic) - future enhancement
-- [x] Create success feedback when card is added
-- [ ] Add quick shortcuts for common card types - future enhancement
+### Step 1: Environment Setup (5 minutes)
+- [ ] Get OpenAI API key from https://platform.openai.com/api-keys
+- [ ] Install flutter_dotenv: `flutter pub add flutter_dotenv`
+- [ ] Create `.env` file with `OPENAI_API_KEY=sk-your-key-here`
+- [ ] Add `.env` to `.gitignore` to keep key secure
+- [ ] Update `main.dart` to load environment variables
+
+### Step 2: Fix AI Service (10 minutes)
+- [ ] Update `packages/ai_service/lib/src/ai_service.dart`:
+  - [ ] Remove mock data from `generateCardsFromText()` (lines 103-107)
+  - [ ] Implement proper JSON parsing with `json.decode()`
+  - [ ] Use actual OpenAI API key from environment
+  - [ ] Parse the actual response structure from GPT
+- [ ] Test with a simple PDF to verify cards are generated
+
+### Step 3: Connect AI to UI (10 minutes)
+- [ ] Update `lib/src/ai_import/cubit/ai_import_cubit.dart`:
+  - [ ] Remove mock cards (lines 67-78)
+  - [ ] Call actual AI service: `await _aiService.generateCardsFromPdf(selectedPdf!)`
+  - [ ] Use real suggested deck name from AI
+  - [ ] Handle API errors properly
+- [ ] Test the full flow: PDF upload → AI processing → Card generation
+
+### Step 4: Error Handling & Polish (5 minutes)
+- [ ] Add proper error messages for API failures
+- [ ] Show actual processing progress
+- [ ] Add cost estimation display
+- [ ] Test with various PDF formats
+
+---
+
+## 🎯 Priority 1: Core Functionality (After AI is working)
+**Goal:** Complete essential features for a working demo
 
 ### Phase 4: Firebase Integration & Data Persistence
 **Status:** Critical for demo
@@ -74,33 +99,30 @@
 
 ---
 
-## 🚀 Priority 2: AI Features (Enhanced Demo)
-**Goal:** Add AI-powered card generation for impressive demo
+## 🚀 Priority 2: Demo Preparation
+**Goal:** Ensure smooth demo experience
 
-### Phase 6: Enable Real AI Processing
-**Status:** High value for demo
-- [ ] Add OpenAI API key to environment configuration
-- [ ] Implement proper JSON parsing in `ai_service.dart`
-- [ ] Replace mock data in `ai_import_cubit.dart` with real AI calls
-- [ ] Test with actual PDF files
-- [ ] Handle API errors gracefully
-- [ ] Add cost estimation display
+### Quick Fixes Before Demo:
+- [ ] Add sample PDF in assets for demo
+- [ ] Create pre-populated demo deck
+- [ ] Fix Firebase authentication flow
+- [ ] Ensure consistent error handling
+- [ ] Test on iOS simulator and device
+- [ ] Remove all print statements
 
-### Phase 7: PDF Processing Improvements
-**Status:** Important for AI demo
-- [ ] Add support for various PDF formats
-- [ ] Implement better text extraction for complex layouts
-- [ ] Add progress tracking during extraction
-- [ ] Handle large PDFs (>100 pages) efficiently
-- [ ] Create PDF metadata extraction (title, pages, etc.)
-- [ ] Implement cleanup of temporary PDF files
+### Demo Enhancement:
+- [ ] Add loading animations during AI processing
+- [ ] Show token/cost estimation
+- [ ] Implement batch card import
+- [ ] Add undo for card deletion
+- [ ] Create onboarding tooltips
 
 ---
 
 ## 💫 Priority 3: Polish & User Experience
 **Goal:** Make the app feel complete and professional
 
-### Phase 8: UI/UX Polish
+### Phase 6: UI/UX Polish
 - [ ] Add loading states for all async operations
 - [ ] Implement proper error messages with recovery options
 - [ ] Create onboarding flow for first-time users
@@ -109,7 +131,7 @@
 - [ ] Add smooth page transitions
 - [ ] Create app icon and splash screen
 
-### Phase 9: Advanced Learning Features
+### Phase 7: Advanced Learning Features
 - [ ] Add study session timer
 - [ ] Implement card reversibility option
 - [ ] Create study reminders/notifications
@@ -119,89 +141,58 @@
 
 ---
 
-## 🔧 Priority 4: Technical Improvements
-**Goal:** Improve code quality and maintainability
-
-### Phase 10: Code Quality
-- [ ] Fix all Flutter analyze warnings
-- [ ] Add proper error handling throughout
-- [ ] Implement logging for debugging
-- [ ] Add unit tests for critical functions
-- [ ] Document complex code sections
-- [ ] Optimize performance bottlenecks
-
-### Phase 11: Flutter Hooks Migration
-- [ ] Convert StatefulWidgets to use Flutter Hooks
-- [ ] Implement custom hooks for common patterns
-- [ ] Update state management patterns
-- [ ] Document hook usage patterns
-
----
-
 ## 📱 Demo Checklist
 Essential features needed for successful demo:
 
-### Must Have (Week 1):
+### Must Have (This Week):
 - [x] Beautiful flashcard learning interface
 - [x] Deck management with statistics
 - [x] Card creation functionality
+- [ ] **AI card generation from PDFs** ← CURRENT FOCUS
 - [ ] Working Firebase sync
 - [ ] Basic spaced repetition
 - [ ] User authentication flow
 
-### Nice to Have (Week 2):
-- [ ] AI-powered card generation from PDFs
+### Nice to Have (Next Week):
 - [ ] Study statistics dashboard
 - [ ] Multiple card types
 - [ ] Offline support
 - [ ] Export/Import functionality
-
-### Impressive Extras (Week 3):
-- [ ] Voice input for cards
-- [ ] Collaborative deck sharing
-- [ ] Gamification elements
 - [ ] Dark mode
-- [ ] Multi-language support
 
 ---
 
-## 🎬 Demo Script Outline
+## 🎬 Demo Script with AI Focus
 1. **Opening:** Show polished login screen
-2. **Deck Management:** Create a new deck, show statistics
-3. **Card Creation:** Add a few cards manually
-4. **Learning Session:** Demo the flip animation and spaced repetition
-5. **AI Magic:** Import a PDF and generate cards automatically
-6. **Progress:** Show learning statistics and streaks
-7. **Closing:** Highlight unique features vs. original Anki
-
----
-
-## ⚡ Quick Wins for Demo
-Low effort, high impact improvements:
-- [ ] Add sample decks with pre-made cards
-- [ ] Include demo PDF for AI generation
-- [ ] Create smooth animations between screens
-- [ ] Add subtle sound effects
-- [ ] Implement pull-to-refresh
-- [ ] Add keyboard shortcuts for desktop
-- [ ] Create attractive empty states
-
----
-
-## 🚨 Known Issues to Fix Before Demo
-- [ ] Fix test failures in authentication_repository
-- [ ] Remove all print statements from production code
-- [ ] Fix deprecated API warnings
-- [ ] Ensure consistent error handling
-- [ ] Test on various iOS devices
-- [ ] Verify Firebase security rules
+2. **Deck Management:** Show existing decks with statistics
+3. **AI Magic:** 
+   - Click "AI Generate" button
+   - Upload sample PDF (lecture notes)
+   - Show AI processing with progress
+   - Display generated cards with preview
+   - Select cards and import to deck
+4. **Manual Creation:** Add a custom card to show flexibility
+5. **Learning Session:** Demo the flip animation with AI-generated cards
+6. **Closing:** Emphasize time saved with AI generation
 
 ---
 
 ## 📊 Success Metrics for Demo
-- App loads in < 2 seconds
+- AI generates 10-20 quality cards from PDF
+- Card generation completes in < 20 seconds
 - No crashes during 10-minute demo
 - All core features work smoothly
-- AI generates cards in < 15 seconds
 - Animations run at 60 FPS
-- Positive user feedback on UI/UX
+- Positive user feedback on AI accuracy
+
+---
+
+## 🔥 Today's Action Items
+1. **Get OpenAI API key** (2 min)
+2. **Setup environment variables** (3 min)
+3. **Fix mock data in ai_service.dart** (10 min)
+4. **Connect real AI to ui_import_cubit** (10 min)
+5. **Test with sample PDF** (5 min)
+6. **Commit working AI integration** (2 min)
+
+Total time to working AI: ~30 minutes
