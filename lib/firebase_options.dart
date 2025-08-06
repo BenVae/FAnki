@@ -47,11 +47,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAfq697PUdAndtGSF0_Jlff1Cl6RhoUk5U',
-    appId: '1:621881068861:ios:208773df2d65fd97338954',
-    messagingSenderId: '621881068861',
-    projectId: 'fsnameapp',
-    storageBucket: 'fsnameapp.appspot.com',
+    apiKey: 'AIzaSyA1i9BwkMK6cQFda1cGhYoKgOZTZjcIELM',
+    appId: '1:552988895532:ios:d4c1284a9fd165b223a489',
+    messagingSenderId: '552988895532',
+    projectId: 'anki-ai-89a6c',
+    storageBucket: 'anki-ai-89a6c.firebasestorage.app',
     iosBundleId: 'com.example.ankiApp',
   );
 
@@ -65,11 +65,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAfq697PUdAndtGSF0_Jlff1Cl6RhoUk5U',
-    appId: '1:621881068861:ios:208773df2d65fd97338954',
-    messagingSenderId: '621881068861',
-    projectId: 'fsnameapp',
-    storageBucket: 'fsnameapp.appspot.com',
+    apiKey: 'AIzaSyA1i9BwkMK6cQFda1cGhYoKgOZTZjcIELM',
+    appId: '1:552988895532:ios:d4c1284a9fd165b223a489',
+    messagingSenderId: '552988895532',
+    projectId: 'anki-ai-89a6c',
+    storageBucket: 'anki-ai-89a6c.firebasestorage.app',
     iosBundleId: 'com.example.ankiApp',
   );
 
