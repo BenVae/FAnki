@@ -9,7 +9,6 @@
 - [ ] Set up AI service configuration and API key management
 - [x] Create base AI service class with error handling
 - [x] Add Flutter Hooks dependency to pubspec.yaml
-- [ ] Write unit tests for AI service initialization
 
 ## Phase 2: PDF Processing
 **Goal:** Implement PDF upload and text extraction capabilities
@@ -21,7 +20,6 @@
 - [ ] Add image extraction from PDFs for OCR (if needed)
 - [x] Implement chunking logic for large PDFs
 - [ ] Create error handling for corrupted/unsupported PDFs
-- [ ] Write tests for PDF processing
 
 ## Phase 3: AI Integration
 **Goal:** Connect to AI service for content processing
@@ -34,7 +32,6 @@
 - [ ] Create batch processing for multiple cards
 - [ ] Implement rate limiting and quota management
 - [ ] Add retry logic for failed AI requests
-- [ ] Write unit tests
 
 ## Phase 4: UI Implementation - PDF Import ✅
 **Goal:** Create user interface for PDF import and processing
@@ -47,7 +44,6 @@
 - [ ] Implement preview of extracted content
 - [ ] Convert existing StatefulWidgets to use Flutter Hooks
 - [ ] Add PDF history/recent imports section
-- [ ] Write widget tests
 
 ## Phase 5: Card Generation & Review UI ✅
 **Goal:** Build interface for reviewing and editing AI-generated cards
@@ -60,7 +56,6 @@
 - [x] Implement selective card import (checkbox selection)
 - [x] Add manual card editing before import
 - [ ] Create undo/redo functionality
-- [ ] Write UI tests
 
 ## Phase 6: Integration with Existing System ✅
 **Goal:** Seamlessly integrate new features with current app
@@ -73,7 +68,6 @@
 - [x] Integrate with existing deck management
 - [x] Update app navigation (add import button/menu)
 - [x] Ensure backward compatibility
-- [ ] Write unit tests
 
 ## Phase 7: Advanced Features
 **Goal:** Enhance AI capabilities and user experience
@@ -98,14 +92,11 @@
 - [ ] Complete Flutter Hooks migration for all widgets
 - [ ] Add comprehensive error messages and recovery
 - [ ] Implement analytics for AI usage
-- [ ] Performance testing and optimization
 
-## Phase 9: Testing & Documentation
-**Goal:** Ensure quality and maintainability
+## Phase 9: Documentation
+**Goal:** Ensure maintainability and user understanding
 
 ### Tasks:
-- [ ] Write comprehensive unit tests (>80% coverage)
-- [ ] Add E2E tests for critical paths
 - [ ] Update README with AI features
 - [ ] Create user documentation for PDF import
 - [ ] Document AI service API
@@ -156,12 +147,6 @@
 - [ ] Implement proper error messages
 - [ ] Add tooltips and help text
 - [ ] Create onboarding flow for first-time users
-
-### 5. Testing
-- [ ] Test with various PDF types (lectures, textbooks, articles)
-- [ ] Verify Firebase integration works correctly
-- [ ] Test error scenarios (no internet, invalid PDF, API down)
-- [ ] Performance test with large batches of cards
 
 ## Technical Debt to Address:
 - [ ] Replace mock data in `ai_import_cubit.dart` with real AI calls
