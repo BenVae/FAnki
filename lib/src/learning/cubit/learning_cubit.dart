@@ -14,6 +14,8 @@ class LearningCubit extends Cubit<CardLearnState> {
 
   List<SingleCard> _cards = [];
   List<bool> _answereIsVisible = [];
+  int _cardsReviewed = 0;
+  int _totalCards = 0;
 
   final GlobalKey<AnimatedListState> animatedListKey =
       GlobalKey<AnimatedListState>();
@@ -36,7 +38,10 @@ class LearningCubit extends Cubit<CardLearnState> {
       final currentState = state as CardLearningState;
       _answereIsVisible[index] = !_answereIsVisible[index];
       emit(currentState.copyWithNewCards(
-          cards: currentState.cards, answerIsVisible: _answereIsVisible));
+          cards: currentState.cards, 
+          answerIsVisible: _answereIsVisible,
+          cardsReviewed: currentState.cardsReviewed,
+          totalCards: currentState.totalCards));
     } else {
       log.warning('Wrong state 3454243 $state');
       nextCard();
@@ -47,13 +52,17 @@ class LearningCubit extends Cubit<CardLearnState> {
     if (_cards.isNotEmpty) {
       int randomIndex = Random().nextInt(_cards.length);
       SingleCard newCard = _cards[randomIndex];
+      _cardsReviewed++;
       if (state is CardLearningState) {
         final currentState = state as CardLearningState;
         List<SingleCard> updatedCards = List.from(currentState.cards);
         updatedCards.insert(0, newCard);
         _answereIsVisible.insert(0, false);
         emit(currentState.copyWithNewCards(
-            cards: updatedCards, answerIsVisible: _answereIsVisible));
+            cards: updatedCards, 
+            answerIsVisible: _answereIsVisible,
+            cardsReviewed: _cardsReviewed,
+            totalCards: _totalCards));
         animatedListKey.currentState?.insertItem(0);
       }
     } else {
@@ -66,10 +75,14 @@ class LearningCubit extends Cubit<CardLearnState> {
       int randomIndex = Random().nextInt(_cards.length);
       SingleCard newCard = _cards[randomIndex];
       _answereIsVisible.add(false);
+      _totalCards = _cards.length;
+      _cardsReviewed = 0;
       CardLearningState state = CardLearningState(
           cards: [newCard],
           animatedListKey: animatedListKey,
-          answerIsVisible: _answereIsVisible);
+          answerIsVisible: _answereIsVisible,
+          cardsReviewed: _cardsReviewed,
+          totalCards: _totalCards);
       emit(state);
     } else {
       log.severe('No first card');
@@ -114,6 +127,8 @@ class CardLearningState extends CardLearnState {
   final List<SingleCard> _cards;
   final GlobalKey<AnimatedListState> _animatedListKey;
   final List<bool> _answerIsVisible;
+  final int cardsReviewed;
+  final int totalCards;
 
   List<bool> get answerIsVisible => _answerIsVisible;
   List<SingleCard> get cards => _cards;
@@ -123,6 +138,8 @@ class CardLearningState extends CardLearnState {
     required List<SingleCard> cards,
     required GlobalKey<AnimatedListState> animatedListKey,
     required List<bool> answerIsVisible,
+    this.cardsReviewed = 0,
+    this.totalCards = 0,
   })  : _cards = cards,
         _animatedListKey = animatedListKey,
         _answerIsVisible = answerIsVisible;
@@ -133,15 +150,23 @@ class CardLearningState extends CardLearnState {
       answerIsVisible: answerIsVisible,
       cards: _cards,
       animatedListKey: _animatedListKey,
+      cardsReviewed: cardsReviewed,
+      totalCards: totalCards,
     );
   }
 
-  CardLearningState copyWithNewCards(
-      {required List<SingleCard> cards, required List<bool> answerIsVisible}) {
+  CardLearningState copyWithNewCards({
+    required List<SingleCard> cards, 
+    required List<bool> answerIsVisible,
+    int? cardsReviewed,
+    int? totalCards,
+  }) {
     return CardLearningState(
       cards: cards,
       animatedListKey: _animatedListKey,
       answerIsVisible: answerIsVisible,
+      cardsReviewed: cardsReviewed ?? this.cardsReviewed,
+      totalCards: totalCards ?? this.totalCards,
     );
   }
 }
