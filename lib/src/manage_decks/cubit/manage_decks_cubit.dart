@@ -18,7 +18,10 @@ class ManageDecksCubit extends Cubit<DeckState> {
       DeckStateFinished currentState = state as DeckStateFinished;
       final selectedDeck = _cdm.deckNames.indexOf(deckName);
       _cdm.setCurrentDeck(deckName);
-      emit(currentState.copyWith(selectedDeck: selectedDeck));
+      emit(currentState.copyWith(
+        selectedDeck: selectedDeck,
+        cardCounts: _cdm.deckCardCounts,
+      ));
     } else if (state is DeckStateLoading) {
       _selectedDeckIndex = _cdm.deckNames.indexOf(deckName);
     } else {
@@ -31,7 +34,10 @@ class ManageDecksCubit extends Cubit<DeckState> {
     _cdm.getCurrentDeckCards();
     selectDeck(_cdm.currentDeckName);
     emit(DeckStateFinished(
-        deckNames: _cdm.deckNames, selectedDeck: _selectedDeckIndex));
+      deckNames: _cdm.deckNames, 
+      selectedDeck: _selectedDeckIndex,
+      cardCounts: _cdm.deckCardCounts,
+    ));
   }
 
   void createDeck(String deckName) {
@@ -68,19 +74,23 @@ abstract class DeckState {}
 class DeckStateFinished extends DeckState {
   final List<String> deckNames;
   final int selectedDeck;
+  final Map<String, int> cardCounts;
 
   DeckStateFinished({
     required this.deckNames,
     required this.selectedDeck,
+    required this.cardCounts,
   });
 
   DeckState copyWith({
     List<String>? deckNames,
     int? selectedDeck,
+    Map<String, int>? cardCounts,
   }) {
     return DeckStateFinished(
       deckNames: deckNames ?? this.deckNames,
       selectedDeck: selectedDeck ?? this.selectedDeck,
+      cardCounts: cardCounts ?? this.cardCounts,
     );
   }
 

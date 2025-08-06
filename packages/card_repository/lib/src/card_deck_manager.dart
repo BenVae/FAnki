@@ -11,6 +11,23 @@ class CardDeckManager {
 
   List<String> get deckNames => decks.keys.toList();
 
+  /// Get the number of cards in a specific deck
+  int getCardCount(String deckName) {
+    if (decks.containsKey(deckName) && decks[deckName] != null) {
+      return decks[deckName]!.length;
+    }
+    return 0;
+  }
+
+  /// Get card counts for all decks as a map
+  Map<String, int> get deckCardCounts {
+    Map<String, int> counts = {};
+    for (String deckName in deckNames) {
+      counts[deckName] = getCardCount(deckName);
+    }
+    return counts;
+  }
+
   void setUserID(String userID) {
     this.userID = userID.toLowerCase();
     if (this.userID.isNotEmpty) {
