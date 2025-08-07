@@ -60,9 +60,7 @@
   - Light: 1-10 cards reviewed
   - Medium: 11-30 cards reviewed  
   - Dark: 31+ cards reviewed
-- [ ] Add date range filtering
 - [ ] Show streak counter
-- [ ] Display statistics on hover/tap
 - [ ] Monthly/yearly view toggle
 
 ---
