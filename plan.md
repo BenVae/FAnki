@@ -17,6 +17,11 @@
 **Goal:** Enable rich content formatting for answer cards
 
 ### Implementation Tasks:
+- [ ] Update AI service prompt to inform GPT about markdown formatting capabilities:
+  - [ ] Specify that answers can use markdown syntax
+  - [ ] Include LaTeX formula support (e.g., `$...$` for inline, `$$...$$` for block)
+  - [ ] Allow code blocks with syntax highlighting (```language)
+  - [ ] Support for lists, tables, bold, italic, etc.
 - [ ] Add flutter_markdown package for rendering
 - [ ] Update Card model to support markdown content
 - [ ] Implement markdown editor with live preview
