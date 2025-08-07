@@ -60,8 +60,8 @@
   - Light: 1-10 cards reviewed
   - Medium: 11-30 cards reviewed  
   - Dark: 31+ cards reviewed
-- [ ] Show streak counter
-- [ ] Monthly/yearly view toggle
+- [ ] it should only show the last month (always)
+- [ ] I want this to be super minimalistic.
 
 ---
 
