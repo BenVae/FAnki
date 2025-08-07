@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 class LearningCubit extends Cubit<CardLearnState> {
   final AuthenticationRepository _repo;
   final CardDeckManager _cdm;
+  final StudyActivityManager _activityManager = StudyActivityManager();
 
   String _deckName = '';
 
@@ -27,6 +28,13 @@ class LearningCubit extends Cubit<CardLearnState> {
     deckName = _cdm.currentDeckName;
     loadCards();
     log.info(_repo.toString());
+    
+    // Initialize activity manager with user ID
+    final userId = _repo.currentUser.email ?? '';
+    if (userId.isNotEmpty) {
+      _activityManager.setUserId(userId);
+      _activityManager.startSession();
+    }
   }
 
   set deckName(String value) {
@@ -53,6 +61,13 @@ class LearningCubit extends Cubit<CardLearnState> {
       int randomIndex = Random().nextInt(_cards.length);
       SingleCard newCard = _cards[randomIndex];
       _cardsReviewed++;
+      
+      // Track card review
+      _activityManager.trackCardReview(
+        deckId: _deckName,
+        isNewCard: false, // Could track if card is new based on difficulty
+      );
+      
       if (state is CardLearningState) {
         final currentState = state as CardLearningState;
         List<SingleCard> updatedCards = List.from(currentState.cards);
@@ -118,6 +133,18 @@ class LearningCubit extends Cubit<CardLearnState> {
     } else if (_cards.isEmpty) {
       loadCards();
     }
+  }
+  
+  /// Call this when learning session ends or app is paused
+  void endSession() async {
+    await _activityManager.endSession();
+  }
+  
+  @override
+  Future<void> close() {
+    // Save session when cubit is closed
+    endSession();
+    return super.close();
   }
 }
 
