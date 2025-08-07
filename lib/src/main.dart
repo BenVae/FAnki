@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'navigation/view/app.dart';
 import 'package:authentication_repository/authentication_repository.dart';
@@ -18,6 +19,7 @@ void initializeLogger() {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await Firebase.initializeApp();
 
   final authenticationRepository = AuthenticationRepository();

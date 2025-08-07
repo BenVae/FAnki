@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
+import 'package:ai_service/ai_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // States
 abstract class AiImportState {}
@@ -35,9 +37,15 @@ class AiImportError extends AiImportState {
 
 // Cubit
 class AiImportCubit extends Cubit<AiImportState> {
-  AiImportCubit({required this.cardDeckManager}) : super(AiImportInitial());
+  AiImportCubit({required this.cardDeckManager}) : super(AiImportInitial()) {
+    final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
+    if (apiKey.isNotEmpty) {
+      _aiService = AiService(apiKey: apiKey);
+    }
+  }
 
   final CardDeckManager cardDeckManager;
+  AiService? _aiService;
   File? selectedPdf;
   List<SingleCard> generatedCards = [];
   String suggestedDeckName = '';
@@ -57,31 +65,30 @@ class AiImportCubit extends Cubit<AiImportState> {
   Future<void> generateCards() async {
     if (selectedPdf == null) return;
     
+    if (_aiService == null) {
+      emit(AiImportError('AI service not configured. Please check your API key.'));
+      return;
+    }
+    
     emit(AiImportProcessing());
     
     try {
-      // TODO: Implement actual PDF processing and AI generation
-      await Future.delayed(Duration(seconds: 3)); // Simulate processing
+      // Generate cards using AI service
+      generatedCards = await _aiService!.generateCardsFromPdf(selectedPdf!);
       
-      // Mock generated cards for now
-      generatedCards = [
-        SingleCard(
-          deckName: 'AI Generated',
-          questionText: 'What is Flutter?',
-          answerText: 'A cross-platform UI framework by Google',
-        ),
-        SingleCard(
-          deckName: 'AI Generated',
-          questionText: 'What is BLoC pattern?',
-          answerText: 'Business Logic Component - a state management pattern',
-        ),
-      ];
-      
-      suggestedDeckName = 'Flutter Basics';
+      // Get suggested deck name from first card or use default
+      if (generatedCards.isNotEmpty) {
+        // Extract text from PDF to suggest deck name
+        final pdfText = await PdfProcessor.extractTextFromPdf(selectedPdf!);
+        suggestedDeckName = await _aiService!.suggestDeckName(pdfText.substring(0, pdfText.length > 1000 ? 1000 : pdfText.length));
+      } else {
+        suggestedDeckName = 'AI Generated Deck';
+      }
       
       emit(AiImportPreview(generatedCards, suggestedDeckName));
     } catch (e) {
-      emit(AiImportError(e.toString()));
+      // Log error for debugging
+      emit(AiImportError('Failed to generate cards: ${e.toString()}'));
     }
   }
 

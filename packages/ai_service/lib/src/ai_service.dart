@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:dart_openai/dart_openai.dart';
 import 'package:card_repository/card_deck_manager.dart';
 import 'pdf_processor.dart';
@@ -93,20 +94,35 @@ Return only the deck name, nothing else.
       }
       
       final jsonString = content.substring(jsonStart, jsonEnd);
-      final List<dynamic> cardsJson = [];
       
-      // Simple JSON parsing for now - in production, use json.decode
-      // This is a simplified version - you'd want proper JSON parsing
-      final cards = <SingleCard>[];
-      
-      // For now, return mock cards - implement proper JSON parsing
-      cards.add(SingleCard(
-        deckName: 'AI Generated',
-        questionText: 'Sample question from PDF',
-        answerText: 'Sample answer from PDF',
-      ));
-      
-      return cards;
+      try {
+        final List<dynamic> cardsJson = json.decode(jsonString);
+        final cards = <SingleCard>[];
+        
+        for (final cardJson in cardsJson) {
+          if (cardJson is Map<String, dynamic>) {
+            final question = cardJson['question'] as String? ?? '';
+            final answer = cardJson['answer'] as String? ?? '';
+            
+            if (question.isNotEmpty && answer.isNotEmpty) {
+              cards.add(SingleCard(
+                deckName: 'AI Generated',
+                questionText: question,
+                answerText: answer,
+              ));
+            }
+          }
+        }
+        
+        if (cards.isEmpty) {
+          throw Exception('No valid cards could be generated from the text');
+        }
+        
+        return cards;
+      } catch (e) {
+        // Log error for debugging - in production use proper logging
+        throw Exception('Failed to parse cards from AI response: $e');
+      }
     } catch (e) {
       throw Exception('Failed to generate cards from text: $e');
     }
