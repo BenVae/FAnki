@@ -1,11 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'navigation/view/app.dart';
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:card_repository/card_deck_manager.dart';
+import 'env.dart';
 
 final Logger log = Logger('MyAppLogger');
 
@@ -19,7 +19,10 @@ void initializeLogger() {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  
+  // Validate environment variables
+  Env.validateEnvironment();
+  
   await Firebase.initializeApp();
 
   final authenticationRepository = AuthenticationRepository();

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
 import 'package:ai_service/ai_service.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../env.dart';
 
 // States
 abstract class AiImportState {}
@@ -38,9 +38,8 @@ class AiImportError extends AiImportState {
 // Cubit
 class AiImportCubit extends Cubit<AiImportState> {
   AiImportCubit({required this.cardDeckManager}) : super(AiImportInitial()) {
-    final apiKey = dotenv.env['OPEN_AI_API_KEY'] ?? '';
-    if (apiKey.isNotEmpty) {
-      _aiService = AiService(apiKey: apiKey);
+    if (Env.openaiApiKey.isNotEmpty) {
+      _aiService = AiService(apiKey: Env.openaiApiKey);
     }
   }
 
@@ -115,8 +114,12 @@ class AiImportCubit extends Cubit<AiImportState> {
     emit(AiImportSaving());
     
     try {
-      // Set the current deck name
-      cardDeckManager.currentDeckName = deckName;
+      // Create deck if it doesn't exist, or set as current if it does
+      bool deckCreated = cardDeckManager.createDeck(deckName);
+      if (!deckCreated) {
+        // Deck already exists, just set it as current
+        cardDeckManager.currentDeckName = deckName;
+      }
       
       // Add each card to the deck
       for (var card in generatedCards) {
