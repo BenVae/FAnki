@@ -212,4 +212,85 @@ class FirebaseApi {
         .onError((error, stackTrace) =>
             print('Update of difficulty was not successful. $error'));
   }
+
+  // New methods for hierarchical deck support
+  
+  /// Get all decks with their metadata
+  Future<List<Map<String, dynamic>>> getAllDecksFromFirestore(String userID) async {
+    try {
+      final snapshot = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks_v2')
+          .get();
+      
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      print('Error getting decks: $e');
+      return [];
+    }
+  }
+
+  /// Create a new deck with v2 structure
+  Future<void> createDeckInFirestoreV2(String userID, Map<String, dynamic> deckData) async {
+    try {
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks_v2')
+          .doc(deckData['id'])
+          .set(deckData);
+    } catch (e) {
+      print('Error creating deck: $e');
+      throw e;
+    }
+  }
+
+  /// Update deck metadata
+  Future<void> updateDeckInFirestore(String userID, String deckId, Map<String, dynamic> deckData) async {
+    try {
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks_v2')
+          .doc(deckId)
+          .update(deckData);
+    } catch (e) {
+      print('Error updating deck: $e');
+      throw e;
+    }
+  }
+
+  /// Delete a deck
+  Future<void> deleteDeckFromFirestore(String userID, String deckId) async {
+    try {
+      // Delete all cards in the deck first
+      final cardsSnapshot = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks_v2')
+          .doc(deckId)
+          .collection('cards')
+          .get();
+      
+      for (final doc in cardsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      
+      // Delete the deck document
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks_v2')
+          .doc(deckId)
+          .delete();
+    } catch (e) {
+      print('Error deleting deck: $e');
+      throw e;
+    }
+  }
 }
