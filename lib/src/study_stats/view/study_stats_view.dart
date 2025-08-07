@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
+import 'package:authentication_repository/authentication_repository.dart';
 import '../../widgets/study_heatmap.dart';
 
 class StudyStatsView extends StatefulWidget {
@@ -19,7 +20,20 @@ class _StudyStatsViewState extends State<StudyStatsView> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initializeAndLoad();
+  }
+
+  Future<void> _initializeAndLoad() async {
+    // Get user ID from authentication repository
+    final authRepo = RepositoryProvider.of<AuthenticationRepository>(context);
+    final userId = authRepo.currentUser.email ?? '';
+    
+    if (userId.isNotEmpty) {
+      _activityManager.setUserId(userId);
+      await _loadData();
+    } else {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadData() async {

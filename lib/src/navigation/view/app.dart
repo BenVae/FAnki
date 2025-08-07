@@ -16,6 +16,7 @@ import '../../manage_decks/cubit/manage_decks_cubit.dart';
 import '../../manage_decks/cubit/manage_decks_cubit_v2.dart';
 import '../../manage_decks/view/manage_decks_page.dart';
 import '../../manage_decks/view/manage_decks_view_v2.dart';
+import '../../study_stats/view/study_stats_page.dart';
 import '../cubit/navigation_cubit.dart';
 
 class KarteiApp extends StatefulWidget {
@@ -41,7 +42,7 @@ class _KarteiAppState extends State<KarteiApp>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this, initialIndex: 3);
+    _tabController = TabController(length: 5, vsync: this, initialIndex: 4);
   }
 
   @override
@@ -52,12 +53,18 @@ class _KarteiAppState extends State<KarteiApp>
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider(
-          create: (context) => LoginCubit(
-              widget.authenticationRepository, widget.cardDeckManager),
+        RepositoryProvider.value(
+          value: widget.authenticationRepository,
         ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => LoginCubit(
+                widget.authenticationRepository, widget.cardDeckManager),
+          ),
         BlocProvider(
           create: (context) => LoginCubitV2(
               widget.authenticationRepository, 
@@ -114,6 +121,7 @@ class _KarteiAppState extends State<KarteiApp>
           },
         ),
       ),
+      ),
     );
   }
 
@@ -129,6 +137,7 @@ class _KarteiAppState extends State<KarteiApp>
             Tab(icon: Icon(Icons.school)),
             Tab(icon: Icon(Icons.create)),
             Tab(icon: Icon(Icons.book)),
+            Tab(icon: Icon(Icons.insights)),
             Tab(icon: Icon(Icons.login)),
           ],
         ),
@@ -139,6 +148,7 @@ class _KarteiAppState extends State<KarteiApp>
           LearningPage(),
           CreateCardsPage(),
           ManageDecksPage(),
+          StudyStatsPage(),
           LoginPage(),
         ],
       ),
@@ -174,6 +184,11 @@ class _KarteiAppState extends State<KarteiApp>
                   label: Text('Decks'),
                 ),
                 NavigationRailDestination(
+                  icon: Icon(Icons.insights_outlined),
+                  selectedIcon: Icon(Icons.insights),
+                  label: Text('Stats'),
+                ),
+                NavigationRailDestination(
                   icon: Icon(Icons.login_outlined),
                   selectedIcon: Icon(Icons.login),
                   label: Text('Login'),
@@ -195,6 +210,8 @@ class _KarteiAppState extends State<KarteiApp>
     } else if (index == 2) {
       context.read<NavigationCubit>().goToDecks();
     } else if (index == 3) {
+      context.read<NavigationCubit>().goToStats();
+    } else if (index == 4) {
       context.read<NavigationCubit>().goToLogin();
     } else {
       throw UnimplementedError();
@@ -209,8 +226,10 @@ class _KarteiAppState extends State<KarteiApp>
         return 1;
       case NavigationState.decks:
         return 2;
-      case NavigationState.login:
+      case NavigationState.stats:
         return 3;
+      case NavigationState.login:
+        return 4;
     }
   }
 
@@ -222,6 +241,8 @@ class _KarteiAppState extends State<KarteiApp>
         return CreateCardsPage();
       case NavigationState.decks:
         return ManageDecksViewV2();
+      case NavigationState.stats:
+        return StudyStatsPage();
       case NavigationState.login:
         return LoginPage();
     }
