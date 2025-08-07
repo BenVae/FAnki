@@ -3,7 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../main.dart';
+import '../../../main.dart';
 
 class LoginCubit extends Cubit<LoginState> {
   final AuthenticationRepository _authenticationRepository;

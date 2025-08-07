@@ -1,11 +1,11 @@
+import 'package:anki_app/src/env.dart';
+import 'package:anki_app/src/navigation/view/app.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
-import 'navigation/view/app.dart';
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:card_repository/card_deck_manager.dart';
-import 'env.dart';
 
 final Logger log = Logger('MyAppLogger');
 
@@ -19,10 +19,10 @@ void initializeLogger() {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Validate environment variables
   Env.validateEnvironment();
-  
+
   await Firebase.initializeApp();
 
   final authenticationRepository = AuthenticationRepository();
@@ -31,7 +31,7 @@ Future<void> main() async {
   final cardDeckManager = CardDeckManager();
 
   runApp(
-    FAnkiApp(
+    KarteiApp(
       authenticationRepository: authenticationRepository,
       cardDeckManager: cardDeckManager,
     ),

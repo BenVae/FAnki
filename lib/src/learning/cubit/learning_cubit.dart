@@ -1,10 +1,10 @@
-import 'dart:math';
+import 'dart:math' show Random;
+
+import 'package:anki_app/main.dart';
 import 'package:bloc/bloc.dart';
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:card_repository/card_deck_manager.dart';
 import 'package:flutter/material.dart';
-
-import '../../main.dart';
 
 class LearningCubit extends Cubit<CardLearnState> {
   final AuthenticationRepository _repo;
@@ -38,7 +38,7 @@ class LearningCubit extends Cubit<CardLearnState> {
       final currentState = state as CardLearningState;
       _answereIsVisible[index] = !_answereIsVisible[index];
       emit(currentState.copyWithNewCards(
-          cards: currentState.cards, 
+          cards: currentState.cards,
           answerIsVisible: _answereIsVisible,
           cardsReviewed: currentState.cardsReviewed,
           totalCards: currentState.totalCards));
@@ -59,7 +59,7 @@ class LearningCubit extends Cubit<CardLearnState> {
         updatedCards.insert(0, newCard);
         _answereIsVisible.insert(0, false);
         emit(currentState.copyWithNewCards(
-            cards: updatedCards, 
+            cards: updatedCards,
             answerIsVisible: _answereIsVisible,
             cardsReviewed: _cardsReviewed,
             totalCards: _totalCards));
@@ -156,7 +156,7 @@ class CardLearningState extends CardLearnState {
   }
 
   CardLearningState copyWithNewCards({
-    required List<SingleCard> cards, 
+    required List<SingleCard> cards,
     required List<bool> answerIsVisible,
     int? cardsReviewed,
     int? totalCards,

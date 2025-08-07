@@ -1,13 +1,8 @@
-# F/Anki: Flutter Anki Clone
+# kartei
 
-**For personal use only**
+**Kartei** (pronounced "kar-TIE") is derived from the German word "Karteikarten," which literally translates to "index cards" or "file cards." In German, "Kartei" refers to a card index system - a traditional method of organizing information on individual cards that can be sorted, searched, and reviewed. "Karten" means "cards," making "Karteikarten" the perfect linguistic foundation for a flashcard application.
 
-This project is a basic Anki clone developed with Flutter. It's designed to help users learn using flashcards, which they can create, manage, and organize into different decks. This app integrates Firebase to handle backend operations such as data storage and retrieval. The primary goal of this project is to showcase that I know Flutter and later on I will extend it with Gemini features.
-
-<img src="https://github.com/wklausing/FAnki/assets/62486651/6c1ea65d-9261-4a30-b749-913b61df85b6" alt="Learning Page" width="300">
-<img src="https://github.com/wklausing/FAnki/assets/62486651/a19fda91-b118-4570-84cf-889701e7936d" alt="Creating Cards Page" width="300">
-<img src="https://github.com/wklausing/FAnki/assets/62486651/fcc73668-9421-466d-9e2c-8d1a72d9e4dc" alt="Managing Decks Page" width="300">
-<img src="https://github.com/wklausing/FAnki/assets/62486651/ffef4668-3f31-4a39-ac95-b8b0441e08da" alt="Login Page" width="300">
+This Flutter-based app brings the timeless concept of Karteikarten into the digital age, offering a modern Anki-like flashcard experience for effective learning and memorization.
 
 ## Features
 
@@ -22,36 +17,35 @@ To get a local copy up and running follow these simple steps.
 ### Prerequisites
 
 - Flutter installed on your machine
-- An IDE (VSCode, Android Studio, etc.)
-- An active Firebase project
+- Firebase cli installed
 
 ### Installation
 
-1. **Clone the repository:**
-
-```bash
-git clone https://github.com/wklausing/flutter-anki-clone.git
-```
-
-2. **Navigate to the project directory:**
-
-```bash
-cd FAnki
-```
-
-3. **Install dependencies:**
+1. **Install dependencies:**
 
 ```bash
 flutter pub get
 ```
 
-4. **Setup Firebase:**
+2. **Setup env**
+
+```bash
+cp .env.example .env
+```
+
+then add your openAi api key.
+
+1. **Setup Firebase:**
 
 Create a Firebase project at Firebase Console
 Add your Android/iOS app to your Firebase project
 Download the google-services.json or GoogleService-Info.plist and place it in the appropriate directory (android/app or ios/Runner)
 
-5. **Run the app:**
+```bash
+flutterfire configure
+```
+
+3. **Run the app:**
 
 ```bash
 flutter run

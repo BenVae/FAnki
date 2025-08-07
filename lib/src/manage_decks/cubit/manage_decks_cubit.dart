@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
 
-import '../../main.dart';
+import '../../../main.dart';
 
 class ManageDecksCubit extends Cubit<DeckState> {
   final CardDeckManager _cdm;
@@ -34,7 +34,7 @@ class ManageDecksCubit extends Cubit<DeckState> {
     _cdm.getCurrentDeckCards();
     selectDeck(_cdm.currentDeckName);
     emit(DeckStateFinished(
-      deckNames: _cdm.deckNames, 
+      deckNames: _cdm.deckNames,
       selectedDeck: _selectedDeckIndex,
       cardCounts: _cdm.deckCardCounts,
     ));

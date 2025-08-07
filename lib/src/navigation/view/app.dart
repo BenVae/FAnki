@@ -15,8 +15,8 @@ import '../../manage_decks/cubit/manage_decks_cubit.dart';
 import '../../manage_decks/view/manage_decks_page.dart';
 import '../cubit/navigation_cubit.dart';
 
-class FAnkiApp extends StatefulWidget {
-  const FAnkiApp({
+class KarteiApp extends StatefulWidget {
+  const KarteiApp({
     super.key,
     required this.authenticationRepository,
     required this.cardDeckManager,
@@ -26,10 +26,10 @@ class FAnkiApp extends StatefulWidget {
   final CardDeckManager cardDeckManager;
 
   @override
-  State<FAnkiApp> createState() => _FAnkiAppState();
+  State<KarteiApp> createState() => _KarteiAppState();
 }
 
-class _FAnkiAppState extends State<FAnkiApp>
+class _KarteiAppState extends State<KarteiApp>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -194,8 +194,6 @@ class _FAnkiAppState extends State<FAnkiApp>
         return 2;
       case NavigationState.login:
         return 3;
-      default:
-        return -1;
     }
   }
 
@@ -208,7 +206,6 @@ class _FAnkiAppState extends State<FAnkiApp>
       case NavigationState.decks:
         return ManageDecksPage();
       case NavigationState.login:
-      default:
         return LoginPage();
     }
   }

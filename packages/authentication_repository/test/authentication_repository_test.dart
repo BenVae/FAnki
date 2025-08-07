@@ -133,52 +133,6 @@ void main() {
       });
     });
 
-    group('loginWithGoogle', () {
-      const accessToken = 'access-token';
-      const idToken = 'id-token';
-
-      setUp(() {
-        final googleSignInAuthentication = MockGoogleSignInAuthentication();
-        final googleSignInAccount = MockGoogleSignInAccount();
-        when(() => googleSignInAuthentication.accessToken)
-            .thenReturn(accessToken);
-        when(() => googleSignInAuthentication.idToken).thenReturn(idToken);
-        when(() => googleSignInAccount.authentication)
-            .thenAnswer((_) async => googleSignInAuthentication);
-        when(() => googleSignIn.signIn())
-            .thenAnswer((_) async => googleSignInAccount);
-        when(() => firebaseAuth.signInWithCredential(any()))
-            .thenAnswer((_) => Future.value(MockUserCredential()));
-        when(() => firebaseAuth.signInWithPopup(any()))
-            .thenAnswer((_) => Future.value(MockUserCredential()));
-      });
-
-      test('calls signIn authentication, and signInWithCredential', () async {
-        verify(() => firebaseAuth.signInWithCredential(any())).called(1);
-      });
-
-      test(
-          'throws LogInWithGoogleFailure and calls signIn authentication, and '
-          'signInWithPopup when authCredential is null and kIsWeb is true',
-          () async {
-        authenticationRepository.isWeb = true;
-        verify(() => firebaseAuth.signInWithPopup(any())).called(1);
-      });
-
-      test(
-          'successfully calls signIn authentication, and '
-          'signInWithPopup when authCredential is not null and kIsWeb is true',
-          () async {
-        final credential = MockUserCredential();
-        when(() => firebaseAuth.signInWithPopup(any()))
-            .thenAnswer((_) async => credential);
-        when(() => credential.credential).thenReturn(FakeAuthCredential());
-        authenticationRepository.isWeb = true;
-        verifyNever(() => googleSignIn.signIn());
-        verify(() => firebaseAuth.signInWithPopup(any())).called(1);
-      });
-    });
-
     group('logInWithEmailAndPassword', () {
       setUp(() {
         when(
@@ -234,7 +188,7 @@ void main() {
     group('logOut', () {
       test('calls signOut', () async {
         when(() => firebaseAuth.signOut()).thenAnswer((_) async {});
-        when(() => googleSignIn.signOut()).thenAnswer((_) async => null);
+        when(() => googleSignIn.signOut()).thenAnswer((_) async => {});
         await authenticationRepository.logOut();
         verify(() => firebaseAuth.signOut()).called(1);
         verify(() => googleSignIn.signOut()).called(1);
