@@ -5,6 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_repository/card_deck_manager.dart';
 import '../cubit/ai_import_cubit.dart';
+import '../../widgets/markdown_editor.dart';
+import '../../widgets/markdown_card_display.dart';
 
 class AiImportView extends StatelessWidget {
   const AiImportView({super.key});
@@ -360,13 +362,10 @@ class _CardPreviewItemState extends State<_CardPreviewItem> {
                 maxLines: 2,
               ),
               SizedBox(height: 8),
-              TextField(
+              MarkdownEditor(
                 controller: answerController,
-                decoration: InputDecoration(
-                  labelText: 'Answer',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
+                labelText: 'Answer',
+                maxLines: 3,
               ),
             ] else ...[
               Text(
@@ -376,9 +375,19 @@ class _CardPreviewItemState extends State<_CardPreviewItem> {
                 ),
               ),
               SizedBox(height: 8),
-              Text(
-                'A: ${widget.card.answerText}',
-                style: Theme.of(context).textTheme.bodyMedium,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('A: ', style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  )),
+                  Expanded(
+                    child: MarkdownCardDisplay(
+                      content: widget.card.answerText,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
               ),
             ],
             SizedBox(height: 8),

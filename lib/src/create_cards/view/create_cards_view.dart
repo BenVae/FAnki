@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/create_cards_cubit.dart';
 import '../../ai_import/view/ai_import_page.dart';
 import '../../widgets/markdown_card_display.dart';
+import '../../widgets/markdown_editor.dart';
 
 class CreateCardsView extends StatefulWidget {
   const CreateCardsView({super.key});
@@ -217,33 +218,10 @@ class _CreateCardsViewState extends State<CreateCardsView> {
                             minLines: 1,
                           ),
                           SizedBox(height: 16),
-                          TextFormField(
+                          MarkdownEditor(
                             controller: backController,
-                            decoration: InputDecoration(
-                              labelText: 'Answer',
-                              hintText: 'Enter the answer or back side',
-                              prefixIcon: Icon(Icons.lightbulb_outline),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Colors.blue.shade600,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Colors.red.shade400,
-                                  width: 1,
-                                ),
-                              ),
-                            ),
+                            labelText: 'Answer',
+                            hintText: 'Enter the answer with formatting',
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter an answer';
@@ -255,8 +233,7 @@ class _CreateCardsViewState extends State<CreateCardsView> {
                                 _showPreview = frontController.text.isNotEmpty && value.isNotEmpty;
                               });
                             },
-                            maxLines: 3,
-                            minLines: 1,
+                            maxLines: 5,
                           ),
                           SizedBox(height: 20),
                           Row(
