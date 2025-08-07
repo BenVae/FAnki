@@ -125,7 +125,6 @@ class DeckTreeManager {
     } else if (deck.children.isNotEmpty) {
       // Move children to parent or make them root decks
       for (final child in deck.children) {
-        child.parentId == deck.parentId;
         if (deck.parentId == null) {
           _rootDecks.add(child);
         } else {

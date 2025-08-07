@@ -39,20 +39,22 @@ class DeckBreadcrumbs extends StatelessWidget {
           final deck = allDecks[index];
           final isLast = index == allDecks.length - 1;
           final isRoot = deck == null;
-          
+
           return InkWell(
             onTap: isLast ? null : () => onNavigate(deck),
             borderRadius: BorderRadius.circular(16),
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: isLast 
+                color: isLast
                     ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                     : null,
                 borderRadius: BorderRadius.circular(16),
-                border: isLast 
+                border: isLast
                     ? Border.all(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                        color: Theme.of(context)
+                            .primaryColor
+                            .withValues(alpha: 0.3),
                         width: 1,
                       )
                     : null,
@@ -63,17 +65,17 @@ class DeckBreadcrumbs extends StatelessWidget {
                   Icon(
                     isRoot ? Icons.home : Icons.folder,
                     size: 16,
-                    color: isLast 
+                    color: isLast
                         ? Theme.of(context).primaryColor
                         : Colors.grey.shade600,
                   ),
                   SizedBox(width: 4),
                   Text(
-                    isRoot ? 'All Decks' : deck!.name,
+                    isRoot ? 'All Decks' : deck.name,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
-                      color: isLast 
+                      color: isLast
                           ? Theme.of(context).primaryColor
                           : Colors.grey.shade700,
                     ),

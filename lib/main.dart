@@ -29,11 +29,13 @@ Future<void> main() async {
   await authenticationRepository.user.first;
 
   final cardDeckManager = CardDeckManager();
+  final deckTreeManager = DeckTreeManager();
 
   runApp(
     KarteiApp(
       authenticationRepository: authenticationRepository,
       cardDeckManager: cardDeckManager,
+      deckTreeManager: deckTreeManager,
     ),
   );
 }

@@ -10,9 +10,12 @@ import '../../create_cards/view/create_cards_page.dart';
 import '../../learning/cubit/learning_cubit.dart';
 import '../../learning/view/learning_page.dart';
 import '../../login/cubit/login_cubit.dart';
+import '../../login/cubit/login_cubit_v2.dart';
 import '../../login/view/login_page.dart';
 import '../../manage_decks/cubit/manage_decks_cubit.dart';
+import '../../manage_decks/cubit/manage_decks_cubit_v2.dart';
 import '../../manage_decks/view/manage_decks_page.dart';
+import '../../manage_decks/view/manage_decks_view_v2.dart';
 import '../cubit/navigation_cubit.dart';
 
 class KarteiApp extends StatefulWidget {
@@ -20,10 +23,12 @@ class KarteiApp extends StatefulWidget {
     super.key,
     required this.authenticationRepository,
     required this.cardDeckManager,
+    required this.deckTreeManager,
   });
 
   final AuthenticationRepository authenticationRepository;
   final CardDeckManager cardDeckManager;
+  final DeckTreeManager deckTreeManager;
 
   @override
   State<KarteiApp> createState() => _KarteiAppState();
@@ -54,6 +59,12 @@ class _KarteiAppState extends State<KarteiApp>
               widget.authenticationRepository, widget.cardDeckManager),
         ),
         BlocProvider(
+          create: (context) => LoginCubitV2(
+              widget.authenticationRepository, 
+              widget.cardDeckManager,
+              widget.deckTreeManager),
+        ),
+        BlocProvider(
           create: (context) => NavigationCubit(),
         ),
         BlocProvider(
@@ -67,6 +78,12 @@ class _KarteiAppState extends State<KarteiApp>
         ),
         BlocProvider(
           create: (context) => ManageDecksCubit(
+            cardDeckManager: widget.cardDeckManager,
+          ),
+        ),
+        BlocProvider(
+          create: (context) => ManageDecksCubitV2(
+            deckTreeManager: widget.deckTreeManager,
             cardDeckManager: widget.cardDeckManager,
           ),
         ),
@@ -204,7 +221,7 @@ class _KarteiAppState extends State<KarteiApp>
       case NavigationState.createCards:
         return CreateCardsPage();
       case NavigationState.decks:
-        return ManageDecksPage();
+        return ManageDecksViewV2();
       case NavigationState.login:
         return LoginPage();
     }
