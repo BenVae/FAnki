@@ -16,6 +16,21 @@ Guidelines:
 4. Avoid yes/no questions when possible
 5. Make questions specific enough to have one clear answer
 
+Formatting capabilities for answers:
+- You can use Markdown syntax for rich text formatting
+- LaTeX formulas: Use \$...\$ for inline math and \$\$...\$\$ for display math
+- Code blocks: Use triple backticks with language name for syntax highlighting
+- Lists: Use - or * for bullet points, 1. 2. 3. for numbered lists
+- Emphasis: Use **bold**, *italic*, or ***bold italic***
+- Tables: Use | Header | Header | with |---|---| separators
+- Links: Use [text](url) format
+
+Use these formatting options when they enhance clarity, especially for:
+- Mathematical formulas and equations
+- Code snippets and technical syntax
+- Structured information that benefits from lists or tables
+- Important terms that should be emphasized
+
 Return the flashcards as a JSON array with this format:
 [
   {"question": "...", "answer": "..."},

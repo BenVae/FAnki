@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/learning_cubit.dart';
+import '../../widgets/markdown_card_display.dart';
 
 Widget buildLearningCardView() {
   return Container(
@@ -196,14 +197,16 @@ class _FlashcardWidgetState extends State<_FlashcardWidget>
                                 color: Colors.green.shade700,
                               ),
                               SizedBox(height: 16),
-                              Text(
-                                widget.card.answerText,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.green.shade900,
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: MarkdownCardDisplay(
+                                  content: widget.card.answerText,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green.shade900,
+                                  ),
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                             ],
                           ],

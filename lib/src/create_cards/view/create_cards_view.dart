@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/create_cards_cubit.dart';
 import '../../ai_import/view/ai_import_page.dart';
+import '../../widgets/markdown_card_display.dart';
 
 class CreateCardsView extends StatefulWidget {
   const CreateCardsView({super.key});
@@ -363,12 +364,27 @@ class _CreateCardsViewState extends State<CreateCardsView> {
                                 SizedBox(height: 8),
                                 Divider(),
                                 SizedBox(height: 8),
-                                Text(
-                                  'A: ${backController.text}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.green.shade700,
-                                  ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'A: ',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade700,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: MarkdownCardDisplay(
+                                        content: backController.text,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.green.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -593,8 +609,8 @@ class _CardListItemState extends State<_CardListItem>
                                   ),
                                   SizedBox(width: 6),
                                   Expanded(
-                                    child: Text(
-                                      widget.card.answerText,
+                                    child: MarkdownCardDisplay(
+                                      content: widget.card.answerText,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey.shade700,
