@@ -5,8 +5,7 @@ import 'package:card_repository/card_deck_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../create_cards/cubit/create_cards_cubit.dart';
-import '../../create_cards/view/create_cards_page.dart';
+import '../../settings/view/settings_view.dart';
 import '../../learning/cubit/learning_cubit.dart';
 import '../../learning/view/learning_page.dart';
 import '../../login/cubit/login_cubit.dart';
@@ -63,11 +62,6 @@ class _KarteiAppState extends State<KarteiApp> {
         BlocProvider(
           create: (context) => LearningCubit(
               widget.authenticationRepository, widget.cardDeckManager),
-        ),
-        BlocProvider(
-          create: (context) => CreateCardsCubit(
-              repo: widget.authenticationRepository,
-              cardDeckManager: widget.cardDeckManager),
         ),
         BlocProvider(
           create: (context) => ManageDecksCubit(
@@ -130,15 +124,11 @@ class _KarteiAppState extends State<KarteiApp> {
 
   void _onDestinationSelected(BuildContext context, int index) {
     if (index == 0) {
-      context.read<NavigationCubit>().goToLearning();
-    } else if (index == 1) {
-      context.read<NavigationCubit>().goToCreateCards();
-    } else if (index == 2) {
       context.read<NavigationCubit>().goToDecks();
-    } else if (index == 3) {
+    } else if (index == 1) {
       context.read<NavigationCubit>().goToStats();
-    } else if (index == 4) {
-      context.read<NavigationCubit>().goToLogin();
+    } else if (index == 2) {
+      context.read<NavigationCubit>().goToSettings();
     } else {
       throw UnimplementedError();
     }
@@ -146,16 +136,14 @@ class _KarteiAppState extends State<KarteiApp> {
 
   int _determineSelectedIndex(NavigationState state) {
     switch (state) {
-      case NavigationState.learning:
-        return 0;
-      case NavigationState.createCards:
-        return 1;
       case NavigationState.decks:
-        return 2;
+        return 0;
       case NavigationState.stats:
-        return 3;
-      case NavigationState.login:
-        return 4;
+        return 1;
+      case NavigationState.settings:
+        return 2;
+      case NavigationState.learning:
+        return -1; // Not in navigation bar
     }
   }
 
@@ -163,14 +151,12 @@ class _KarteiAppState extends State<KarteiApp> {
     switch (state) {
       case NavigationState.learning:
         return LearningPage();
-      case NavigationState.createCards:
-        return CreateCardsPage();
       case NavigationState.decks:
         return ManageDecksViewV2();
       case NavigationState.stats:
         return StudyStatsPage();
-      case NavigationState.login:
-        return LoginPage();
+      case NavigationState.settings:
+        return SettingsView();
     }
   }
 }

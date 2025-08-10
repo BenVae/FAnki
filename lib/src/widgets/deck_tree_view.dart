@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:card_repository/card_deck_manager.dart';
+import 'study_count_label.dart';
 
 class DeckTreeView extends StatefulWidget {
   final List<Deck> rootDecks;
@@ -11,6 +12,7 @@ class DeckTreeView extends StatefulWidget {
   final Function(Deck) onRenameDeck;
   final Function(Deck) onDeleteDeck;
   final Function(Deck, Deck?) onMoveDeck;
+  final Function(Deck)? onAddCards;
 
   const DeckTreeView({
     super.key,
@@ -23,6 +25,7 @@ class DeckTreeView extends StatefulWidget {
     required this.onRenameDeck,
     required this.onDeleteDeck,
     required this.onMoveDeck,
+    this.onAddCards,
   }) : expandedDeckIds = expandedDeckIds ?? const {};
 
   @override
@@ -94,22 +97,7 @@ class _DeckTreeViewState extends State<DeckTreeView> {
                     ),
                   ),
                 ),
-                if (deck.totalCards > 0)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${deck.totalCards}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                StudyCountLabel(count: deck.totalCards),
               ],
             ),
             subtitle: deck.newCards > 0 || deck.reviewCards > 0
@@ -139,6 +127,17 @@ class _DeckTreeViewState extends State<DeckTreeView> {
               icon: Icon(Icons.more_vert, size: 20),
               onSelected: (value) => _handleDeckAction(value, deck),
               itemBuilder: (context) => [
+                if (widget.onAddCards != null)
+                  PopupMenuItem(
+                    value: 'add_cards',
+                    child: Row(
+                      children: [
+                        Icon(Icons.add_circle, size: 18),
+                        SizedBox(width: 8),
+                        Text('Add Cards'),
+                      ],
+                    ),
+                  ),
                 PopupMenuItem(
                   value: 'add_subdeck',
                   child: Row(
@@ -192,6 +191,11 @@ class _DeckTreeViewState extends State<DeckTreeView> {
 
   void _handleDeckAction(String action, Deck deck) {
     switch (action) {
+      case 'add_cards':
+        if (widget.onAddCards != null) {
+          widget.onAddCards!(deck);
+        }
+        break;
       case 'add_subdeck':
         widget.onCreateSubdeck(deck);
         break;

@@ -1,21 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum NavigationState { learning, createCards, decks, stats, login }
+enum NavigationState { decks, stats, settings, learning }
 
 class NavigationCubit extends Cubit<NavigationState> {
-  NavigationCubit() : super(NavigationState.login);
+  NavigationCubit() : super(NavigationState.decks);
   
   NavigationState? _previousState;
-
-  void goToCreateCards() {
-    _previousState = state;
-    emit(NavigationState.createCards);
-  }
-
-  void goToLearning() {
-    _previousState = state;
-    emit(NavigationState.learning);
-  }
 
   void goToDecks() {
     _previousState = state;
@@ -27,13 +17,18 @@ class NavigationCubit extends Cubit<NavigationState> {
     emit(NavigationState.stats);
   }
 
-  void goToLogin() {
+  void goToSettings() {
     _previousState = state;
-    emit(NavigationState.login);
+    emit(NavigationState.settings);
+  }
+  
+  void goToLearning() {
+    _previousState = state;
+    emit(NavigationState.learning);
   }
   
   void goBack() {
-    if (_previousState != null && _previousState != NavigationState.learning) {
+    if (_previousState != null) {
       emit(_previousState!);
     } else {
       emit(NavigationState.decks); // Default to decks view

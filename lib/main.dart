@@ -1,5 +1,5 @@
-import 'package:anki_app/src/env.dart';
-import 'package:anki_app/src/navigation/view/app.dart';
+import 'package:kartei/src/env.dart';
+import 'package:kartei/src/navigation/view/app.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';

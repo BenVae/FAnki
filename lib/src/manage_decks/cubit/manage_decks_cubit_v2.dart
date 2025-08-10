@@ -9,6 +9,9 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   String? _selectedDeckId;
   final Set<String> _expandedDeckIds = {};
 
+  // Getter to expose CardDeckManager for other components
+  CardDeckManager get cdm => _cdm;
+
   ManageDecksCubitV2({
     required DeckTreeManager deckTreeManager,
     required CardDeckManager cardDeckManager,

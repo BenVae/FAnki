@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
+import 'package:authentication_repository/authentication_repository.dart';
 import '../cubit/manage_decks_cubit_v2.dart';
 import '../../widgets/deck_tree_view.dart';
 import '../../widgets/deck_breadcrumbs.dart';
+import '../../widgets/study_count_label.dart';
+import '../../widgets/card_creation_dialog.dart';
+import '../../navigation/cubit/navigation_cubit.dart';
+import '../../create_cards/view/create_cards_view.dart';
+import '../../ai_import/view/ai_import_page.dart';
+import '../../create_cards/cubit/create_cards_cubit.dart';
 
 class ManageDecksViewV2 extends StatefulWidget {
   const ManageDecksViewV2({super.key});
@@ -138,6 +145,13 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
                           ),
                         ],
                       ),
+                      
+                      // Deck Dropdown Switcher
+                      if (state.allDecks.isNotEmpty) ...[
+                        SizedBox(height: 16),
+                        _buildDeckDropdown(context, state),
+                      ],
+                      
                       if (state.currentDeck != null) ...[
                         SizedBox(height: 16),
                         DeckBreadcrumbs(
@@ -182,6 +196,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
                               },
                               onDeckSelected: (deck) {
                                 cubit.selectDeck(deck);
+                                _handleDeckTap(context, deck);
                               },
                               onCreateSubdeck: (parentDeck) {
                                 _showCreateDeckDialog(context, parentDeck);
@@ -200,6 +215,9 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
                                   deck.id,
                                   newParent?.id,
                                 );
+                              },
+                              onAddCards: (deck) {
+                                _showAddCardsDialog(context, deck);
                               },
                             ),
                           ),
@@ -354,6 +372,151 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
             child: Text('Create'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDeckDropdown(BuildContext context, DeckStateV2Loaded state) {
+    final currentDeck = state.currentDeck;
+    final allDecks = state.allDecks;
+    
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String?>(
+          value: currentDeck?.id,
+          hint: Text('Select a deck'),
+          isExpanded: true,
+          icon: Icon(Icons.keyboard_arrow_down),
+          items: [
+            ...allDecks.map((deck) => DropdownMenuItem<String?>(
+              value: deck.id,
+              child: Row(
+                children: [
+                  Icon(
+                    deck.children.isNotEmpty ? Icons.folder : Icons.style,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(child: Text(deck.name)),
+                  StudyCountLabel(count: deck.totalCards),
+                ],
+              ),
+            )),
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Row(
+                children: [
+                  Icon(Icons.add, size: 16, color: Colors.blue.shade600),
+                  SizedBox(width: 8),
+                  Text(
+                    'Create New Deck',
+                    style: TextStyle(
+                      color: Colors.blue.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (deckId) {
+            if (deckId == null) {
+              _showCreateDeckDialog(context, null);
+            } else {
+              final deck = allDecks.firstWhere((d) => d.id == deckId);
+              context.read<ManageDecksCubitV2>().selectDeck(deck);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _handleDeckTap(BuildContext context, Deck deck) {
+    if (deck.totalCards > 0) {
+      // Navigate to learning view if deck has cards
+      context.read<NavigationCubit>().goToLearning();
+    } else {
+      // Show snackbar if no cards available
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 8),
+              Text('No cards available for study'),
+            ],
+          ),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  void _showAddCardsDialog(BuildContext context, Deck deck) async {
+    final result = await showDialog<CardCreationType>(
+      context: context,
+      builder: (context) => CardCreationDialog(),
+    );
+
+    if (result != null && context.mounted) {
+      if (result == CardCreationType.ai) {
+        _navigateToAiImport(context, deck);
+      } else {
+        _navigateToManualCreation(context, deck);
+      }
+    }
+  }
+
+  void _navigateToAiImport(BuildContext context, Deck deck) {
+    // Set the current deck in the cubit before navigation
+    context.read<ManageDecksCubitV2>().selectDeck(deck);
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (context) => CreateCardsCubit(
+            repo: RepositoryProvider.of<AuthenticationRepository>(context),
+            cardDeckManager: context.read<ManageDecksCubitV2>().cdm,
+          ),
+          child: AiImportPage(),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToManualCreation(BuildContext context, Deck deck) {
+    // Set the current deck in the cubit before navigation
+    context.read<ManageDecksCubitV2>().selectDeck(deck);
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider(
+          create: (context) => CreateCardsCubit(
+            repo: RepositoryProvider.of<AuthenticationRepository>(context),
+            cardDeckManager: context.read<ManageDecksCubitV2>().cdm,
+          ),
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Create Cards'),
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            body: CreateCardsView(),
+          ),
+        ),
       ),
     );
   }
