@@ -8,8 +8,32 @@
 - Card creation interface with form validation and preview
 - Progress tracking and statistics display
 - **AI functionality with OpenAI integration - WORKING!** 🚀
+- Tree-structured deck hierarchy with expand/collapse
+- Fixed deck management initialization and loading issues
 
-**Next Priority:** Implement features based on roadmap priorities
+**Next Priority:** Navigation refactoring and deck-centric UI
+
+---
+
+## Priority 0: Navigation & Deck Management Refactoring
+**Goal:** Simplify navigation with deck management as the central hub
+
+### Implementation Tasks:
+- [ ] Simplify navigation to only 2 buttons (Statistics, Settings)
+- [ ] Remove Learning and Create Cards from main navigation
+- [ ] Make deck management the default/home view
+- [ ] Add deck dropdown switcher with "Create New Deck" option
+- [ ] Create study count label widget (number only, auto-hide when 0)
+- [ ] Add tap-to-study functionality on decks
+- [ ] Create card creation dialog (AI vs Manual choice)
+- [ ] Move card creation to deck context menu
+- [ ] Update NavigationCubit to remove unused states
+
+### UI Components:
+- **Study Count Label**: Blue text on light blue bg, shows number only
+- **Deck Dropdown**: Current deck + deck list + "Create New Deck" button
+- **Card Creation Dialog**: Choice between AI and Manual creation
+- **Deck Actions Menu**: Add Cards, Rename, Delete, Move options
 
 ---
 
@@ -33,7 +57,7 @@
 
 ---
 
-## Priority 2: Tree-Structured Decks (Anki-like)
+## Priority 2: Tree-Structured Decks (Anki-like) ✅ MOSTLY COMPLETE
 **Goal:** Implement hierarchical deck organization like Anki
 
 ### Implementation Tasks:
@@ -134,18 +158,19 @@
 
 ## Development Workflow
 
-### Phase 1: Foundation (Week 1)
-1. Fix authentication tests
-2. Implement Priority 1 (Markdown support)
-3. Begin Priority 2 (Tree decks structure)
+### Phase 1: Navigation Refactoring (Current)
+1. Implement Priority 0 (Navigation & Deck Management)
+2. Create study count labels
+3. Simplify navigation to 2 buttons
+4. Add deck-centric features
 
-### Phase 2: Core Features (Week 2)
-1. Complete Priority 2 (Tree decks UI)
-2. Implement Priority 3 (Study timeline)
-3. Start Priority 4 (Navigation update)
+### Phase 2: Content Enhancement
+1. Implement Priority 1 (Markdown support)
+2. Add LaTeX formula rendering
+3. Enable code syntax highlighting
 
-### Phase 3: Polish (Week 3)
-1. Complete Priority 4 (Settings & navigation)
+### Phase 3: Analytics & Polish
+1. Implement Priority 3 (Study timeline)
 2. Add pie chart visualization
 3. Implement AI usage limitations
 4. Testing and bug fixes
