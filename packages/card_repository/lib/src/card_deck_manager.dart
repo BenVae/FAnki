@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'models/single_card.dart';
 import 'firebase_api.dart';
 
@@ -138,11 +136,12 @@ class CardDeckManager {
     if (deckNames.contains(deckName)) {
       // log.info('Deck $deckName is used now.');
       currentDeckName = deckName;
-      firebaseapi.getAllCardsOfDeckFromFirestore(userID, deckName);
+      // Don't load cards here - let the caller decide when to load
       firebaseapi.setLastDeckInFireStore(userID, deckName);
     } else {
       // log.info('Deck with name $deckName does not exist.');
-      exit(1);
+      // Don't exit the app - just log a warning
+      print('Warning: Deck with name $deckName does not exist in CardDeckManager.');
     }
   }
 }

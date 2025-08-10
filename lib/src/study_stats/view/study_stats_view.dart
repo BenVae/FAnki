@@ -27,7 +27,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
     // Get user ID from authentication repository
     final authRepo = RepositoryProvider.of<AuthenticationRepository>(context);
     final userId = authRepo.currentUser.email ?? '';
-    
+
     if (userId.isNotEmpty) {
       _activityManager.setUserId(userId);
       await _loadData();
@@ -38,11 +38,11 @@ class _StudyStatsViewState extends State<StudyStatsView> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final dailyData = await _activityManager.getDailyStudyData();
       final stats = await _activityManager.getStudyStats();
-      
+
       setState(() {
         _dailyData = dailyData;
         _stats = stats;
@@ -61,9 +61,10 @@ class _StudyStatsViewState extends State<StudyStatsView> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(20),
-      child: Column(
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(20),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
@@ -86,7 +87,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
             ],
           ),
           SizedBox(height: 24),
-          
+
           // Stats cards
           GridView.count(
             shrinkWrap: true,
@@ -140,9 +141,9 @@ class _StudyStatsViewState extends State<StudyStatsView> {
               ),
             ],
           ),
-          
+
           SizedBox(height: 24),
-          
+
           // Heatmap
           StudyHeatmap(
             dailyData: _dailyData,
@@ -150,15 +151,16 @@ class _StudyStatsViewState extends State<StudyStatsView> {
               // Could show detailed stats for that day
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Study details for ${date.toString().split(' ')[0]}'),
+                  content: Text(
+                      'Study details for ${date.toString().split(' ')[0]}'),
                   duration: Duration(seconds: 2),
                 ),
               );
             },
           ),
-          
+
           SizedBox(height: 24),
-          
+
           // Motivational message
           Container(
             padding: EdgeInsets.all(16),
@@ -206,6 +208,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -220,7 +223,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
   String _getMotivationalMessage() {
     final streak = _stats['currentStreak'] ?? 0;
     final average = _stats['averageCards'] ?? 0;
-    
+
     if (streak >= 7) {
       return 'You\'ve been studying for $streak days straight! Your consistency is paying off.';
     }

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:ui';
 
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:card_repository/card_deck_manager.dart';
@@ -14,9 +14,9 @@ import '../../login/cubit/login_cubit_v2.dart';
 import '../../login/view/login_page.dart';
 import '../../manage_decks/cubit/manage_decks_cubit.dart';
 import '../../manage_decks/cubit/manage_decks_cubit_v2.dart';
-import '../../manage_decks/view/manage_decks_page.dart';
 import '../../manage_decks/view/manage_decks_view_v2.dart';
 import '../../study_stats/view/study_stats_page.dart';
+import '../../widgets/frosted_navigation.dart';
 import '../cubit/navigation_cubit.dart';
 
 class KarteiApp extends StatefulWidget {
@@ -35,21 +35,7 @@ class KarteiApp extends StatefulWidget {
   State<KarteiApp> createState() => _KarteiAppState();
 }
 
-class _KarteiAppState extends State<KarteiApp>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 5, vsync: this, initialIndex: 4);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _KarteiAppState extends State<KarteiApp> {
 
   @override
   Widget build(BuildContext context) {
@@ -110,94 +96,34 @@ class _KarteiAppState extends State<KarteiApp>
             } else {
               return BlocBuilder<NavigationCubit, NavigationState>(
                 builder: (context, state) {
-                  final mainArea = Expanded(child: _getPage(state));
-
-                  return Platform.isIOS || Platform.isAndroid
-                      ? _buildMobileNavigationBar(context, mainArea)
-                      : _buildDesktopNavigationBar(context, mainArea, state);
+                  final isLearning = state == NavigationState.learning;
+                  
+                  return Scaffold(
+                    body: Stack(
+                      children: [
+                        _getPage(state),
+                        if (!isLearning)
+                          FrostedNavigationButtons(
+                            selectedIndex: _determineSelectedIndex(state),
+                            onNavigate: (index) => _onDestinationSelected(context, index),
+                          ),
+                        if (isLearning)
+                          Positioned(
+                            top: MediaQuery.of(context).padding.top + 16,
+                            right: MediaQuery.of(context).padding.right + 16,
+                            child: _FrostedBackButton(
+                              onPressed: () => context.read<NavigationCubit>().goBack(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
                 },
               );
             }
           },
         ),
       ),
-      ),
-    );
-  }
-
-  Widget _buildMobileNavigationBar(BuildContext context, Widget mainArea) {
-    return Scaffold(
-      appBar: AppBar(
-        bottom: TabBar(
-          controller: _tabController,
-          onTap: (int index) {
-            _onDestinationSelected(context, index);
-          },
-          tabs: const [
-            Tab(icon: Icon(Icons.school)),
-            Tab(icon: Icon(Icons.create)),
-            Tab(icon: Icon(Icons.book)),
-            Tab(icon: Icon(Icons.insights)),
-            Tab(icon: Icon(Icons.login)),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          LearningPage(),
-          CreateCardsPage(),
-          ManageDecksPage(),
-          StudyStatsPage(),
-          LoginPage(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDesktopNavigationBar(
-      BuildContext context, Widget mainArea, NavigationState state) {
-    return Scaffold(
-      body: Row(
-        children: [
-          SafeArea(
-            child: NavigationRail(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              selectedIndex: _determineSelectedIndex(state),
-              onDestinationSelected: (int index) {
-                _onDestinationSelected(context, index);
-              },
-              destinations: const [
-                NavigationRailDestination(
-                  icon: Icon(Icons.school_outlined),
-                  selectedIcon: Icon(Icons.school),
-                  label: Text('Learning'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.create_outlined),
-                  selectedIcon: Icon(Icons.create),
-                  label: Text('Creating cards'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.book_outlined),
-                  selectedIcon: Icon(Icons.book),
-                  label: Text('Decks'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.insights_outlined),
-                  selectedIcon: Icon(Icons.insights),
-                  label: Text('Stats'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.login_outlined),
-                  selectedIcon: Icon(Icons.login),
-                  label: Text('Login'),
-                ),
-              ],
-            ),
-          ),
-          mainArea,
-        ],
       ),
     );
   }
@@ -246,5 +172,54 @@ class _KarteiAppState extends State<KarteiApp>
       case NavigationState.login:
         return LoginPage();
     }
+  }
+}
+
+class _FrostedBackButton extends StatelessWidget {
+  const _FrostedBackButton({required this.onPressed});
+  
+  final VoidCallback onPressed;
+  
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: 0.3),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.4),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(28),
+              onTap: onPressed,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  Icons.close,
+                  size: 22,
+                  color: colorScheme.onSurface.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

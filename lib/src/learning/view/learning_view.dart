@@ -10,116 +10,73 @@ class LearningView extends StatelessWidget {
   Widget build(BuildContext context) {
     LearningCubit learningCubit = context.read<LearningCubit>();
     learningCubit.checkAndReloadDeck();
-    return Column(
+    return SafeArea(
+        child: Stack(
       children: [
-        SizedBox(height: 8),
-        BlocBuilder<LearningCubit, CardLearnState>(
-          builder: (context, state) {
-            if (state is CardLearningState) {
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: buildLearningCardView(),
+              ),
+            ),
+            SizedBox(height: 16),
+            BlocBuilder<LearningCubit, CardLearnState>(
+              builder: (context, state) {
+                final isAnswerVisible = state is CardLearningState &&
+                    state.answerIsVisible.isNotEmpty &&
+                    state.answerIsVisible[0];
+
+                return AnimatedOpacity(
+                  opacity: isAnswerVisible ? 1.0 : 0.3,
+                  duration: Duration(milliseconds: 300),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Progress',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        _DifficultyButton(
+                          label: 'Again',
+                          color: Colors.red.shade400,
+                          onPressed: isAnswerVisible
+                              ? () => toggleOrAdvanceCard(learningCubit)
+                              : null,
                         ),
-                        Text(
-                          '${state.cardsReviewed} / ${state.totalCards} cards',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
+                        SizedBox(width: 8),
+                        _DifficultyButton(
+                          label: 'Hard',
+                          color: Colors.orange.shade400,
+                          onPressed: isAnswerVisible
+                              ? () => toggleOrAdvanceCard(learningCubit)
+                              : null,
+                        ),
+                        SizedBox(width: 8),
+                        _DifficultyButton(
+                          label: 'Good',
+                          color: Colors.blue.shade400,
+                          onPressed: isAnswerVisible
+                              ? () => toggleOrAdvanceCard(learningCubit)
+                              : null,
+                        ),
+                        SizedBox(width: 8),
+                        _DifficultyButton(
+                          label: 'Easy',
+                          color: Colors.green.shade400,
+                          onPressed: isAnswerVisible
+                              ? () => toggleOrAdvanceCard(learningCubit)
+                              : null,
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: state.totalCards > 0 
-                            ? state.cardsReviewed / state.totalCards 
-                            : 0,
-                        backgroundColor: Colors.grey.shade200,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.blue.shade400,
-                        ),
-                        minHeight: 8,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return SizedBox.shrink();
-          },
-        ),
-        Expanded(
-          child: Center(
-            child: buildLearningCardView(),
-          ),
-        ),
-        SizedBox(height: 16),
-        BlocBuilder<LearningCubit, CardLearnState>(
-          builder: (context, state) {
-            final isAnswerVisible = state is CardLearningState && 
-                state.answerIsVisible.isNotEmpty && 
-                state.answerIsVisible[0];
-            
-            return AnimatedOpacity(
-              opacity: isAnswerVisible ? 1.0 : 0.3,
-              duration: Duration(milliseconds: 300),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _DifficultyButton(
-                      label: 'Again',
-                      color: Colors.red.shade400,
-                      onPressed: isAnswerVisible 
-                          ? () => toggleOrAdvanceCard(learningCubit)
-                          : null,
-                    ),
-                    SizedBox(width: 8),
-                    _DifficultyButton(
-                      label: 'Hard',
-                      color: Colors.orange.shade400,
-                      onPressed: isAnswerVisible 
-                          ? () => toggleOrAdvanceCard(learningCubit)
-                          : null,
-                    ),
-                    SizedBox(width: 8),
-                    _DifficultyButton(
-                      label: 'Good',
-                      color: Colors.blue.shade400,
-                      onPressed: isAnswerVisible 
-                          ? () => toggleOrAdvanceCard(learningCubit)
-                          : null,
-                    ),
-                    SizedBox(width: 8),
-                    _DifficultyButton(
-                      label: 'Easy',
-                      color: Colors.green.shade400,
-                      onPressed: isAnswerVisible 
-                          ? () => toggleOrAdvanceCard(learningCubit)
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-        SizedBox(height: 50),
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: 50),
+          ],
+        )
       ],
-    );
+    ));
   }
 
   void toggleOrAdvanceCard(LearningCubit cubit) {

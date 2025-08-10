@@ -4,6 +4,8 @@ import 'package:card_repository/card_deck_manager.dart';
 class DeckTreeView extends StatefulWidget {
   final List<Deck> rootDecks;
   final String? selectedDeckId;
+  final Set<String> expandedDeckIds;
+  final Function(String) onToggleExpansion;
   final Function(Deck) onDeckSelected;
   final Function(Deck) onCreateSubdeck;
   final Function(Deck) onRenameDeck;
@@ -14,20 +16,20 @@ class DeckTreeView extends StatefulWidget {
     super.key,
     required this.rootDecks,
     this.selectedDeckId,
+    Set<String>? expandedDeckIds,
+    required this.onToggleExpansion,
     required this.onDeckSelected,
     required this.onCreateSubdeck,
     required this.onRenameDeck,
     required this.onDeleteDeck,
     required this.onMoveDeck,
-  });
+  }) : expandedDeckIds = expandedDeckIds ?? const {};
 
   @override
   State<DeckTreeView> createState() => _DeckTreeViewState();
 }
 
 class _DeckTreeViewState extends State<DeckTreeView> {
-  final Set<String> _expandedDecks = {};
-
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -37,7 +39,7 @@ class _DeckTreeViewState extends State<DeckTreeView> {
 
   Widget _buildDeckTile(Deck deck, {int indent = 0}) {
     final hasChildren = deck.children.isNotEmpty;
-    final isExpanded = _expandedDecks.contains(deck.id);
+    final isExpanded = widget.expandedDeckIds.contains(deck.id);
     final isSelected = deck.id == widget.selectedDeckId;
     
     return Column(
@@ -63,13 +65,7 @@ class _DeckTreeViewState extends State<DeckTreeView> {
                       size: 20,
                     ),
                     onPressed: () {
-                      setState(() {
-                        if (isExpanded) {
-                          _expandedDecks.remove(deck.id);
-                        } else {
-                          _expandedDecks.add(deck.id);
-                        }
-                      });
+                      widget.onToggleExpansion(deck.id);
                     },
                     padding: EdgeInsets.zero,
                     constraints: BoxConstraints(minWidth: 32, minHeight: 32),
@@ -197,7 +193,7 @@ class _DeckTreeViewState extends State<DeckTreeView> {
   void _handleDeckAction(String action, Deck deck) {
     switch (action) {
       case 'add_subdeck':
-        _showAddSubdeckDialog(deck);
+        widget.onCreateSubdeck(deck);
         break;
       case 'rename':
         _showRenameDeckDialog(deck);
@@ -209,41 +205,6 @@ class _DeckTreeViewState extends State<DeckTreeView> {
         _showDeleteDeckDialog(deck);
         break;
     }
-  }
-
-  void _showAddSubdeckDialog(Deck parentDeck) {
-    final controller = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add Subdeck to "${parentDeck.name}"'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: 'Subdeck Name',
-            hintText: 'Enter subdeck name',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                widget.onCreateSubdeck(parentDeck);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text('Create'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showRenameDeckDialog(Deck deck) {

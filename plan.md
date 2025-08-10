@@ -37,15 +37,23 @@
 **Goal:** Implement hierarchical deck organization like Anki
 
 ### Implementation Tasks:
-- [ ] Study Anki's deck structure (https://docs.ankiweb.net/getting-started.html)
-- [ ] Modify Deck model to support parent-child relationships
-- [ ] Update Firestore schema for nested deck structure
-- [ ] Create expandable tree view UI component
-- [ ] Implement deck path navigation (breadcrumbs)
-- [ ] Update deck selection to handle subdeck logic
+- [x] Study Anki's deck structure (https://docs.ankiweb.net/getting-started.html)
+- [x] Modify Deck model to support parent-child relationships
+- [x] Update Firestore schema for nested deck structure
+- [x] Create expandable tree view UI component
+- [x] Implement deck path navigation (breadcrumbs)
+- [x] Update deck selection to handle subdeck logic
 - [ ] Add deck moving/reorganization functionality
 - [ ] Support for deck inheritance settings
 - [ ] Note: Focus on basic card type only (as specified)
+
+### Completed:
+- Implemented DeckTreeManager for hierarchical deck management
+- Created tree view UI with expand/collapse functionality
+- Added breadcrumb navigation for deck hierarchy
+- Fixed initialization issues with ManageDecksCubitV2
+- Resolved infinite loop in deck loading
+- Updated deck selection to work with new tree structure
 
 ---
 

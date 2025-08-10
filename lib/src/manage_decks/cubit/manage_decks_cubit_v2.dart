@@ -7,17 +7,16 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   final DeckTreeManager _deckTreeManager;
   final CardDeckManager _cdm; // Keep for backwards compatibility
   String? _selectedDeckId;
+  final Set<String> _expandedDeckIds = {};
 
   ManageDecksCubitV2({
     required DeckTreeManager deckTreeManager,
     required CardDeckManager cardDeckManager,
   })  : _deckTreeManager = deckTreeManager,
         _cdm = cardDeckManager,
-        super(DeckStateV2Loading()) {
-    _initialize();
-  }
+        super(DeckStateV2Loading());
 
-  void _initialize() async {
+  void initialize() async {
     // Get user ID from CardDeckManager (already set by LoginCubit)
     if (_cdm.userID.isNotEmpty) {
       await _deckTreeManager.setUserId(_cdm.userID);
@@ -35,13 +34,16 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       // Try to select the previously selected deck or the first available
       if (_selectedDeckId != null) {
         final deck = _deckTreeManager.getDeckById(_selectedDeckId!);
-        if (deck != null) {
+        if (deck != null && _cdm.deckNames.contains(deck.name)) {
           _cdm.setCurrentDeck(deck.name);
         }
       } else if (_deckTreeManager.allDecks.isNotEmpty) {
         final firstDeck = _deckTreeManager.allDecks.first;
         _selectedDeckId = firstDeck.id;
-        _cdm.setCurrentDeck(firstDeck.name);
+        // Only set current deck if it exists in the old system
+        if (_cdm.deckNames.contains(firstDeck.name)) {
+          _cdm.setCurrentDeck(firstDeck.name);
+        }
       }
       
       emit(DeckStateV2Loaded(
@@ -51,6 +53,7 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
         currentDeck: _selectedDeckId != null 
             ? _deckTreeManager.getDeckById(_selectedDeckId!)
             : null,
+        expandedDeckIds: _expandedDeckIds,
       ));
     } catch (e) {
       emit(DeckStateV2Error(e.toString()));
@@ -59,13 +62,32 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
 
   void selectDeck(Deck deck) {
     _selectedDeckId = deck.id;
-    _cdm.setCurrentDeck(deck.name);
+    // Only set current deck if it exists in the old system
+    if (_cdm.deckNames.contains(deck.name)) {
+      _cdm.setCurrentDeck(deck.name);
+    }
     
     if (state is DeckStateV2Loaded) {
       final currentState = state as DeckStateV2Loaded;
       emit(currentState.copyWith(
         selectedDeckId: deck.id,
         currentDeck: deck,
+        expandedDeckIds: _expandedDeckIds,
+      ));
+    }
+  }
+
+  void toggleDeckExpansion(String deckId) {
+    if (_expandedDeckIds.contains(deckId)) {
+      _expandedDeckIds.remove(deckId);
+    } else {
+      _expandedDeckIds.add(deckId);
+    }
+    
+    if (state is DeckStateV2Loaded) {
+      final currentState = state as DeckStateV2Loaded;
+      emit(currentState.copyWith(
+        expandedDeckIds: Set<String>.from(_expandedDeckIds),
       ));
     }
   }
@@ -82,8 +104,9 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
         settings: settings,
       );
       
-      // Also create in old system for compatibility
+      // Auto-expand parent deck when creating subdeck
       if (parentId != null) {
+        _expandedDeckIds.add(parentId);
         final parent = _deckTreeManager.getDeckById(parentId);
         if (parent != null) {
           _cdm.createDeck('${parent.path}::$name');
@@ -170,25 +193,29 @@ class DeckStateV2Loaded extends DeckStateV2 {
   final List<Deck> allDecks;
   final String? selectedDeckId;
   final Deck? currentDeck;
+  final Set<String> expandedDeckIds;
 
   DeckStateV2Loaded({
     required this.rootDecks,
     required this.allDecks,
     this.selectedDeckId,
     this.currentDeck,
-  });
+    Set<String>? expandedDeckIds,
+  }) : expandedDeckIds = expandedDeckIds ?? {};
 
   DeckStateV2Loaded copyWith({
     List<Deck>? rootDecks,
     List<Deck>? allDecks,
     String? selectedDeckId,
     Deck? currentDeck,
+    Set<String>? expandedDeckIds,
   }) {
     return DeckStateV2Loaded(
       rootDecks: rootDecks ?? this.rootDecks,
       allDecks: allDecks ?? this.allDecks,
       selectedDeckId: selectedDeckId ?? this.selectedDeckId,
       currentDeck: currentDeck ?? this.currentDeck,
+      expandedDeckIds: expandedDeckIds ?? this.expandedDeckIds,
     );
   }
 }

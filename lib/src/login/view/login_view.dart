@@ -14,7 +14,8 @@ class LoginView extends StatelessWidget {
       color: Colors.grey.shade400,
     );
 
-    return BlocBuilder<LoginCubit, LoginState>(
+    return SafeArea(
+      child: BlocBuilder<LoginCubit, LoginState>(
       builder: (context, state) {
         String userID = context.read<LoginCubit>().userLoggedIn();
         if (state is LoginLoading) {
@@ -52,6 +53,7 @@ class LoginView extends StatelessWidget {
           return _buildLoginForm(context, hintStyle);
         }
       },
+      ),
     );
   }
 

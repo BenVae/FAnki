@@ -5,14 +5,42 @@ import '../cubit/manage_decks_cubit_v2.dart';
 import '../../widgets/deck_tree_view.dart';
 import '../../widgets/deck_breadcrumbs.dart';
 
-class ManageDecksViewV2 extends StatelessWidget {
+class ManageDecksViewV2 extends StatefulWidget {
   const ManageDecksViewV2({super.key});
+
+  @override
+  State<ManageDecksViewV2> createState() => _ManageDecksViewV2State();
+}
+
+class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the cubit when the view is first shown
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ManageDecksCubitV2>().initialize();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: BlocBuilder<ManageDecksCubitV2, DeckStateV2>(
+      floatingActionButton: BlocBuilder<ManageDecksCubitV2, DeckStateV2>(
+        builder: (context, state) {
+          if (state is DeckStateV2Loaded) {
+            return FloatingActionButton.extended(
+              onPressed: () => _showCreateDeckDialog(context, null),
+              icon: Icon(Icons.add),
+              label: Text('New Deck'),
+              backgroundColor: Colors.blue.shade600,
+            );
+          }
+          return Container();
+        },
+      ),
+      body: SafeArea(
+        child: BlocBuilder<ManageDecksCubitV2, DeckStateV2>(
         builder: (context, state) {
           if (state is DeckStateV2Loading) {
             return Center(
@@ -108,23 +136,6 @@ class ManageDecksViewV2 extends StatelessWidget {
                               color: Colors.grey.shade900,
                             ),
                           ),
-                          Spacer(),
-                          ElevatedButton.icon(
-                            onPressed: () => _showCreateDeckDialog(context, null),
-                            icon: Icon(Icons.add),
-                            label: Text('New Deck'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade600,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       if (state.currentDeck != null) ...[
@@ -165,6 +176,10 @@ class ManageDecksViewV2 extends StatelessWidget {
                             child: DeckTreeView(
                               rootDecks: state.rootDecks,
                               selectedDeckId: state.selectedDeckId,
+                              expandedDeckIds: state.expandedDeckIds,
+                              onToggleExpansion: (deckId) {
+                                cubit.toggleDeckExpansion(deckId);
+                              },
                               onDeckSelected: (deck) {
                                 cubit.selectDeck(deck);
                               },
@@ -231,6 +246,7 @@ class ManageDecksViewV2 extends StatelessWidget {
           return Container();
         },
       ),
+      ),
     );
   }
 
@@ -280,7 +296,7 @@ class ManageDecksViewV2 extends StatelessWidget {
     );
   }
 
-  void _showCreateDeckDialog(BuildContext context, Deck? parentDeck) {
+  static void _showCreateDeckDialog(BuildContext context, Deck? parentDeck) {
     final controller = TextEditingController();
     
     showDialog(

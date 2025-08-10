@@ -62,7 +62,20 @@ class _CreateCardsViewState extends State<CreateCardsView> {
     
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: CustomScrollView(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AiImportPage(),
+            ),
+          );
+        },
+        icon: Icon(Icons.auto_awesome),
+        label: Text('AI Generate'),
+        backgroundColor: Colors.purple.shade600,
+      ),
+      body: SafeArea(
+        child: CustomScrollView(
         slivers: [
           SliverAppBar(
             floating: true,
@@ -72,65 +85,37 @@ class _CreateCardsViewState extends State<CreateCardsView> {
             flexibleSpace: FlexibleSpaceBar(
               background: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Card Manager',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade900,
-                          ),
-                        ),
-                        BlocBuilder<CreateCardsCubit, CreateCardsState>(
-                          builder: (context, state) {
-                            if (state is CreateCardViewingState) {
-                              return Text(
-                                '${state.cards.length} cards in ${state.deckName}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                ),
-                              );
-                            }
-                            return Text(
-                              'Loading deck...',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                    Text(
+                      'Card Manager',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade900,
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => AiImportPage(),
+                    BlocBuilder<CreateCardsCubit, CreateCardsState>(
+                      builder: (context, state) {
+                        if (state is CreateCardViewingState) {
+                          return Text(
+                            '${state.cards.length} cards in ${state.deckName}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
                             ),
                           );
-                        },
-                        icon: Icon(Icons.auto_awesome),
-                        label: Text('AI Generate'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple.shade600,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        }
+                        return Text(
+                          'Loading deck...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -465,6 +450,7 @@ class _CreateCardsViewState extends State<CreateCardsView> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
