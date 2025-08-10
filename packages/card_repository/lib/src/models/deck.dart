@@ -46,9 +46,20 @@ class Deck {
 
   /// Create deck from Firestore data
   factory Deck.fromMap(Map<String, dynamic> map) {
+    final id = map['id'] as String?;
+    final name = map['name'] as String?;
+    
+    if (id == null || id.isEmpty) {
+      throw ArgumentError('Deck ID cannot be null or empty');
+    }
+    
+    if (name == null || name.isEmpty) {
+      throw ArgumentError('Deck name cannot be null or empty');
+    }
+    
     return Deck(
-      id: map['id'] as String,
-      name: map['name'] as String,
+      id: id,
+      name: name,
       parentId: map['parentId'] as String?,
       createdAt: map['createdAt'] != null 
           ? DateTime.parse(map['createdAt'] as String)

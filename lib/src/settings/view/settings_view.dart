@@ -38,7 +38,8 @@ class _SettingsViewState extends State<SettingsView> {
 
     return Container(
       color: Colors.grey.shade50,
-      child: SingleChildScrollView(
+      child: SafeArea(
+        child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -249,6 +250,7 @@ class _SettingsViewState extends State<SettingsView> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

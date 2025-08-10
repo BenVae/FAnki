@@ -50,6 +50,16 @@ class FirebaseApi {
   }
 
   void removeDeckFromFirestore(String userID, String deckName) {
+    // Validate inputs
+    if (userID.isEmpty) {
+      print('Error: userID is empty');
+      return;
+    }
+    if (deckName.isEmpty) {
+      print('Error: deckName is empty');
+      return;
+    }
+    
     firestore
         .collection('users')
         .doc(userID)
@@ -77,6 +87,20 @@ class FirebaseApi {
 
   void addCardToFirestore(
       String userID, String currentDeckName, SingleCard card) {
+    // Validate inputs
+    if (userID.isEmpty) {
+      print('Error: userID is empty');
+      return;
+    }
+    if (currentDeckName.isEmpty) {
+      print('Error: currentDeckName is empty');
+      return;
+    }
+    if (card.id.isEmpty) {
+      print('Error: card.id is empty');
+      return;
+    }
+    
     var userDoc = firestore.collection('users').doc(userID);
     var deckDoc = userDoc.collection('decks').doc(currentDeckName);
     deckDoc.collection('cards').doc(card.id).set(card.cardToMap());
@@ -93,6 +117,20 @@ class FirebaseApi {
 
   void removeCardFromFirestore(
       String userID, String currentDeckName, SingleCard card) {
+    // Validate inputs
+    if (userID.isEmpty) {
+      print('Error: userID is empty');
+      return;
+    }
+    if (currentDeckName.isEmpty) {
+      print('Error: currentDeckName is empty');
+      return;
+    }
+    if (card.id.isEmpty) {
+      print('Error: card.id is empty');
+      return;
+    }
+    
     final deckCollection = firestore
         .collection('users')
         .doc(userID)
@@ -104,6 +142,20 @@ class FirebaseApi {
 
   void removeCardFromFirestoreByID(
       String userID, String currentDeckName, String id) {
+    // Validate inputs
+    if (userID.isEmpty) {
+      print('Error: userID is empty');
+      return;
+    }
+    if (currentDeckName.isEmpty) {
+      print('Error: currentDeckName is empty');
+      return;
+    }
+    if (id.isEmpty) {
+      print('Error: card id is empty');
+      return;
+    }
+    
     final deckCollection = firestore
         .collection('users')
         .doc(userID)
@@ -218,6 +270,12 @@ class FirebaseApi {
   /// Get all decks with their metadata
   Future<List<Map<String, dynamic>>> getAllDecksFromFirestore(String userID) async {
     try {
+      // Validate input
+      if (userID.isEmpty) {
+        print('Error: userID is empty');
+        return [];
+      }
+      
       final snapshot = await firestore
           .collection('users')
           .doc(userID)
@@ -238,11 +296,26 @@ class FirebaseApi {
   /// Create a new deck with v2 structure
   Future<void> createDeckInFirestoreV2(String userID, Map<String, dynamic> deckData) async {
     try {
+      // Validate inputs
+      if (userID.isEmpty) {
+        throw ArgumentError('userID cannot be empty');
+      }
+      
+      final deckId = deckData['id'] as String?;
+      if (deckId == null || deckId.isEmpty) {
+        throw ArgumentError('Deck ID cannot be null or empty');
+      }
+      
+      final deckName = deckData['name'] as String?;
+      if (deckName == null || deckName.isEmpty) {
+        throw ArgumentError('Deck name cannot be null or empty');
+      }
+      
       await firestore
           .collection('users')
           .doc(userID)
           .collection('decks_v2')
-          .doc(deckData['id'])
+          .doc(deckId)
           .set(deckData);
     } catch (e) {
       print('Error creating deck: $e');
@@ -253,6 +326,15 @@ class FirebaseApi {
   /// Update deck metadata
   Future<void> updateDeckInFirestore(String userID, String deckId, Map<String, dynamic> deckData) async {
     try {
+      // Validate inputs
+      if (userID.isEmpty) {
+        throw ArgumentError('userID cannot be empty');
+      }
+      
+      if (deckId.isEmpty) {
+        throw ArgumentError('deckId cannot be empty');
+      }
+      
       await firestore
           .collection('users')
           .doc(userID)
@@ -268,6 +350,15 @@ class FirebaseApi {
   /// Delete a deck
   Future<void> deleteDeckFromFirestore(String userID, String deckId) async {
     try {
+      // Validate inputs
+      if (userID.isEmpty) {
+        throw ArgumentError('userID cannot be empty');
+      }
+      
+      if (deckId.isEmpty) {
+        throw ArgumentError('deckId cannot be empty');
+      }
+      
       // Delete all cards in the deck first
       final cardsSnapshot = await firestore
           .collection('users')

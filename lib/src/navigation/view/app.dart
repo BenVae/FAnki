@@ -43,6 +43,9 @@ class _KarteiAppState extends State<KarteiApp> {
         RepositoryProvider.value(
           value: widget.authenticationRepository,
         ),
+        RepositoryProvider.value(
+          value: widget.cardDeckManager,
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -90,18 +93,27 @@ class _KarteiAppState extends State<KarteiApp> {
             } else {
               return BlocBuilder<NavigationCubit, NavigationState>(
                 builder: (context, state) {
-                  final isLearning = state == NavigationState.learning;
-                  
                   return Scaffold(
                     body: Stack(
                       children: [
                         _getPage(state),
-                        if (!isLearning)
+                        // Only show frosted navigation buttons on decks view
+                        if (state == NavigationState.decks)
                           FrostedNavigationButtons(
-                            selectedIndex: _determineSelectedIndex(state),
+                            selectedIndex: -1, // No button selected when on decks view
                             onNavigate: (index) => _onDestinationSelected(context, index),
                           ),
-                        if (isLearning)
+                        // Show back button on non-deck views
+                        if (state != NavigationState.decks && state != NavigationState.learning)
+                          Positioned(
+                            top: MediaQuery.of(context).padding.top + 16,
+                            right: MediaQuery.of(context).padding.right + 16,
+                            child: _FrostedBackButton(
+                              onPressed: () => context.read<NavigationCubit>().goToDecks(),
+                            ),
+                          ),
+                        // Learning view back button
+                        if (state == NavigationState.learning)
                           Positioned(
                             top: MediaQuery.of(context).padding.top + 16,
                             right: MediaQuery.of(context).padding.right + 16,
@@ -123,27 +135,13 @@ class _KarteiAppState extends State<KarteiApp> {
   }
 
   void _onDestinationSelected(BuildContext context, int index) {
+    // Since we only show navigation buttons on deck view, map them directly
     if (index == 0) {
-      context.read<NavigationCubit>().goToDecks();
-    } else if (index == 1) {
       context.read<NavigationCubit>().goToStats();
-    } else if (index == 2) {
+    } else if (index == 1) {
       context.read<NavigationCubit>().goToSettings();
     } else {
       throw UnimplementedError();
-    }
-  }
-
-  int _determineSelectedIndex(NavigationState state) {
-    switch (state) {
-      case NavigationState.decks:
-        return 0;
-      case NavigationState.stats:
-        return 1;
-      case NavigationState.settings:
-        return 2;
-      case NavigationState.learning:
-        return -1; // Not in navigation bar
     }
   }
 

@@ -73,11 +73,24 @@ class DeckTreeManager {
     String? parentId,
     DeckSettings? settings,
   }) async {
+    // Validate inputs
+    if (_userId.isEmpty) {
+      throw ArgumentError('User ID is not set');
+    }
+    
+    if (name.isEmpty) {
+      throw ArgumentError('Deck name cannot be empty');
+    }
+    
     // Build the path
     String path = name;
     int level = 0;
     
     if (parentId != null) {
+      if (parentId.isEmpty) {
+        throw ArgumentError('Parent ID cannot be empty when provided');
+      }
+      
       final parent = _decksById[parentId];
       if (parent != null) {
         path = '${parent.path}::$name';
@@ -116,6 +129,15 @@ class DeckTreeManager {
 
   /// Delete a deck and optionally its subdecks
   Future<void> deleteDeck(String deckId, {bool deleteSubdecks = false}) async {
+    // Validate inputs
+    if (_userId.isEmpty) {
+      throw ArgumentError('User ID is not set');
+    }
+    
+    if (deckId.isEmpty) {
+      throw ArgumentError('Deck ID cannot be empty');
+    }
+    
     final deck = _decksById[deckId];
     if (deck == null) return;
 
@@ -194,6 +216,19 @@ class DeckTreeManager {
 
   /// Move a deck to a new parent
   Future<void> moveDeck(String deckId, String? newParentId) async {
+    // Validate inputs
+    if (_userId.isEmpty) {
+      throw ArgumentError('User ID is not set');
+    }
+    
+    if (deckId.isEmpty) {
+      throw ArgumentError('Deck ID cannot be empty');
+    }
+    
+    if (newParentId != null && newParentId.isEmpty) {
+      throw ArgumentError('New parent ID cannot be empty when provided');
+    }
+    
     final deck = _decksById[deckId];
     if (deck == null) return;
 
@@ -236,6 +271,19 @@ class DeckTreeManager {
 
   /// Rename a deck
   Future<void> renameDeck(String deckId, String newName) async {
+    // Validate inputs
+    if (_userId.isEmpty) {
+      throw ArgumentError('User ID is not set');
+    }
+    
+    if (deckId.isEmpty) {
+      throw ArgumentError('Deck ID cannot be empty');
+    }
+    
+    if (newName.isEmpty) {
+      throw ArgumentError('New name cannot be empty');
+    }
+    
     final deck = _decksById[deckId];
     if (deck == null) return;
 
@@ -304,6 +352,15 @@ class DeckTreeManager {
     int? learningCards,
     int? reviewCards,
   }) async {
+    // Validate inputs
+    if (_userId.isEmpty) {
+      throw ArgumentError('User ID is not set');
+    }
+    
+    if (deckId.isEmpty) {
+      throw ArgumentError('Deck ID cannot be empty');
+    }
+    
     final deck = _decksById[deckId];
     if (deck == null) return;
 

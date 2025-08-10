@@ -16,6 +16,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
   List<DailyStudyData> _dailyData = [];
   Map<String, dynamic> _stats = {};
   bool _isLoading = true;
+  String _currentDeck = '';
 
   @override
   void initState() {
@@ -27,29 +28,41 @@ class _StudyStatsViewState extends State<StudyStatsView> {
     // Get user ID from authentication repository
     final authRepo = RepositoryProvider.of<AuthenticationRepository>(context);
     final userId = authRepo.currentUser.email ?? '';
+    
+    // Get current deck from CardDeckManager
+    final cardDeckManager = RepositoryProvider.of<CardDeckManager>(context);
+    _currentDeck = await cardDeckManager.getCurrentDeck();
 
     if (userId.isNotEmpty) {
       _activityManager.setUserId(userId);
       await _loadData();
     } else {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final dailyData = await _activityManager.getDailyStudyData();
       final stats = await _activityManager.getStudyStats();
 
-      setState(() {
-        _dailyData = dailyData;
-        _stats = stats;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _dailyData = dailyData;
+          _stats = stats;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -76,12 +89,27 @@ class _StudyStatsViewState extends State<StudyStatsView> {
                 color: Colors.blue.shade600,
               ),
               SizedBox(width: 12),
-              Text(
-                'Study Statistics',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Study Statistics',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade900,
+                      ),
+                    ),
+                    if (_currentDeck.isNotEmpty)
+                      Text(
+                        'for $_currentDeck',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

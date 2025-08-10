@@ -64,6 +64,12 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }
 
   void selectDeck(Deck deck) {
+    // Validate deck before selection
+    if (deck.id.isEmpty) {
+      log.severe('Cannot select deck with empty ID');
+      return;
+    }
+    
     _selectedDeckId = deck.id;
     // Only set current deck if it exists in the old system
     if (_cdm.deckNames.contains(deck.name)) {
@@ -100,6 +106,17 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
     String? parentId,
     DeckSettings? settings,
   }) async {
+    // Validate inputs
+    if (name.isEmpty) {
+      log.severe('Cannot create deck with empty name');
+      return;
+    }
+    
+    if (parentId != null && parentId.isEmpty) {
+      log.severe('Cannot create deck with empty parent ID');
+      return;
+    }
+    
     try {
       await _deckTreeManager.createDeck(
         name: name,
@@ -125,6 +142,12 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }
 
   Future<void> deleteDeck(String deckId, {bool deleteSubdecks = false}) async {
+    // Validate inputs
+    if (deckId.isEmpty) {
+      log.severe('Cannot delete deck with empty ID');
+      return;
+    }
+    
     try {
       final deck = _deckTreeManager.getDeckById(deckId);
       if (deck == null) return;
@@ -160,6 +183,17 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }
 
   Future<void> renameDeck(String deckId, String newName) async {
+    // Validate inputs
+    if (deckId.isEmpty) {
+      log.severe('Cannot rename deck with empty ID');
+      return;
+    }
+    
+    if (newName.isEmpty) {
+      log.severe('Cannot rename deck to empty name');
+      return;
+    }
+    
     try {
       await _deckTreeManager.renameDeck(deckId, newName);
       await loadDecks();
@@ -169,6 +203,17 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }
 
   Future<void> moveDeck(String deckId, String? newParentId) async {
+    // Validate inputs
+    if (deckId.isEmpty) {
+      log.severe('Cannot move deck with empty ID');
+      return;
+    }
+    
+    if (newParentId != null && newParentId.isEmpty) {
+      log.severe('Cannot move deck to empty parent ID');
+      return;
+    }
+    
     try {
       await _deckTreeManager.moveDeck(deckId, newParentId);
       await loadDecks();
