@@ -25,18 +25,31 @@ class _StudyStatsViewState extends State<StudyStatsView> {
   }
 
   Future<void> _initializeAndLoad() async {
-    // Get user ID from authentication repository
-    final authRepo = RepositoryProvider.of<AuthenticationRepository>(context);
-    final userId = authRepo.currentUser.email ?? '';
-    
-    // Get current deck from CardDeckManager
-    final cardDeckManager = RepositoryProvider.of<CardDeckManager>(context);
-    _currentDeck = await cardDeckManager.getCurrentDeck();
+    try {
+      // Get user ID from authentication repository
+      final authRepo = RepositoryProvider.of<AuthenticationRepository>(context);
+      final userId = authRepo.currentUser.email ?? '';
+      
+      // Try to get current deck from CardDeckManager
+      try {
+        final cardDeckManager = RepositoryProvider.of<CardDeckManager>(context);
+        _currentDeck = await cardDeckManager.getCurrentDeck();
+      } catch (e) {
+        // If CardDeckManager not available, just skip deck context
+        print('CardDeckManager not available: $e');
+        _currentDeck = '';
+      }
 
-    if (userId.isNotEmpty) {
-      _activityManager.setUserId(userId);
-      await _loadData();
-    } else {
+      if (userId.isNotEmpty) {
+        _activityManager.setUserId(userId);
+        await _loadData();
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      print('Error in _initializeAndLoad: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

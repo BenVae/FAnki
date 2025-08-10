@@ -21,11 +21,20 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
 
   void initialize() async {
     // Get user ID from CardDeckManager (already set by LoginCubit)
-    if (_cdm.userID.isNotEmpty) {
-      await _deckTreeManager.setUserId(_cdm.userID);
+    String userId = _cdm.userID;
+    
+    // If userID is empty, try to get it from AuthenticationRepository
+    if (userId.isEmpty) {
+      // Wait a bit and try again - login might still be in progress
+      await Future.delayed(Duration(milliseconds: 100));
+      userId = _cdm.userID;
+    }
+    
+    if (userId.isNotEmpty) {
+      await _deckTreeManager.setUserId(userId);
       await loadDecks();
     } else {
-      emit(DeckStateV2Error('User not logged in'));
+      emit(DeckStateV2Error('User not logged in. Please retry.'));
     }
   }
 
@@ -70,11 +79,22 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       return;
     }
     
+    print('ManageDecksCubitV2: Selecting deck "${deck.name}" (id: ${deck.id})');
+    print('ManageDecksCubitV2: CDM userID: "${_cdm.userID}"');
+    print('ManageDecksCubitV2: CDM deckNames: ${_cdm.deckNames}');
+    
     _selectedDeckId = deck.id;
-    // Only set current deck if it exists in the old system
-    if (_cdm.deckNames.contains(deck.name)) {
+    // Always set current deck in the old system, creating if needed
+    if (!_cdm.deckNames.contains(deck.name)) {
+      // Create deck in old system to sync with v2
+      print('ManageDecksCubitV2: Creating deck "${deck.name}" in old system');
+      _cdm.createDeck(deck.name);
+    } else {
+      print('ManageDecksCubitV2: Setting current deck to "${deck.name}"');
       _cdm.setCurrentDeck(deck.name);
     }
+    
+    print('ManageDecksCubitV2: CDM currentDeckName after selection: "${_cdm.currentDeckName}"');
     
     if (state is DeckStateV2Loaded) {
       final currentState = state as DeckStateV2Loaded;
@@ -118,6 +138,14 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
     }
     
     try {
+      // Ensure DeckTreeManager has the userID before creating deck
+      if (_cdm.userID.isNotEmpty) {
+        await _deckTreeManager.setUserId(_cdm.userID);
+      } else {
+        log.severe('Cannot create deck: User not logged in');
+        return;
+      }
+      
       await _deckTreeManager.createDeck(
         name: name,
         parentId: parentId,

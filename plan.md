@@ -12,12 +12,34 @@
 - Fixed deck management initialization and loading issues
 - **✅ Phase 1 Complete - Navigation & Deck Management Refactoring**
 
-**Next Priority:** Critical bug fixes and navigation simplification
+**Next Priority:** Architecture unification to resolve dual-system complexity
+
+---
+
+## Priority -0.5: Provider Context & UserID Architecture Fixes 🔧 ✅ COMPLETE
+**Goal:** Fix critical provider context and userID synchronization issues
+
+### Completed Tasks:
+- [x] Fix CardDeckManager RepositoryProvider issue in StudyStatsView
+- [x] Add error handling for missing CardDeckManager in StudyStatsView
+- [x] Fix AiImportPage Provider context issue by adding CardDeckManager parameter
+- [x] Enhanced CreateCardsCubit initialization with proper userID setting
+- [x] Added deck synchronization between v1 (CardDeckManager) and v2 (DeckTreeManager) systems
+- [x] Fixed navigation provider chains with proper context passing
+
+### Identified Architectural Issue:
+- **Root Problem:** Dual deck management systems (CardDeckManager + DeckTreeManager) create synchronization complexity
+- **Persistent Issue:** "userID is empty" errors due to timing and system conflicts
+- **Next Phase Needed:** Complete architectural unification (see Priority 2.5)
+
+### Technical Debt Created:
+- Added debugging print statements (need cleanup)
+- Temporary dual-system synchronization (needs architectural fix)
 
 ---
 
 ## Priority -1: Critical Bug Fixes 🚨
-**Goal:** Fix urgent issues and simplify navigation structure
+**Goal:** Fix urgent issues and navigation simplification
 
 ### Implementation Tasks:
 - [ ] Fix setState after dispose error in StudyStatsView
@@ -100,6 +122,60 @@
 - Fixed initialization issues with ManageDecksCubitV2
 - Resolved infinite loop in deck loading
 - Updated deck selection to work with new tree structure
+
+---
+
+## Priority 2.5: CardDeckManager Architecture Unification 🏗️
+**Goal:** Eliminate dual-system complexity and create bulletproof card creation flow
+
+### Root Problem Analysis:
+The userID empty errors stem from having two deck management systems (CardDeckManager + DeckTreeManager) that are poorly synchronized, creating race conditions and context dependency issues.
+
+### Architectural Solution Options:
+
+#### Option A: Eliminate CardDeckManager (Recommended)
+- **Migrate all card operations** to work directly with DeckTreeManager/Firebase
+- **Remove CardDeckManager dependency** from CreateCardsCubit
+- **Create unified CardService** that handles all card CRUD operations
+- **Simplify context chains** by removing dual system dependencies
+
+#### Option B: Reverse Integration  
+- **Make DeckTreeManager a wrapper** around CardDeckManager
+- **Ensure CardDeckManager is always initialized** before any deck operations
+- **Add synchronization layer** between the two systems
+
+### Implementation Strategy (Option A - Recommended):
+
+1. **Create Unified CardService**
+   ```dart
+   class CardService {
+     final FirebaseApi _firebaseApi;
+     final AuthenticationRepository _authRepo;
+     
+     Future<void> addCard(String deckId, String question, String answer);
+     Future<List<Card>> getCardsForDeck(String deckId);
+   }
+   ```
+
+2. **Update CreateCardsCubit**
+   ```dart
+   class CreateCardsCubit extends Cubit<CreateCardsState> {
+     final CardService _cardService;
+     final String _deckId; // Direct deck ID, no context dependency
+   }
+   ```
+
+3. **Streamline Navigation Flow**
+   - Pass deck IDs directly instead of relying on CardDeckManager state
+   - Remove complex provider chains
+   - Make card creation bulletproof with single system
+
+### Benefits:
+- **Eliminates userID timing issues** (always available from AuthRepo)
+- **Removes dual-system synchronization** complexity
+- **Simplifies context dependencies** (no more provider chains)
+- **Makes card creation bulletproof** with direct deck ID passing
+- **Easier to test and debug** with single system
 
 ---
 

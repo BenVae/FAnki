@@ -25,8 +25,16 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
     super.initState();
     // Initialize the cubit when the view is first shown
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ManageDecksCubitV2>().initialize();
+      _initializeIfNeeded();
     });
+  }
+
+  void _initializeIfNeeded() async {
+    final cubit = context.read<ManageDecksCubitV2>();
+    // Check if we need to initialize by checking current state
+    if (cubit.state is DeckStateV2Loading) {
+      cubit.initialize();
+    }
   }
 
   @override
@@ -147,10 +155,8 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
                       ),
                       
                       // Deck Dropdown Switcher
-                      if (state.allDecks.isNotEmpty) ...[
-                        SizedBox(height: 16),
-                        _buildDeckDropdown(context, state),
-                      ],
+                      SizedBox(height: 16),
+                      _buildDeckDropdown(context, state),
                       
                       if (state.currentDeck != null) ...[
                         SizedBox(height: 16),
@@ -316,6 +322,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
 
   static void _showCreateDeckDialog(BuildContext context, Deck? parentDeck) {
     final controller = TextEditingController();
+    final cubit = context.read<ManageDecksCubitV2>(); // Get cubit outside dialog
     
     showDialog(
       context: context,
@@ -338,7 +345,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
           autofocus: true,
           onSubmitted: (_) {
             if (controller.text.isNotEmpty) {
-              context.read<ManageDecksCubitV2>().createDeck(
+              cubit.createDeck( // Use the captured cubit
                 name: controller.text,
                 parentId: parentDeck?.id,
               );
@@ -357,7 +364,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                context.read<ManageDecksCubitV2>().createDeck(
+                cubit.createDeck( // Use the captured cubit
                   name: controller.text,
                   parentId: parentDeck?.id,
                 );
@@ -429,7 +436,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
           ],
           onChanged: (deckId) {
             if (deckId == null) {
-              _showCreateDeckDialog(context, null);
+              _showDeckCreationOptions(context, null);
             } else {
               final deck = allDecks.firstWhere((d) => d.id == deckId);
               context.read<ManageDecksCubitV2>().selectDeck(deck);
@@ -481,15 +488,19 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
   void _navigateToAiImport(BuildContext context, Deck deck) {
     // Set the current deck in the cubit before navigation
     context.read<ManageDecksCubitV2>().selectDeck(deck);
+    final cardDeckManager = context.read<ManageDecksCubitV2>().cdm;
     
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => CreateCardsCubit(
-            repo: RepositoryProvider.of<AuthenticationRepository>(context),
-            cardDeckManager: context.read<ManageDecksCubitV2>().cdm,
+        builder: (builderContext) => RepositoryProvider.value(
+          value: RepositoryProvider.of<AuthenticationRepository>(context),
+          child: BlocProvider(
+            create: (providerContext) => CreateCardsCubit(
+              repo: RepositoryProvider.of<AuthenticationRepository>(providerContext),
+              cardDeckManager: cardDeckManager,
+            ),
+            child: AiImportPage(cardDeckManager: cardDeckManager),
           ),
-          child: AiImportPage(),
         ),
       ),
     );
@@ -498,25 +509,264 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
   void _navigateToManualCreation(BuildContext context, Deck deck) {
     // Set the current deck in the cubit before navigation
     context.read<ManageDecksCubitV2>().selectDeck(deck);
+    final cardDeckManager = context.read<ManageDecksCubitV2>().cdm;
     
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => CreateCardsCubit(
-            repo: RepositoryProvider.of<AuthenticationRepository>(context),
-            cardDeckManager: context.read<ManageDecksCubitV2>().cdm,
-          ),
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text('Create Cards'),
-              leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
+        builder: (builderContext) => RepositoryProvider.value(
+          value: RepositoryProvider.of<AuthenticationRepository>(context),
+          child: BlocProvider(
+            create: (providerContext) => CreateCardsCubit(
+              repo: RepositoryProvider.of<AuthenticationRepository>(providerContext),
+              cardDeckManager: cardDeckManager,
             ),
-            body: CreateCardsView(),
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text('Create Cards'),
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(builderContext).pop(),
+                ),
+              ),
+              body: CreateCardsView(),
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeckCreationOptions(BuildContext context, Deck? parentDeck) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          parentDeck != null 
+              ? 'Create Subdeck in "${parentDeck.name}"'
+              : 'Create New Deck',
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'How would you like to create this deck?',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            SizedBox(height: 20),
+            // AI Option
+            InkWell(
+              onTap: () {
+                Navigator.of(dialogContext).pop();
+                _navigateToAICardCreation(context, parentDeck);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.purple.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.smart_toy,
+                        color: Colors.purple.shade600,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'AI Generation',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Upload documents to automatically generate cards',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 12),
+            // Manual Option
+            InkWell(
+              onTap: () {
+                Navigator.of(dialogContext).pop();
+                _showCreateDeckDialog(context, parentDeck);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        color: Colors.blue.shade600,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Manual Creation',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Create an empty deck and add cards manually',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToAICardCreation(BuildContext context, Deck? parentDeck) {
+    // First show dialog to get deck name, then navigate to AI import
+    final controller = TextEditingController();
+    final cubit = context.read<ManageDecksCubitV2>(); // Get cubit outside dialog
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Enter Deck Name'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: 'Deck Name',
+            hintText: 'Enter deck name for AI generation',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            prefixIcon: Icon(Icons.smart_toy),
+          ),
+          autofocus: true,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                Navigator.of(dialogContext).pop();
+                // Create the deck first, then navigate to AI import
+                cubit.createDeck( // Use the captured cubit
+                  name: controller.text,
+                  parentId: parentDeck?.id,
+                );
+                // Navigate to AI import view
+                _navigateToAIImport(context, controller.text);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple.shade600,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text('Create & Generate'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToAIImport(BuildContext context, String deckName) {
+    // Get the CardDeckManager from ManageDecksCubitV2  
+    final cardDeckManager = context.read<ManageDecksCubitV2>().cdm;
+    
+    // Navigate to AI import view with CardDeckManager and proper context
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (builderContext) => RepositoryProvider.value(
+          value: RepositoryProvider.of<AuthenticationRepository>(context),
+          child: BlocProvider(
+            create: (providerContext) => CreateCardsCubit(
+              repo: RepositoryProvider.of<AuthenticationRepository>(providerContext),
+              cardDeckManager: cardDeckManager,
+            ),
+            child: AiImportPage(cardDeckManager: cardDeckManager),
+          ),
+        ),
+      ),
+    );
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.smart_toy, color: Colors.white),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text('Deck "$deckName" created! You can now generate cards with AI.'),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.purple.shade600,
       ),
     );
   }

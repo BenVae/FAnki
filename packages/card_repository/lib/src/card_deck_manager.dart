@@ -126,7 +126,7 @@ class CardDeckManager {
   }
 
   Future<String> getCurrentDeck() async {
-    if (currentDeckName == '') {
+    if (currentDeckName == '' && userID.isNotEmpty) {
       currentDeckName = await firebaseapi.getLastDeckFromFireStore(userID);
     }
     return currentDeckName;
