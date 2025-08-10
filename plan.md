@@ -10,30 +10,52 @@
 - **AI functionality with OpenAI integration - WORKING!** 🚀
 - Tree-structured deck hierarchy with expand/collapse
 - Fixed deck management initialization and loading issues
+- **✅ Phase 1 Complete - Navigation & Deck Management Refactoring**
 
-**Next Priority:** Navigation refactoring and deck-centric UI
+**Next Priority:** Critical bug fixes and navigation simplification
 
 ---
 
-## Priority 0: Navigation & Deck Management Refactoring
+## Priority -1: Critical Bug Fixes 🚨
+**Goal:** Fix urgent issues and simplify navigation structure
+
+### Implementation Tasks:
+- [ ] Fix setState after dispose error in StudyStatsView
+- [ ] Add current deck context to statistics view header
+- [ ] Fix Settings SafeArea at top
+- [ ] Resolve Firestore "document path must be non-empty string" error
+- [ ] Simplify navigation: remove global nav, keep buttons only on deck view
+- [ ] Add back buttons to Statistics and Settings views
+- [ ] Fix deck loading validation and error handling
+
+### Navigation Simplification:
+- **Deck View Only**: Show Statistics & Settings buttons only on deck management
+- **Other Views**: Simple back/close button only
+- **No Global Nav**: Remove frosted navigation from all other screens
+
+---
+
+## Priority 0: Navigation & Deck Management Refactoring ✅ COMPLETE
 **Goal:** Simplify navigation with deck management as the central hub
 
 ### Implementation Tasks:
-- [ ] Simplify navigation to only 2 buttons (Statistics, Settings)
-- [ ] Remove Learning and Create Cards from main navigation
-- [ ] Make deck management the default/home view
-- [ ] Add deck dropdown switcher with "Create New Deck" option
-- [ ] Create study count label widget (number only, auto-hide when 0)
-- [ ] Add tap-to-study functionality on decks
-- [ ] Create card creation dialog (AI vs Manual choice)
-- [ ] Move card creation to deck context menu
-- [ ] Update NavigationCubit to remove unused states
+- [x] Simplify navigation to only 2 buttons (Statistics, Settings)
+- [x] Remove Learning and Create Cards from main navigation
+- [x] Make deck management the default/home view
+- [x] Add deck dropdown switcher with "Create New Deck" option
+- [x] Create study count label widget (number only, auto-hide when 0)
+- [x] Add tap-to-study functionality on decks
+- [x] Create card creation dialog (AI vs Manual choice)
+- [x] Move card creation to deck context menu
+- [x] Update NavigationCubit to remove unused states
 
-### UI Components:
-- **Study Count Label**: Blue text on light blue bg, shows number only
+### Completed Features:
+- **Study Count Labels**: Blue text on light blue bg, auto-hide when 0
 - **Deck Dropdown**: Current deck + deck list + "Create New Deck" button
 - **Card Creation Dialog**: Choice between AI and Manual creation
 - **Deck Actions Menu**: Add Cards, Rename, Delete, Move options
+- **Tap-to-Study**: Direct navigation from deck to learning view
+- **Streamlined Navigation**: Simplified to essential components only
 
 ---
 
@@ -158,11 +180,11 @@
 
 ## Development Workflow
 
-### Phase 1: Navigation Refactoring (Current)
-1. Implement Priority 0 (Navigation & Deck Management)
-2. Create study count labels
-3. Simplify navigation to 2 buttons
-4. Add deck-centric features
+### Phase 1: Critical Bug Fixes (Current)
+1. Fix setState after dispose and SafeArea issues
+2. Resolve Firestore document path errors
+3. Simplify navigation structure (remove global nav)
+4. Add proper back button navigation
 
 ### Phase 2: Content Enhancement
 1. Implement Priority 1 (Markdown support)
