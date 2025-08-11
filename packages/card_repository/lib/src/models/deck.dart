@@ -122,9 +122,13 @@ class Deck {
   /// Calculate total cards including all subdecks
   int get totalCards {
     int total = cardCount;
+    print('Deck "$name": cardCount = $cardCount, children.length = ${children.length}');
     for (final child in children) {
-      total += child.totalCards;
+      final childTotal = child.totalCards;
+      print('Deck "$name": child "${child.name}" has totalCards = $childTotal');
+      total += childTotal;
     }
+    print('Deck "$name": final totalCards = $total');
     return total;
   }
 

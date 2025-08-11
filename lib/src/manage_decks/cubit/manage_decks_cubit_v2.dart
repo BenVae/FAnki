@@ -17,7 +17,9 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
     required CardDeckManager cardDeckManager,
   })  : _deckTreeManager = deckTreeManager,
         _cdm = cardDeckManager,
-        super(DeckStateV2Loading());
+        super(DeckStateV2Loading()) {
+    print('ManageDecksCubitV2: Constructor - CDM userID: "${cardDeckManager.userID}", currentDeckName: "${cardDeckManager.currentDeckName}"');
+  }
 
   void initialize() async {
     // Get user ID from CardDeckManager (already set by LoginCubit)
@@ -39,9 +41,14 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }
 
   Future<void> loadDecks() async {
+    print('ManageDecksCubitV2: === LOADING DECKS ===');
     emit(DeckStateV2Loading());
     try {
       await _deckTreeManager.loadDecks();
+      print('ManageDecksCubitV2: Loaded ${_deckTreeManager.allDecks.length} decks from v2 system');
+      
+      // Sync card counts from v1 system after loading decks
+      await _syncCardCounts();
       
       // Try to select the previously selected deck or the first available
       if (_selectedDeckId != null) {
@@ -72,6 +79,39 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
     }
   }
 
+  /// Sync card counts from v1 system (CardDeckManager) to v2 decks
+  Future<void> _syncCardCounts() async {
+    print('ManageDecksCubitV2: === STARTING CARD COUNT SYNC ===');
+    print('ManageDecksCubitV2: CDM userID: "${_cdm.userID}"');
+    print('ManageDecksCubitV2: CDM deckNames: ${_cdm.deckNames}');
+    print('ManageDecksCubitV2: V2 allDecks count: ${_deckTreeManager.allDecks.length}');
+    
+    for (final deck in _deckTreeManager.allDecks) {
+      print('ManageDecksCubitV2: Processing deck "${deck.name}" (id: ${deck.id})');
+      
+      // Get card count from v1 system if the deck exists there
+      int realCardCount = 0;
+      if (_cdm.deckNames.contains(deck.name)) {
+        realCardCount = _cdm.getCardCount(deck.name);
+        print('ManageDecksCubitV2: ✓ Deck "${deck.name}": v2=${deck.cardCount}, v1=$realCardCount');
+        
+        // Update the deck in DeckTreeManager if card count is different
+        if (deck.cardCount != realCardCount) {
+          print('ManageDecksCubitV2: → Updating card count for "${deck.name}" from ${deck.cardCount} to $realCardCount');
+          _deckTreeManager.updateDeckCardCount(deck.id, realCardCount);
+          print('ManageDecksCubitV2: → Update complete');
+        } else {
+          print('ManageDecksCubitV2: → No update needed, counts match');
+        }
+      } else {
+        print('ManageDecksCubitV2: ✗ Deck "${deck.name}" not found in v1 system');
+        print('ManageDecksCubitV2: Available v1 decks: ${_cdm.deckNames}');
+      }
+    }
+    
+    print('ManageDecksCubitV2: === CARD COUNT SYNC COMPLETE ===');
+  }
+
   void selectDeck(Deck deck) {
     // Validate deck before selection
     if (deck.id.isEmpty) {
@@ -95,6 +135,13 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
     }
     
     print('ManageDecksCubitV2: CDM currentDeckName after selection: "${_cdm.currentDeckName}"');
+    
+    // Update card count from v1 system for this specific deck
+    final realCardCount = _cdm.getCardCount(deck.name);
+    if (deck.cardCount != realCardCount) {
+      print('ManageDecksCubitV2: Updating selected deck card count from ${deck.cardCount} to $realCardCount');
+      _deckTreeManager.updateDeckCardCount(deck.id, realCardCount);
+    }
     
     if (state is DeckStateV2Loaded) {
       final currentState = state as DeckStateV2Loaded;

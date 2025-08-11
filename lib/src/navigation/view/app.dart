@@ -82,15 +82,40 @@ class _KarteiAppState extends State<KarteiApp> {
         home: StreamBuilder<User>(
           stream: widget.authenticationRepository.user,
           builder: (context, snapshot) {
+            print('App: Auth StreamBuilder - connectionState: ${snapshot.connectionState}');
+            print('App: Auth StreamBuilder - hasData: ${snapshot.hasData}');
+            print('App: Auth StreamBuilder - data: ${snapshot.data}');
+            print('App: Auth StreamBuilder - is User.empty: ${snapshot.data == User.empty}');
+            
             if (snapshot.connectionState == ConnectionState.waiting) {
+              print('App: Showing loading indicator');
               return Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
-            } else if (!snapshot.hasData || snapshot.data == User.empty) {
+            } else if (!snapshot.hasData || 
+                       snapshot.data == User.empty || 
+                       snapshot.data == null ||
+                       snapshot.data!.email == null ||
+                       snapshot.data!.email!.isEmpty) {
+              print('App: User is not authenticated - showing login page');
+              print('App: hasData: ${snapshot.hasData}');
+              print('App: data == User.empty: ${snapshot.data == User.empty}');
+              print('App: email: ${snapshot.data?.email}');
               return Scaffold(
-                body: Center(child: LoginPage()),
+                body: SafeArea(
+                  child: LoginPage(),
+                ),
               );
             } else {
+              print('App: User is authenticated, showing main app');
+              final user = snapshot.data!;
+              print('App: User email: "${user.email}", id: "${user.id}"');
+              
+              // Ensure the user is properly set in our managers
+              if (user.email != null && user.email!.isNotEmpty) {
+                print('App: Ensuring userID is set in CardDeckManager');
+                widget.cardDeckManager.setUserID(user.email!);
+              }
               return BlocBuilder<NavigationCubit, NavigationState>(
                 builder: (context, state) {
                   return Scaffold(

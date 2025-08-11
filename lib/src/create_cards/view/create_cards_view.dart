@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/create_cards_cubit.dart';
@@ -74,29 +75,36 @@ class _CreateCardsViewState extends State<CreateCardsView> {
         label: Text('AI Generate'),
         backgroundColor: Colors.purple.shade600,
       ),
-      body: SafeArea(
-        child: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            expandedHeight: 80,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Card Manager',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade900,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  floating: true,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  expandedHeight: 120, // Increased for proper spacing
+                  automaticallyImplyLeading: false, // Remove default back button
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 16.0,
+                        right: 16.0,
+                        top: 40, // Add top padding so title appears below frosted button
                       ),
-                    ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Card Manager',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade900,
+                            ),
+                          ),
                     BlocBuilder<CreateCardsCubit, CreateCardsState>(
                       builder: (context, state) {
                         if (state is CreateCardViewingState) {
@@ -449,8 +457,18 @@ class _CreateCardsViewState extends State<CreateCardsView> {
               ),
             ),
           ),
+              ],
+            ),
+          ),
+          // Frosted back button
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: MediaQuery.of(context).padding.right + 16,
+            child: _FrostedBackButton(
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
         ],
-      ),
       ),
     );
   }
@@ -640,6 +658,55 @@ class _CardListItemState extends State<_CardListItem>
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FrostedBackButton extends StatelessWidget {
+  const _FrostedBackButton({required this.onPressed});
+  
+  final VoidCallback onPressed;
+  
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: 0.3),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.4),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(28),
+              onTap: onPressed,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  Icons.close,
+                  size: 22,
+                  color: colorScheme.onSurface.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
           ),
         ),
       ),

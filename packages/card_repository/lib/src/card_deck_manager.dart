@@ -7,6 +7,10 @@ class CardDeckManager {
   String userID = '';
   String currentDeckName = '';
 
+  CardDeckManager() {
+    print('CardDeckManager: Constructor called - userID: "$userID", currentDeckName: "$currentDeckName"');
+  }
+
   List<String> get deckNames => decks.keys.toList();
 
   /// Get the number of cards in a specific deck
@@ -27,10 +31,15 @@ class CardDeckManager {
   }
 
   void setUserID(String userID) {
+    print('CardDeckManager.setUserID: Setting userID from "${this.userID}" to "$userID"');
     this.userID = userID.toLowerCase();
+    print('CardDeckManager.setUserID: After toLowerCase: "${this.userID}"');
     if (this.userID.isNotEmpty) {
+      print('CardDeckManager.setUserID: UserID is not empty, initializing deck names and getting current deck');
       initDeckNames();
       getCurrentDeck();
+    } else {
+      print('CardDeckManager.setUserID: WARNING - UserID is empty after setting!');
     }
   }
 
@@ -68,15 +77,18 @@ class CardDeckManager {
   }
 
   bool createDeck(String deckName) {
+    print('CardDeckManager.createDeck: Creating deck "$deckName" with userID "$userID"');
     if (deckNames.contains(deckName)) {
-      print('Deck with name $deckName already exists.');
+      print('CardDeckManager.createDeck: Deck with name $deckName already exists.');
       return false;
     } else {
       decks[deckName] = [];
+      print('CardDeckManager.createDeck: Calling Firebase API with userID "$userID" and deckName "$deckName"');
       firebaseapi.createDeckInFirestore(userID, deckName);
-      print('Added deck with name $deckName.');
+      print('CardDeckManager.createDeck: Added deck with name $deckName.');
     }
     currentDeckName = deckName;
+    print('CardDeckManager.createDeck: Set currentDeckName to "$currentDeckName"');
     return true;
   }
 
@@ -95,9 +107,12 @@ class CardDeckManager {
   }
 
   void addCardWithQA(String question, String answer) {
+    print('CardDeckManager.addCardWithQA: Adding card with userID "$userID" and currentDeckName "$currentDeckName"');
+    print('CardDeckManager.addCardWithQA: Question: "$question", Answer: "$answer"');
     SingleCard sc = SingleCard(
         deckName: currentDeckName, questionText: question, answerText: answer);
     decks[currentDeckName]!.add(sc);
+    print('CardDeckManager.addCardWithQA: Calling Firebase API addCardToFirestore');
     firebaseapi.addCardToFirestore(userID, currentDeckName, sc);
   }
 

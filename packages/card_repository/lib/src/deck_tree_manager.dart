@@ -17,6 +17,32 @@ class DeckTreeManager {
   /// Get a deck by ID
   Deck? getDeckById(String id) => _decksById[id];
 
+  /// Update the card count for a deck
+  void updateDeckCardCount(String deckId, int cardCount) {
+    final deck = _decksById[deckId];
+    if (deck != null) {
+      final updatedDeck = deck.copyWith(cardCount: cardCount);
+      _decksById[deckId] = updatedDeck;
+      
+      // Update in root decks list if it's a root deck
+      final rootIndex = _rootDecks.indexWhere((d) => d.id == deckId);
+      if (rootIndex != -1) {
+        _rootDecks[rootIndex] = updatedDeck;
+      }
+      
+      // Update in parent's children list if it has a parent
+      if (deck.parentId != null) {
+        final parent = _decksById[deck.parentId!];
+        if (parent != null) {
+          final childIndex = parent.children.indexWhere((d) => d.id == deckId);
+          if (childIndex != -1) {
+            parent.children[childIndex] = updatedDeck;
+          }
+        }
+      }
+    }
+  }
+
   /// Set the user ID and load decks
   Future<void> setUserId(String userId) async {
     _userId = userId.toLowerCase();

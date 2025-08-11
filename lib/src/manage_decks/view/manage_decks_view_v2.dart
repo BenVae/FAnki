@@ -489,6 +489,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
     // Set the current deck in the cubit before navigation
     context.read<ManageDecksCubitV2>().selectDeck(deck);
     final cardDeckManager = context.read<ManageDecksCubitV2>().cdm;
+    final cubit = context.read<ManageDecksCubitV2>();
     
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -503,13 +504,18 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      // Refresh deck counts when returning from AI import
+      print('ManageDecksCubitV2: Returned from AI import, refreshing deck counts');
+      cubit.loadDecks();
+    });
   }
 
   void _navigateToManualCreation(BuildContext context, Deck deck) {
     // Set the current deck in the cubit before navigation
     context.read<ManageDecksCubitV2>().selectDeck(deck);
     final cardDeckManager = context.read<ManageDecksCubitV2>().cdm;
+    final cubit = context.read<ManageDecksCubitV2>();
     
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -520,20 +526,15 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
               repo: RepositoryProvider.of<AuthenticationRepository>(providerContext),
               cardDeckManager: cardDeckManager,
             ),
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text('Create Cards'),
-                leading: IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(builderContext).pop(),
-                ),
-              ),
-              body: CreateCardsView(),
-            ),
+            child: CreateCardsView(),
           ),
         ),
       ),
-    );
+    ).then((_) {
+      // Refresh deck counts when returning from card creation
+      print('ManageDecksCubitV2: Returned from card creation, refreshing deck counts');
+      cubit.loadDecks();
+    });
   }
 
   void _showDeckCreationOptions(BuildContext context, Deck? parentDeck) {

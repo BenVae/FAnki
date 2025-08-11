@@ -15,15 +15,20 @@ class LoginCubitV2 extends Cubit<LoginState> {
     this._cdm,
     this._deckTreeManager,
   ) : super(LoginLoading()) {
+    print('LoginCubitV2: Constructor - CDM userID before: "${_cdm.userID}"');
     if (_authenticationRepository.currentUser.isEmpty) {
       log.info('CurrentUser empty');
+      print('LoginCubitV2: CurrentUser is empty, emitting LoginInitial');
       emit(LoginInitial());
     } else {
       log.info('CurrentUser not empty');
       String email = _authenticationRepository.currentUser.email ?? '';
+      print('LoginCubitV2: Got email from currentUser: "$email"');
       if (email != '') {
+        print('LoginCubitV2: Setting userID in CDM and DeckTreeManager');
         _cdm.setUserID(email);
         _deckTreeManager.setUserId(email);
+        print('LoginCubitV2: After setUserID - CDM userID: "${_cdm.userID}"');
         emit(LoginSuccess());
       } else {
         log.severe('Did not get the email from auth.');

@@ -10,10 +10,15 @@ class StudyCountLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('StudyCountLabel: Received count = $count');
+    
     // Don't show label if count is 0
     if (count <= 0) {
+      print('StudyCountLabel: Hiding label because count <= 0');
       return const SizedBox.shrink();
     }
+    
+    print('StudyCountLabel: Showing label with count = $count');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
