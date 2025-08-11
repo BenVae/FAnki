@@ -1,320 +1,830 @@
-# FAnki Development Plan - Roadmap Aligned
+# FAnki Anki Implementation Plan
 
-## Current Status
-**Completed:**
-- Core UI and infrastructure for AI card generation
-- Enhanced flashcard learning interface with 3D flip animations
-- Modern deck management UI with card-based layout
-- Card creation interface with form validation and preview
-- Progress tracking and statistics display
-- **AI functionality with OpenAI integration - WORKING!** 🚀
-- Tree-structured deck hierarchy with expand/collapse
-- Fixed deck management initialization and loading issues
-- **✅ Phase 1 Complete - Navigation & Deck Management Refactoring**
-- **✅ Markdown/Rich Text Support - COMPLETE** 🎨
+## <� **Mission: Transform FAnki into Proper Anki System**
 
-**Next Priority:** Critical bug fixes and architecture unification to resolve dual-system complexity
+**Goal:** Upgrade from basic random flashcards to scientific spaced repetition using SM-2 algorithm
 
----
+## =� **Current System Analysis**
 
-## Priority -0.5: Provider Context & UserID Architecture Fixes 🔧 ✅ COMPLETE
-**Goal:** Fix critical provider context and userID synchronization issues
+###  **What We Have:**
+- Basic `SingleCard` model with simple `difficulty` field (0.01-1.0)
+- Random card selection in learning
+- Markdown support with LaTeX formulas
+- Tree-structured deck hierarchy
+- AI-powered card generation
+- Modern Flutter UI with BLoC architecture
 
-### Completed Tasks:
-- [x] Fix CardDeckManager RepositoryProvider issue in StudyStatsView
-- [x] Add error handling for missing CardDeckManager in StudyStatsView
-- [x] Fix AiImportPage Provider context issue by adding CardDeckManager parameter
-- [x] Enhanced CreateCardsCubit initialization with proper userID setting
-- [x] Added deck synchronization between v1 (CardDeckManager) and v2 (DeckTreeManager) systems
-- [x] Fixed navigation provider chains with proper context passing
-
-### Latest Updates (Priority -0.25):
-- [x] Enhanced authentication flow with comprehensive debugging
-- [x] Added robust userID initialization in LoginCubitV2 and app.dart
-- [x] Implemented card count synchronization between dual deck systems
-- [x] Added frosted back button to CreateCardsView with proper SafeArea handling
-- [x] Fixed deck count refresh after card creation and AI import operations
-- [x] Enhanced DeckTreeManager with updateDeckCardCount functionality
-- [x] Added comprehensive debugging output for tracking userID flow
-
-### UI Improvements:
-- [x] Implemented modern frosted glass back button in CreateCardsView
-- [x] Fixed SafeArea and layout spacing issues in card creation interface
-- [x] Improved visual hierarchy with proper app bar spacing
-
-### Identified Architectural Issue:
-- **Root Problem:** Dual deck management systems (CardDeckManager + DeckTreeManager) create synchronization complexity
-- **Persistent Issue:** "userID is empty" errors due to timing and system conflicts
-- **Next Phase Needed:** Complete architectural unification (see Priority 2.5)
-
-### Technical Debt Created:
-- ~~Added comprehensive debugging print statements (need cleanup)~~ ✅ RESOLVED
-- Temporary dual-system synchronization (needs architectural fix)
-- Complex refresh logic after navigation operations
-
-
-## Priority 0: Navigation & Deck Management Refactoring ✅ COMPLETE
-**Goal:** Simplify navigation with deck management as the central hub
-
-### Implementation Tasks:
-- [x] Simplify navigation to only 2 buttons (Statistics, Settings)
-- [x] Remove Learning and Create Cards from main navigation
-- [x] Make deck management the default/home view
-- [x] Add deck dropdown switcher with "Create New Deck" option
-- [x] Create study count label widget (number only, auto-hide when 0)
-- [x] Add tap-to-study functionality on decks
-- [x] Create card creation dialog (AI vs Manual choice)
-- [x] Move card creation to deck context menu
-- [x] Update NavigationCubit to remove unused states
-
-### Completed Features:
-- **Study Count Labels**: Blue text on light blue bg, auto-hide when 0
-- **Deck Dropdown**: Current deck + deck list + "Create New Deck" button
-- **Card Creation Dialog**: Choice between AI and Manual creation
-- **Deck Actions Menu**: Add Cards, Rename, Delete, Move options
-- **Tap-to-Study**: Direct navigation from deck to learning view
-- **Streamlined Navigation**: Simplified to essential components only
+### L **Critical Missing Anki Features:**
+1. **Spaced Repetition Algorithm** (SM-2/SM-17)
+2. **Card States & Lifecycle** (New � Learning � Review � Mature)
+3. **Due Date Scheduling System** 
+4. **Review Intervals** (1d, 3d, 7d, 14d, etc.)
+5. **Ease Factor** (how easy/hard cards are)
+6. **Learning Steps** (for new cards: 1m, 10m, etc.)
+7. **Lapses & Relearning** (failed mature cards)
+8. **Daily Review Limits**
+9. **Proper Review Queue** (due cards first, then new)
+10. **Answer Grading** (Again, Hard, Good, Easy)
 
 ---
 
-## Priority 1: Markdown/Rich Text for Card Back ✅ COMPLETE
-**Goal:** Enable rich content formatting for answer cards
+## <� **Phase 1: Core Data Models & Architecture**
 
-### ✅ Completed Implementation:
-- [x] **AI service prompt updated** - GPT informed about markdown capabilities ✅
-  - [x] Markdown syntax support specified
-  - [x] LaTeX formula support (`$...$` inline, `$$...$$` block) 
-  - [x] Code blocks with syntax highlighting (```language)
-  - [x] Lists, tables, bold, italic, links fully supported
-- [x] **flutter_markdown package added** (^0.7.4) ✅
-- [x] **Card model supports markdown** - uses existing string fields ✅
-- [x] **MarkdownEditor implemented** with comprehensive toolbar ✅
-  - [x] Live preview with Write/Preview tabs
-  - [x] Toolbar with formatting buttons (bold, italic, headings, lists)
-  - [x] Math formulas (inline/block), code blocks, links, tables
-  - [x] Smart text insertion with selected text wrapping
-- [x] **flutter_math_fork added** for LaTeX support (^0.7.2) ✅
-- [x] **MarkdownCardDisplay component** renders markdown ✅
-  - [x] Custom LaTeX processor for $...$ and $$...$$
-  - [x] GitHub Flavored Markdown support
-  - [x] Styled code blocks with syntax highlighting
-  - [x] Proper theme integration
-- [x] **Integration complete** - Used in card creation and learning views ✅
+### **1.1 Enhanced Card Model**
+Replace `SingleCard` with proper Anki-style card model:
 
-### Current Status:
-**FULLY FUNCTIONAL** - Markdown support is complete and integrated throughout the app:
-- **Card Creation**: Uses MarkdownEditor with full toolbar
-- **Learning View**: Uses MarkdownCardDisplay for rich answer rendering  
-- **AI Generation**: AI service generates markdown-formatted content
-- **LaTeX Math**: Both inline ($x^2$) and block ($$\frac{1}{2}$$) formulas supported
+```dart
+class AnkiCard {
+  String id;
+  String deckId;           // Changed from deckName to deckId
+  String questionText;     // Supports markdown
+  String answerText;       // Supports markdown + LaTeX
+  
+  // Anki-specific scheduling fields
+  CardState state;         // NEW, LEARNING, REVIEW, RELEARNING
+  int repetitions;         // Number of successful reviews
+  double easeFactor;       // 1.3 to 4.0 (starts at 2.5)
+  int interval;           // Days until next review
+  DateTime dueDate;       // When card is next due
+  DateTime lastReviewed;  // Last review timestamp
+  int lapses;            // Number of times card was failed
+  List<int> learningSteps; // [1, 10] minutes for new cards
+  int currentStep;        // Current position in learning steps
+  
+  // Optional Anki features
+  bool suspended;         // User can suspend difficult cards
+  List<String> tags;      // For organization
+  String noteType;        // Basic, Cloze, etc.
+  
+  // Metadata
+  DateTime created;
+  DateTime modified;
+}
 
-### Remaining Minor Tasks:
-- [ ] Enable image embedding in cards (low priority)
-- [ ] Add keyboard shortcuts for formatting (enhancement)
+enum CardState { NEW, LEARNING, REVIEW, RELEARNING }
+```
 
----
+### **1.2 SM-2 Algorithm Service**
+```dart
+class SM2Service {
+  static const double INITIAL_EASE = 2.5;
+  static const double MIN_EASE = 1.3;
+  static const double MAX_EASE = 4.0;
+  static const List<int> DEFAULT_LEARNING_STEPS = [1, 10]; // minutes
+  static const List<int> DEFAULT_RELEARNING_STEPS = [10];
+  
+  /// Process a review and update card according to SM-2 algorithm
+  AnkiCard processReview(AnkiCard card, ReviewGrade grade) {
+    // Implement complete SM-2 algorithm:
+    // 1. Update repetitions based on grade
+    // 2. Calculate new ease factor
+    // 3. Determine new interval
+    // 4. Set next due date
+    // 5. Update card state (NEW � LEARNING � REVIEW)
+    // 6. Handle lapses and relearning
+  }
+  
+  /// Calculate intervals according to SM-2 rules
+  int calculateInterval(int repetitions, double easeFactor, int previousInterval) {
+    if (repetitions == 1) return 1;      // First review: 1 day
+    if (repetitions == 2) return 6;      // Second review: 6 days
+    return (previousInterval * easeFactor).round(); // Subsequent: I(n-1) * EF
+  }
+  
+  /// Update ease factor based on review grade
+  double calculateEaseFactor(double currentEase, ReviewGrade grade) {
+    int q = grade.qualityValue; // 1=Again, 2=Hard, 4=Good, 5=Easy
+    double newEase = currentEase + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+    return newEase.clamp(MIN_EASE, MAX_EASE);
+  }
+}
 
-## Priority 2: Tree-Structured Decks (Anki-like) ✅ MOSTLY COMPLETE
-**Goal:** Implement hierarchical deck organization like Anki
+enum ReviewGrade { 
+  AGAIN(1),  // Complete failure - restart learning
+  HARD(2),   // Difficult recall - reduce interval
+  GOOD(4),   // Normal recall - standard interval
+  EASY(5);   // Perfect recall - bonus interval
+  
+  const ReviewGrade(this.qualityValue);
+  final int qualityValue;
+}
+```
 
-### Implementation Tasks:
-- [x] Study Anki's deck structure (https://docs.ankiweb.net/getting-started.html)
-- [x] Modify Deck model to support parent-child relationships
-- [x] Update Firestore schema for nested deck structure
-- [x] Create expandable tree view UI component
-- [x] Implement deck path navigation (breadcrumbs)
-- [x] Update deck selection to handle subdeck logic
-- [ ] Add deck moving/reorganization functionality
-- [ ] Support for deck inheritance settings
-- [ ] Note: Focus on basic card type only (as specified)
-
-### Completed:
-- Implemented DeckTreeManager for hierarchical deck management
-- Created tree view UI with expand/collapse functionality
-- Added breadcrumb navigation for deck hierarchy
-- Fixed initialization issues with ManageDecksCubitV2
-- Resolved infinite loop in deck loading
-- Updated deck selection to work with new tree structure
-
----
-
-## Priority 2.5: CardDeckManager Architecture Unification 🏗️
-**Goal:** Eliminate dual-system complexity and create bulletproof card creation flow
-
-### Root Problem Analysis:
-The userID empty errors stem from having two deck management systems (CardDeckManager + DeckTreeManager) that are poorly synchronized, creating race conditions and context dependency issues.
-
-### Architectural Solution Options:
-
-#### Option A: Eliminate CardDeckManager (Recommended)
-- **Migrate all card operations** to work directly with DeckTreeManager/Firebase
-- **Remove CardDeckManager dependency** from CreateCardsCubit
-- **Create unified CardService** that handles all card CRUD operations
-- **Simplify context chains** by removing dual system dependencies
-
-#### Option B: Reverse Integration  
-- **Make DeckTreeManager a wrapper** around CardDeckManager
-- **Ensure CardDeckManager is always initialized** before any deck operations
-- **Add synchronization layer** between the two systems
-
-### Implementation Strategy (Option A - Recommended):
-
-1. **Create Unified CardService**
-   ```dart
-   class CardService {
-     final FirebaseApi _firebaseApi;
-     final AuthenticationRepository _authRepo;
-     
-     Future<void> addCard(String deckId, String question, String answer);
-     Future<List<Card>> getCardsForDeck(String deckId);
-   }
-   ```
-
-2. **Update CreateCardsCubit**
-   ```dart
-   class CreateCardsCubit extends Cubit<CreateCardsState> {
-     final CardService _cardService;
-     final String _deckId; // Direct deck ID, no context dependency
-   }
-   ```
-
-3. **Streamline Navigation Flow**
-   - Pass deck IDs directly instead of relying on CardDeckManager state
-   - Remove complex provider chains
-   - Make card creation bulletproof with single system
-
-### Benefits:
-- **Eliminates userID timing issues** (always available from AuthRepo)
-- **Removes dual-system synchronization** complexity
-- **Simplifies context dependencies** (no more provider chains)
-- **Makes card creation bulletproof** with direct deck ID passing
-- **Easier to test and debug** with single system
-
----
-
-## Priority 3: GitHub-like Study Timeline
-**Goal:** Visual activity tracker showing study patterns
-
-### Implementation Tasks:
-- [ ] Create study_activity collection in Firestore
-- [ ] Track daily study sessions with card counts
-- [ ] Implement heatmap calendar widget
-- [ ] Define color intensity thresholds:
-  - Light: 1-10 cards reviewed
-  - Medium: 11-30 cards reviewed  
-  - Dark: 31+ cards reviewed
-- [ ] it should only show the last month (always)
-- [ ] I want this to be super minimalistic.
-
----
-
-## Priority 4: Modern App Navigation
-**Goal:** Improve overall navigation and settings
-
-### Implementation Tasks:
-- [ ] Create Settings page with:
-  - [ ] Logout functionality
-  - [ ] Licenses display
-  - [ ] Version information
-  - [ ] User preferences
-- [ ] Add persistent deck switcher in top-left corner
-- [ ] Refactor learning view to show single card at a time
-- [ ] Implement navigation drawer or rail for main sections
-- [ ] Add bottom navigation for mobile
-- [ ] Create consistent back navigation
-- [ ] Add keyboard shortcuts for desktop
+### **1.3 Card Scheduler Service**
+```dart
+class CardScheduler {
+  /// Get cards due for review (sorted by due date)
+  Future<List<AnkiCard>> getReviewQueue(String deckId, int limit) async {
+    // Return cards where dueDate <= now(), sorted by priority
+    // Priority: overdue cards first, then by due time
+  }
+  
+  /// Get new cards for learning (respects daily limit)
+  Future<List<AnkiCard>> getNewCards(String deckId, int limit) async {
+    // Return cards with state == NEW, sorted by creation date
+  }
+  
+  /// Get cards currently in learning steps
+  Future<List<AnkiCard>> getLearningCards(String deckId) async {
+    // Return cards with state == LEARNING or RELEARNING
+  }
+  
+  /// Check if card is due for review
+  bool isCardDue(AnkiCard card) {
+    return card.dueDate.isBefore(DateTime.now());
+  }
+  
+  /// Calculate when card should next be reviewed
+  DateTime calculateNextDue(AnkiCard card, ReviewGrade grade) {
+    // Use SM-2 algorithm to determine next review time
+    // Handle learning steps vs mature intervals
+  }
+  
+  /// Get study session with mixed queue
+  Future<StudySession> createStudySession(String deckId, DeckSettings settings) async {
+    final reviewCards = await getReviewQueue(deckId, settings.maxReviewsPerDay);
+    final newCards = await getNewCards(deckId, settings.newCardsPerDay);
+    final learningCards = await getLearningCards(deckId);
+    
+    return StudySession(
+      reviewCards: reviewCards,
+      newCards: newCards,
+      learningCards: learningCards,
+      settings: settings,
+    );
+  }
+}
+```
 
 ---
 
-## Additional Features (No Priority Order)
+## 📊 **Phase 2: Clean Database Schema Design**
 
-### Pie Chart for Card States
-- [ ] Add fl_chart package
-- [ ] Create statistics view with pie chart
-- [ ] Show distribution of:
-  - New cards
-  - Learning cards
-  - Review cards
-  - Suspended cards
-- [ ] Add filtering by deck
-- [ ] Interactive chart with drill-down
+### **2.1 New Firestore Collection Structure**
+```
+/users/{userId}/cards/{cardId}
+{
+  "id": "uuid",
+  "deckId": "deck-uuid", 
+  "question": "markdown text with **formatting**",
+  "answer": "markdown with LaTeX: $x^2 + y^2 = z^2$",
+  "state": "NEW|LEARNING|REVIEW|RELEARNING",
+  "repetitions": 0,
+  "easeFactor": 2.5,
+  "interval": 0,
+  "dueDate": "2024-08-12T10:00:00Z",
+  "lastReviewed": null,
+  "lapses": 0,
+  "learningSteps": [1, 10],
+  "currentStep": 0,
+  "suspended": false,
+  "tags": [],
+  "noteType": "basic",
+  "created": "2024-08-12T10:00:00Z",
+  "modified": "2024-08-12T10:00:00Z"
+}
 
-### AI Usage Limitations
-- [ ] Add user quota field in Firestore user document
-- [ ] Track API calls per user
-- [ ] Implement quota checking before AI operations
-- [ ] Show remaining quota in UI
-- [ ] Add special testing flag for unlimited access (for dev account)
-- [ ] Consider token-based pricing display
-- [ ] Add quota reset schedule (monthly/weekly)
+/users/{userId}/deckSettings/{deckId}
+{
+  "newCardsPerDay": 20,
+  "maxReviewsPerDay": 200,
+  "learningSteps": [1, 10],
+  "relearningSteps": [10],
+  "initialEase": 2.5,
+  "maxInterval": 36500,
+  "hardMultiplier": 1.2,
+  "easyBonus": 1.3,
+  "showAnswerTimer": false
+}
+```
+
+### **2.2 Clean Implementation Strategy**
+```dart
+class AnkiFirebaseService {
+  /// Create new card with proper Anki structure
+  Future<void> createCard(AnkiCard card) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('cards')
+        .doc(card.id)
+        .set(card.toFirestore());
+    
+    // Update deck counts
+    await _updateDeckCounts(card.deckId);
+  }
+  
+  /// Get cards due for review
+  Future<List<AnkiCard>> getCardsForReview(String deckId, int limit) async {
+    final query = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('cards')
+        .where('deckId', isEqualTo: deckId)
+        .where('dueDate', isLessThanOrEqualTo: DateTime.now())
+        .orderBy('dueDate')
+        .limit(limit);
+    
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => AnkiCard.fromFirestore(doc)).toList();
+  }
+  
+  /// Get new cards for learning
+  Future<List<AnkiCard>> getNewCards(String deckId, int limit) async {
+    final query = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('cards')
+        .where('deckId', isEqualTo: deckId)
+        .where('state', isEqualTo: 'NEW')
+        .orderBy('created')
+        .limit(limit);
+    
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => AnkiCard.fromFirestore(doc)).toList();
+  }
+  
+  /// Update deck statistics after card operations
+  Future<void> _updateDeckCounts(String deckId) async {
+    // Recalculate and update deck card counts
+    final cards = await _getCardsForDeck(deckId);
+    final newCount = cards.where((c) => c.state == CardState.NEW).length;
+    final reviewCount = cards.where((c) => c.state == CardState.REVIEW && 
+                                          c.dueDate.isBefore(DateTime.now())).length;
+    final learningCount = cards.where((c) => c.state == CardState.LEARNING || 
+                                            c.state == CardState.RELEARNING).length;
+    
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('decks')
+        .doc(deckId)
+        .update({
+      'cardCount': cards.length,
+      'newCount': newCount,
+      'reviewCount': reviewCount,
+      'learningCount': learningCount,
+      'modified': DateTime.now().toIso8601String(),
+    });
+  }
+}
+```
 
 ---
 
-## Technical Debt & Improvements
+## <� **Phase 3: Learning Interface Overhaul**
 
-### Authentication Repository Tests
-- [ ] Fix test failures after package updates
-- [ ] Remove deprecated Google Sign-In code from tests
-- [ ] Update mocks to match current implementation
-- [ ] Ensure all tests pass with latest Firebase packages
+### **3.1 New Review Session Architecture**
+```dart
+class ReviewSessionCubit extends Cubit<ReviewSessionState> {
+  final CardScheduler _scheduler;
+  final SM2Service _sm2Service;
+  final DeckSettings _settings;
+  
+  StudySession? _currentSession;
+  AnkiCard? _currentCard;
+  int _reviewsCompleted = 0;
+  int _newCardsIntroduced = 0;
+  
+  /// Start a new study session
+  Future<void> startSession(String deckId) async {
+    emit(ReviewSessionLoading());
+    
+    _currentSession = await _scheduler.createStudySession(deckId, _settings);
+    
+    if (_currentSession!.hasCards) {
+      _currentCard = _currentSession!.nextCard();
+      emit(ReviewSessionActive(
+        card: _currentCard!,
+        progress: _calculateProgress(),
+      ));
+    } else {
+      emit(ReviewSessionComplete());
+    }
+  }
+  
+  /// Process user's review grade
+  Future<void> reviewCard(ReviewGrade grade) async {
+    if (_currentCard == null) return;
+    
+    // Process review with SM-2 algorithm
+    final updatedCard = _sm2Service.processReview(_currentCard!, grade);
+    
+    // Save to database
+    await _cardRepository.updateCard(updatedCard);
+    
+    // Track statistics
+    _reviewsCompleted++;
+    if (_currentCard!.state == CardState.NEW) {
+      _newCardsIntroduced++;
+    }
+    
+    // Get next card or finish session
+    _currentCard = _currentSession!.nextCard();
+    
+    if (_currentCard != null) {
+      emit(ReviewSessionActive(
+        card: _currentCard!,
+        progress: _calculateProgress(),
+      ));
+    } else {
+      emit(ReviewSessionComplete(
+        reviewsCompleted: _reviewsCompleted,
+        newCardsLearned: _newCardsIntroduced,
+        timeSpent: _calculateTimeSpent(),
+      ));
+    }
+  }
+}
+```
 
-### Code Quality
-- [x] Remove all print statements ✅ COMPLETE
-- [x] Add proper error logging ✅ COMPLETE
-- [ ] Implement analytics tracking
-- [ ] Add performance monitoring
-- [ ] Create comprehensive test suite
+### **3.2 Modern Review Interface**
+```dart
+class ReviewCardView extends StatelessWidget {
+  final AnkiCard card;
+  final bool showAnswer;
+  final Function(ReviewGrade) onReview;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Progress indicator
+        LinearProgressIndicator(value: progress),
+        
+        // Card content with flip animation
+        Expanded(
+          child: CardFlipWidget(
+            front: MarkdownCardDisplay(content: card.questionText),
+            back: Column(
+              children: [
+                MarkdownCardDisplay(content: card.answerText),
+                if (showAnswer) ReviewButtonsRow(),
+              ],
+            ),
+          ),
+        ),
+        
+        // Show Answer / Review Buttons
+        if (!showAnswer)
+          ElevatedButton(
+            onPressed: () => setState(() => showAnswer = true),
+            child: Text('Show Answer'),
+          ),
+      ],
+    );
+  }
+}
 
-### Logging Framework Implementation ✅ COMPLETE (Priority -0.1)
-**Completed:** Comprehensive logging framework with minimal configuration
+class ReviewButtonsRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        ReviewButton(
+          label: 'Again',
+          sublabel: '<1m',
+          color: Colors.red,
+          grade: ReviewGrade.AGAIN,
+          onPressed: () => context.read<ReviewSessionCubit>().reviewCard(ReviewGrade.AGAIN),
+        ),
+        ReviewButton(
+          label: 'Hard', 
+          sublabel: '6m',
+          color: Colors.orange,
+          grade: ReviewGrade.HARD,
+          onPressed: () => context.read<ReviewSessionCubit>().reviewCard(ReviewGrade.HARD),
+        ),
+        ReviewButton(
+          label: 'Good',
+          sublabel: '10m', 
+          color: Colors.green,
+          grade: ReviewGrade.GOOD,
+          onPressed: () => context.read<ReviewSessionCubit>().reviewCard(ReviewGrade.GOOD),
+        ),
+        ReviewButton(
+          label: 'Easy',
+          sublabel: '4d',
+          color: Colors.blue, 
+          grade: ReviewGrade.EASY,
+          onPressed: () => context.read<ReviewSessionCubit>().reviewCard(ReviewGrade.EASY),
+        ),
+      ],
+    );
+  }
+}
+```
 
-#### Implementation Details:
-- **Enhanced main.dart logging setup** with configurable log levels (ALL in debug, WARNING in release)
-- **Created `getLogger(String name)` function** for easy logger instantiation throughout codebase
-- **Formatted log output** with timestamps, severity levels, and component names
-- **Replaced all print statements** (100+ occurrences) with appropriate log calls
-
-#### Components Updated:
-- **Authentication:** LoginCubitV2, App - proper INFO/WARNING/SEVERE levels
-- **Deck Management:** ManageDecksCubitV2, CardDeckManager - detailed operation logging
-- **UI Components:** StudyCountLabel, Deck model - FINEST level for debugging
-- **Firebase Operations:** FirebaseApi, StudyActivityManager - error logging
-- **Card Creation:** CreateCardsCubit - operation tracking
-
-#### Log Level Strategy Applied:
-- **SEVERE:** Critical errors, Firebase failures
-- **WARNING:** Non-critical issues, missing data
-- **INFO:** User actions (login, deck/card creation)
-- **FINE:** Detailed operations (synchronization)
-- **FINEST:** UI renders, calculations
+### **3.3 Study Dashboard**
+```dart
+class StudyDashboard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Study counts with proper Anki terminology
+        StudyCountsCard(
+          newCards: 15,        // Cards never seen
+          reviewCards: 42,     // Cards due for review
+          learningCards: 3,    // Cards in learning steps
+        ),
+        
+        // Quick study button
+        StudyNowButton(
+          onPressed: () => context.read<NavigationCubit>().startStudySession(),
+        ),
+        
+        // Today's progress
+        TodayProgressChart(
+          reviewsCompleted: 28,
+          newCardsLearned: 12,
+          timeSpent: Duration(minutes: 45),
+        ),
+        
+        // Upcoming schedule
+        UpcomingScheduleCard(
+          tomorrow: 35,
+          dayAfter: 28,
+          thisWeek: 156,
+        ),
+      ],
+    );
+  }
+}
+```
 
 ---
 
-## Development Workflow
+## =� **Phase 4: Deck Configuration & Settings**
 
-### Phase 1: Critical Bug Fixes (Current)
-1. Fix setState after dispose and SafeArea issues
-2. Resolve Firestore document path errors
-3. Simplify navigation structure (remove global nav)
-4. Add proper back button navigation
+### **4.1 Deck Settings Model**
+```dart
+class DeckSettings {
+  // Daily limits
+  int newCardsPerDay;          // Default: 20
+  int maxReviewsPerDay;        // Default: 200
+  
+  // Learning configuration
+  List<int> learningSteps;     // Default: [1, 10] minutes
+  List<int> relearningSteps;   // Default: [10] minutes
+  double initialEase;          // Default: 2.5
+  int maxInterval;             // Default: 36500 days (100 years)
+  
+  // Review modifiers
+  double hardMultiplier;       // Default: 1.2
+  double easyBonus;           // Default: 1.3
+  double intervalModifier;     // Default: 1.0 (global multiplier)
+  
+  // Interface options
+  bool showAnswerTimer;        // Default: false
+  bool playAudio;             // Default: false
+  bool showRemainingCount;     // Default: true
+  
+  // Advanced options
+  int graduatingInterval;      // Default: 1 day
+  int easyInterval;           // Default: 4 days
+  double lapseMultiplier;     // Default: 0.0 (resets to 1 day)
+  int minimumInterval;        // Default: 1 day
+  
+  DeckSettings.defaults() :
+    newCardsPerDay = 20,
+    maxReviewsPerDay = 200,
+    learningSteps = [1, 10],
+    relearningSteps = [10],
+    initialEase = 2.5,
+    maxInterval = 36500,
+    hardMultiplier = 1.2,
+    easyBonus = 1.3,
+    intervalModifier = 1.0,
+    showAnswerTimer = false,
+    playAudio = false,
+    showRemainingCount = true,
+    graduatingInterval = 1,
+    easyInterval = 4,
+    lapseMultiplier = 0.0,
+    minimumInterval = 1;
+}
+```
 
-### Phase 2: Content Enhancement ✅ COMPLETE
-1. ~~Implement Priority 1 (Markdown support)~~ ✅ COMPLETE
-2. ~~Add LaTeX formula rendering~~ ✅ COMPLETE
-3. ~~Enable code syntax highlighting~~ ✅ COMPLETE
-
-### Phase 3: Analytics & Polish
-1. Implement Priority 3 (Study timeline)
-2. Add pie chart visualization
-3. Implement AI usage limitations
-4. Testing and bug fixes
+### **4.2 Settings UI**
+```dart
+class DeckSettingsView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Deck Options')),
+      body: ListView(
+        children: [
+          SettingsSection(
+            title: 'Daily Limits',
+            children: [
+              SettingsSlider(
+                label: 'New cards per day',
+                value: settings.newCardsPerDay,
+                min: 0, max: 100,
+                onChanged: (value) => updateSettings(newCardsPerDay: value),
+              ),
+              SettingsSlider(
+                label: 'Maximum reviews per day', 
+                value: settings.maxReviewsPerDay,
+                min: 0, max: 1000,
+                onChanged: (value) => updateSettings(maxReviewsPerDay: value),
+              ),
+            ],
+          ),
+          
+          SettingsSection(
+            title: 'Learning Steps',
+            children: [
+              LearningStepsEditor(
+                steps: settings.learningSteps,
+                onChanged: (steps) => updateSettings(learningSteps: steps),
+              ),
+              HelpText('Steps for new cards (in minutes). Default: 1 10'),
+            ],
+          ),
+          
+          // More settings sections...
+        ],
+      ),
+    );
+  }
+}
+```
 
 ---
 
-## Success Metrics
-- ✅ **Markdown rendering works for formulas and code** - ACHIEVED
-- ✅ **Deck hierarchy supports 3+ levels of nesting** - ACHIEVED
-- [ ] Study timeline shows accurate activity data
-- [ ] Navigation is consistent across all platforms
-- [ ] AI usage is properly limited and tracked
-- [ ] All tests pass with >80% coverage
+## =� **Phase 5: Analytics & Statistics**
+
+### **5.1 Comprehensive Statistics**
+```dart
+class DeckStatistics {
+  // Card distribution
+  int totalCards;
+  int newCards;
+  int learningCards;
+  int reviewCards; 
+  int suspendedCards;
+  
+  // Performance metrics
+  double averageEase;
+  double retentionRate;           // % of reviews graded Good or Easy
+  int averageInterval;            // Average days between reviews
+  Duration averageAnswerTime;
+  
+  // Daily activity
+  int cardsStudiedToday;
+  int timeSpentToday;            // minutes
+  int reviewsCompletedToday;
+  int newCardsLearnedToday;
+  
+  // Historical data
+  Map<DateTime, DayStatistics> reviewHistory;
+  List<RetentionDataPoint> retentionTrend;
+  
+  // Predictions
+  int cardsDueTomorrow;
+  int cardsDueThisWeek;
+  EstimatedStudyTime dailyStudyTime;
+  
+  // Advanced metrics
+  Map<ReviewGrade, int> gradeDistribution;
+  List<CardDifficultyBucket> difficultyDistribution;
+  double learningProgress;       // % of deck mastered
+}
+
+class DayStatistics {
+  DateTime date;
+  int reviewsCompleted;
+  int newCardsLearned;
+  int timeSpent;                // minutes
+  double averageGrade;
+  int lapses;
+}
+
+class RetentionChart extends StatelessWidget {
+  final List<RetentionDataPoint> data;
+  
+  @override
+  Widget build(BuildContext context) {
+    return LineChart(
+      // Show retention rate over time
+      // X-axis: days/weeks/months
+      // Y-axis: % retention (0-100%)
+      // Target line at 90% retention
+    );
+  }
+}
+```
+
+### **5.2 Progress Visualization**
+```dart
+class StudyProgressView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // GitHub-style activity heatmap
+        StudyHeatmapCalendar(
+          data: statistics.reviewHistory,
+          colorScheme: AnkiColorScheme.blue,
+        ),
+        
+        // Retention rate chart
+        RetentionChart(
+          data: statistics.retentionTrend,
+          targetRetention: 0.90,
+        ),
+        
+        // Card maturity pie chart
+        CardMaturityPieChart(
+          newCards: statistics.newCards,
+          learningCards: statistics.learningCards,
+          reviewCards: statistics.reviewCards,
+        ),
+        
+        // Forecast section
+        ForecastCard(
+          title: 'Study Forecast',
+          tomorrow: statistics.cardsDueTomorrow,
+          thisWeek: statistics.cardsDueThisWeek,
+          estimatedTime: statistics.dailyStudyTime,
+        ),
+      ],
+    );
+  }
+}
+```
+
+---
+
+## =� **Phase 6: Implementation Roadmap**
+
+### **Priority A: Core Algorithm Implementation (2 weeks)**
+#### Week 1: Data Models & Algorithm
+- [x] **Day 1-2**: Create `AnkiCard` model with all SM-2 fields
+- [x] **Day 3-4**: Implement complete `SM2Service` class  
+- [x] **Day 5-7**: Build `CardScheduler` with queue management
+
+#### Week 2: Database & Migration
+- [x] **Day 8-9**: Design new Firestore schema and update FirebaseApi
+- [x] **Day 10-12**: Implement `CardMigrationService` 
+- [x] **Day 13-14**: Add feature flag system and A/B testing infrastructure
+
+### **Priority B: Review Interface Overhaul (2 weeks)**
+#### Week 3: Core Review Experience
+- [x] **Day 15-17**: Replace `LearningCubit` with `ReviewSessionCubit`
+- [x] **Day 18-19**: Build new review UI with 4-button grading system
+- [x] **Day 20-21**: Implement card flip animations and transitions
+
+#### Week 4: Study Session Management  
+- [x] **Day 22-24**: Add review queue management and session logic
+- [x] **Day 25-26**: Implement learning steps for new cards
+- [x] **Day 27-28**: Add session statistics and progress tracking
+
+### **Priority C: Dashboard & Configuration (2 weeks)**
+#### Week 5: Study Dashboard
+- [x] **Day 29-31**: Create comprehensive study dashboard
+- [x] **Day 32-33**: Add due card counts and progress indicators
+- [x] **Day 34-35**: Implement "Study Now" flow and session routing
+
+#### Week 6: Deck Settings
+- [x] **Day 36-37**: Build `DeckSettings` model and configuration UI
+- [x] **Day 38-39**: Add learning steps editor and advanced options
+- [x] **Day 40-42**: Implement daily limits and review modifiers
+
+### **Priority D: Analytics & Polish (2 weeks)**
+#### Week 7: Statistics & Charts
+- [x] **Day 43-45**: Implement comprehensive `DeckStatistics` system
+- [x] **Day 46-47**: Build retention charts and progress visualizations  
+- [x] **Day 48-49**: Add GitHub-style study heatmap calendar
+
+#### Week 8: Advanced Features & Testing
+- [x] **Day 50-52**: Implement card suspension, bulk operations
+- [x] **Day 53-54**: Add performance optimizations and caching
+- [x] **Day 55-56**: Comprehensive testing and bug fixes
+
+---
+
+## >� **Phase 7: Testing & Rollout Strategy**
+
+### **7.1 A/B Testing Framework**
+```dart
+class FeatureFlags {
+  static const String ANKI_ALGORITHM = 'anki_algorithm';
+  static const String NEW_REVIEW_UI = 'new_review_ui';
+  static const String ADVANCED_STATS = 'advanced_stats';
+  
+  bool isEnabled(String feature, String userId) {
+    // Check user's experiment group
+    // Return true/false based on rollout percentage
+  }
+}
+
+class ExperimentTracker {
+  void trackAlgorithmPerformance(String userId, {
+    required int reviewsCompleted,
+    required double retentionRate,  
+    required Duration studyTime,
+    required String algorithm, // 'random' vs 'sm2'
+  });
+}
+```
+
+### **7.2 Migration & Rollout Process**
+
+#### **Phase 7a: Gradual Feature Rollout**
+1. **10% Beta Users** (Week 9)
+   - Enable new algorithm for power users
+   - Monitor performance metrics and user feedback
+   - Track retention rates vs control group
+
+2. **50% Split Test** (Week 10-11) 
+   - A/B test: 50% random vs 50% SM-2 algorithm
+   - Measure learning effectiveness and user satisfaction
+   - Collect detailed analytics on both systems
+
+3. **90% Full Rollout** (Week 12)
+   - Roll out to 90% of users if metrics are positive
+   - Keep 10% on old system for comparison
+   - Provide opt-out mechanism for user preference
+
+#### **Phase 7b: User Education & Support**
+```dart
+class AnkiIntroTutorial extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return PageView(
+      children: [
+        TutorialPage(
+          title: 'Welcome to Scientific Spaced Repetition',
+          content: 'FAnki now uses the proven SM-2 algorithm...',
+        ),
+        TutorialPage(
+          title: 'Understanding Review Grades',  
+          content: 'Again: Forgot completely\nHard: Difficult recall\nGood: Normal recall\nEasy: Perfect recall',
+        ),
+        TutorialPage(
+          title: 'Study More Efficiently',
+          content: 'Cards appear exactly when you\'re about to forget...',
+        ),
+      ],
+    );
+  }
+}
+```
+
+---
+
+## =� **Expected Outcomes & Success Metrics**
+
+### **Learning Effectiveness (Primary Metrics)**
+- **Retention Rate**: Target 85-95% (vs ~60% with random)
+- **Study Efficiency**: 30-50% fewer reviews for same knowledge retention
+- **Long-term Memory**: Significant improvement in 30+ day recall
+- **Learning Speed**: Faster progression from New � Review � Mature
+
+### **User Experience (Secondary Metrics)**  
+- **Session Completion**: Higher % of users completing full study sessions
+- **Daily Engagement**: More consistent daily usage patterns
+- **User Satisfaction**: Improved app store ratings and feedback
+- **Feature Adoption**: High adoption rate of review grading system
+
+### **Technical Performance (Operational Metrics)**
+- **Database Performance**: Efficient querying of due cards
+- **Algorithm Accuracy**: Proper SM-2 implementation validation  
+- **Migration Success**: 99%+ successful card migrations
+- **System Reliability**: No degradation in app performance
+
+### **Business Impact (Long-term Metrics)**
+- **User Retention**: Improved 30/60/90-day retention rates
+- **Market Position**: Competitive with commercial Anki alternatives
+- **Feature Parity**: Industry-standard spaced repetition capabilities
+- **Scalability**: System handles 10,000+ cards per user efficiently
+
+---
+
+## 🚀 **Current Status & Next Steps**
+
+### **✅ Completed Phases**
+- **✅ Analysis & Planning**: Comprehensive Anki system analysis complete
+- **✅ Architecture Design**: Full SM-2 algorithm and data model specification
+- **✅ Implementation Strategy**: Clean database approach (no migration needed)
+- **✅ Logging Framework**: Added structured logging throughout codebase
+
+### **🔄 Currently In Progress**
+- **🔄 Phase 1: Core Data Models** - Starting AnkiCard implementation
+
+### **📋 Implementation Queue**
+1. **Create the `AnkiCard` model** in `packages/card_repository/lib/src/models/`
+2. **Implement `SM2Service`** in `packages/card_repository/lib/src/services/`  
+3. **Build `CardScheduler`** for queue management
+4. **Update FirebaseApi** to support new schema
+5. **Replace LearningCubit** with ReviewSessionCubit
+
+### **🎯 Ready to Transform FAnki**
+
+This plan transforms FAnki from a basic flashcard app into a sophisticated spaced repetition system that rivals commercial solutions while maintaining the existing UI/UX and adding modern Flutter features.
+
+**Current Focus: Implementing Phase 1 - Core Data Models & SM-2 Algorithm 🧠**
