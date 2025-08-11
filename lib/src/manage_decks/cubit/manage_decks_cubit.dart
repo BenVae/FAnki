@@ -25,7 +25,7 @@ class ManageDecksCubit extends Cubit<DeckState> {
     } else if (state is DeckStateLoading) {
       _selectedDeckIndex = _cdm.deckNames.indexOf(deckName);
     } else {
-      log.severe('Error 73462432');
+      // log.severe('Error 73462432');
     }
   }
 

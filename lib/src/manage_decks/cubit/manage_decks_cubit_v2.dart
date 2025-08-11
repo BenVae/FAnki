@@ -3,6 +3,8 @@ import 'package:card_repository/card_deck_manager.dart';
 
 import '../../../main.dart';
 
+final _logger = getLogger('ManageDecks');
+
 class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   final DeckTreeManager _deckTreeManager;
   final CardDeckManager _cdm; // Keep for backwards compatibility
@@ -18,7 +20,7 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   })  : _deckTreeManager = deckTreeManager,
         _cdm = cardDeckManager,
         super(DeckStateV2Loading()) {
-    print('ManageDecksCubitV2: Constructor - CDM userID: "${cardDeckManager.userID}", currentDeckName: "${cardDeckManager.currentDeckName}"');
+    _logger.config('Initialized ManageDecks - CDM userID: "${cardDeckManager.userID}", deck: "${cardDeckManager.currentDeckName}"');
   }
 
   void initialize() async {
@@ -41,11 +43,11 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }
 
   Future<void> loadDecks() async {
-    print('ManageDecksCubitV2: === LOADING DECKS ===');
+    _logger.info('Loading decks from tree manager');
     emit(DeckStateV2Loading());
     try {
       await _deckTreeManager.loadDecks();
-      print('ManageDecksCubitV2: Loaded ${_deckTreeManager.allDecks.length} decks from v2 system');
+      _logger.info('Loaded ${_deckTreeManager.allDecks.length} decks from tree system');
       
       // Sync card counts from v1 system after loading decks
       await _syncCardCounts();
@@ -81,65 +83,60 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
 
   /// Sync card counts from v1 system (CardDeckManager) to v2 decks
   Future<void> _syncCardCounts() async {
-    print('ManageDecksCubitV2: === STARTING CARD COUNT SYNC ===');
-    print('ManageDecksCubitV2: CDM userID: "${_cdm.userID}"');
-    print('ManageDecksCubitV2: CDM deckNames: ${_cdm.deckNames}');
-    print('ManageDecksCubitV2: V2 allDecks count: ${_deckTreeManager.allDecks.length}');
+    _logger.fine('Starting card count sync - CDM userID: "${_cdm.userID}"');
+    _logger.fine('Available decks: v1=${_cdm.deckNames.length}, v2=${_deckTreeManager.allDecks.length}');
     
     for (final deck in _deckTreeManager.allDecks) {
-      print('ManageDecksCubitV2: Processing deck "${deck.name}" (id: ${deck.id})');
+      _logger.finest('Syncing deck "${deck.name}" (${deck.id})');
       
       // Get card count from v1 system if the deck exists there
       int realCardCount = 0;
       if (_cdm.deckNames.contains(deck.name)) {
         realCardCount = _cdm.getCardCount(deck.name);
-        print('ManageDecksCubitV2: ✓ Deck "${deck.name}": v2=${deck.cardCount}, v1=$realCardCount');
+        _logger.finest('Deck "${deck.name}": v2=${deck.cardCount}, v1=$realCardCount');
         
         // Update the deck in DeckTreeManager if card count is different
         if (deck.cardCount != realCardCount) {
-          print('ManageDecksCubitV2: → Updating card count for "${deck.name}" from ${deck.cardCount} to $realCardCount');
+          _logger.fine('Updating card count for "${deck.name}" from ${deck.cardCount} to $realCardCount');
           _deckTreeManager.updateDeckCardCount(deck.id, realCardCount);
-          print('ManageDecksCubitV2: → Update complete');
         } else {
-          print('ManageDecksCubitV2: → No update needed, counts match');
+          _logger.finest('Card counts match for "${deck.name}"');
         }
       } else {
-        print('ManageDecksCubitV2: ✗ Deck "${deck.name}" not found in v1 system');
-        print('ManageDecksCubitV2: Available v1 decks: ${_cdm.deckNames}');
+        _logger.warning('Deck "${deck.name}" not found in v1 system');
       }
     }
     
-    print('ManageDecksCubitV2: === CARD COUNT SYNC COMPLETE ===');
+    _logger.fine('Card count synchronization complete');
   }
 
   void selectDeck(Deck deck) {
     // Validate deck before selection
     if (deck.id.isEmpty) {
-      log.severe('Cannot select deck with empty ID');
+      _logger.severe('Cannot select deck with empty ID');
       return;
     }
     
-    print('ManageDecksCubitV2: Selecting deck "${deck.name}" (id: ${deck.id})');
-    print('ManageDecksCubitV2: CDM userID: "${_cdm.userID}"');
-    print('ManageDecksCubitV2: CDM deckNames: ${_cdm.deckNames}');
+    _logger.info('Selecting deck "${deck.name}" (${deck.id})');
+    _logger.fine('CDM userID: "${_cdm.userID}", available decks: ${_cdm.deckNames.length}');
     
     _selectedDeckId = deck.id;
     // Always set current deck in the old system, creating if needed
     if (!_cdm.deckNames.contains(deck.name)) {
       // Create deck in old system to sync with v2
-      print('ManageDecksCubitV2: Creating deck "${deck.name}" in old system');
+      _logger.info('Creating deck "${deck.name}" in legacy system');
       _cdm.createDeck(deck.name);
     } else {
-      print('ManageDecksCubitV2: Setting current deck to "${deck.name}"');
+      _logger.fine('Setting current deck to "${deck.name}"');
       _cdm.setCurrentDeck(deck.name);
     }
     
-    print('ManageDecksCubitV2: CDM currentDeckName after selection: "${_cdm.currentDeckName}"');
+    _logger.fine('Current deck set to: "${_cdm.currentDeckName}"');
     
     // Update card count from v1 system for this specific deck
     final realCardCount = _cdm.getCardCount(deck.name);
     if (deck.cardCount != realCardCount) {
-      print('ManageDecksCubitV2: Updating selected deck card count from ${deck.cardCount} to $realCardCount');
+      _logger.fine('Updating selected deck card count from ${deck.cardCount} to $realCardCount');
       _deckTreeManager.updateDeckCardCount(deck.id, realCardCount);
     }
     
@@ -175,12 +172,12 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
   }) async {
     // Validate inputs
     if (name.isEmpty) {
-      log.severe('Cannot create deck with empty name');
+      _logger.severe('Cannot create deck with empty name');
       return;
     }
     
     if (parentId != null && parentId.isEmpty) {
-      log.severe('Cannot create deck with empty parent ID');
+      _logger.severe('Cannot create deck with empty parent ID');
       return;
     }
     
@@ -189,7 +186,7 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       if (_cdm.userID.isNotEmpty) {
         await _deckTreeManager.setUserId(_cdm.userID);
       } else {
-        log.severe('Cannot create deck: User not logged in');
+        _logger.severe('Cannot create deck: User not logged in');
         return;
       }
       
@@ -212,14 +209,14 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       
       await loadDecks();
     } catch (e) {
-      log.severe('Error creating deck: $e');
+      _logger.severe('Error creating deck: $e');
     }
   }
 
   Future<void> deleteDeck(String deckId, {bool deleteSubdecks = false}) async {
     // Validate inputs
     if (deckId.isEmpty) {
-      log.severe('Cannot delete deck with empty ID');
+      _logger.severe('Cannot delete deck with empty ID');
       return;
     }
     
@@ -253,19 +250,19 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       
       await loadDecks();
     } catch (e) {
-      log.severe('Error deleting deck: $e');
+      _logger.severe('Error deleting deck: $e');
     }
   }
 
   Future<void> renameDeck(String deckId, String newName) async {
     // Validate inputs
     if (deckId.isEmpty) {
-      log.severe('Cannot rename deck with empty ID');
+      _logger.severe('Cannot rename deck with empty ID');
       return;
     }
     
     if (newName.isEmpty) {
-      log.severe('Cannot rename deck to empty name');
+      _logger.severe('Cannot rename deck to empty name');
       return;
     }
     
@@ -273,19 +270,19 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       await _deckTreeManager.renameDeck(deckId, newName);
       await loadDecks();
     } catch (e) {
-      log.severe('Error renaming deck: $e');
+      _logger.severe('Error renaming deck: $e');
     }
   }
 
   Future<void> moveDeck(String deckId, String? newParentId) async {
     // Validate inputs
     if (deckId.isEmpty) {
-      log.severe('Cannot move deck with empty ID');
+      _logger.severe('Cannot move deck with empty ID');
       return;
     }
     
     if (newParentId != null && newParentId.isEmpty) {
-      log.severe('Cannot move deck to empty parent ID');
+      _logger.severe('Cannot move deck to empty parent ID');
       return;
     }
     
@@ -293,7 +290,7 @@ class ManageDecksCubitV2 extends Cubit<DeckStateV2> {
       await _deckTreeManager.moveDeck(deckId, newParentId);
       await loadDecks();
     } catch (e) {
-      log.severe('Error moving deck: $e');
+      _logger.severe('Error moving deck: $e');
     }
   }
 

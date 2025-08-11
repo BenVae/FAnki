@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'markdown_editor.dart';
+import '../../main.dart';
+
+final _logger = getLogger('MarkdownDemo');
 
 /// Demo page showing the markdown editor capabilities
 class MarkdownEditorDemo extends StatefulWidget {
@@ -38,7 +41,7 @@ Inline code: `const x = 42;`
 Code block:
 ```dart
 void main() {
-  print('Hello, Flutter!');
+  _logger.info('Markdown editor demo initialized');
 }
 ```
 
@@ -94,7 +97,7 @@ Block math:
                   maxLines: 15,
                   onChanged: (value) {
                     // Handle changes if needed
-                    print('Content changed: ${value.length} characters');
+                    _logger.fine('Content changed: ${value.length} characters');
                   },
                 ),
               ),

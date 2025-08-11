@@ -7,18 +7,29 @@ import 'package:logging/logging.dart';
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:card_repository/card_deck_manager.dart';
 
-final Logger log = Logger('MyAppLogger');
+// Removed unused _rootLogger
 
 void initializeLogger() {
-  log.onRecord.listen((record) {
+  Logger.root.level = kDebugMode ? Level.ALL : Level.WARNING;
+  Logger.root.onRecord.listen((record) {
     if (kDebugMode) {
-      print({record.message}); //${record.level.name}: ${record.time}:
+      final time = record.time.toString().substring(11, 19);
+      final level = record.level.name.padRight(7);
+      final name = record.loggerName;
+      print('$time [$level] $name: ${record.message}');
+      if (record.error != null) print('  Error: ${record.error}');
     }
   });
 }
 
+/// Get a logger instance for a specific component
+Logger getLogger(String name) => Logger(name);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize logging
+  initializeLogger();
 
   // Validate environment variables
   Env.validateEnvironment();

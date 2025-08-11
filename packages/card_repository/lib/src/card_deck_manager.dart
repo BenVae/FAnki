@@ -1,5 +1,8 @@
 import 'models/single_card.dart';
 import 'firebase_api.dart';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('CardDeckManager');
 
 class CardDeckManager {
   FirebaseApi firebaseapi = FirebaseApi();
@@ -8,7 +11,7 @@ class CardDeckManager {
   String currentDeckName = '';
 
   CardDeckManager() {
-    print('CardDeckManager: Constructor called - userID: "$userID", currentDeckName: "$currentDeckName"');
+    _logger.config('CardDeckManager initialized - userID: "$userID", deck: "$currentDeckName"');
   }
 
   List<String> get deckNames => decks.keys.toList();
@@ -31,15 +34,15 @@ class CardDeckManager {
   }
 
   void setUserID(String userID) {
-    print('CardDeckManager.setUserID: Setting userID from "${this.userID}" to "$userID"');
+    _logger.fine('Setting userID from "${this.userID}" to "$userID"');
     this.userID = userID.toLowerCase();
-    print('CardDeckManager.setUserID: After toLowerCase: "${this.userID}"');
+    _logger.fine('UserID normalized to: "${this.userID}"');
     if (this.userID.isNotEmpty) {
-      print('CardDeckManager.setUserID: UserID is not empty, initializing deck names and getting current deck');
+      _logger.info('Initializing deck manager for user');
       initDeckNames();
       getCurrentDeck();
     } else {
-      print('CardDeckManager.setUserID: WARNING - UserID is empty after setting!');
+      _logger.warning('UserID is empty after setting - this may cause issues');
     }
   }
 
@@ -77,18 +80,18 @@ class CardDeckManager {
   }
 
   bool createDeck(String deckName) {
-    print('CardDeckManager.createDeck: Creating deck "$deckName" with userID "$userID"');
+    _logger.info('Creating deck "$deckName" for user "$userID"');
     if (deckNames.contains(deckName)) {
-      print('CardDeckManager.createDeck: Deck with name $deckName already exists.');
+      _logger.warning('Deck "$deckName" already exists');
       return false;
     } else {
       decks[deckName] = [];
-      print('CardDeckManager.createDeck: Calling Firebase API with userID "$userID" and deckName "$deckName"');
+      _logger.fine('Calling Firebase API to create deck');
       firebaseapi.createDeckInFirestore(userID, deckName);
-      print('CardDeckManager.createDeck: Added deck with name $deckName.');
+      _logger.info('Successfully created deck "$deckName"');
     }
     currentDeckName = deckName;
-    print('CardDeckManager.createDeck: Set currentDeckName to "$currentDeckName"');
+    _logger.fine('Set current deck to "$currentDeckName"');
     return true;
   }
 
@@ -97,7 +100,7 @@ class CardDeckManager {
       decks.remove(deckName);
       firebaseapi.removeDeckFromFirestore(userID, deckName);
     } else {
-      print('Error: deck $deckName did not exist');
+      _logger.warning('Cannot delete deck "$deckName" - does not exist');
     }
   }
 
@@ -107,12 +110,12 @@ class CardDeckManager {
   }
 
   void addCardWithQA(String question, String answer) {
-    print('CardDeckManager.addCardWithQA: Adding card with userID "$userID" and currentDeckName "$currentDeckName"');
-    print('CardDeckManager.addCardWithQA: Question: "$question", Answer: "$answer"');
+    _logger.info('Adding card to deck "$currentDeckName" for user "$userID"');
+    _logger.fine('Card content - Q: "$question", A: "$answer"');
     SingleCard sc = SingleCard(
         deckName: currentDeckName, questionText: question, answerText: answer);
     decks[currentDeckName]!.add(sc);
-    print('CardDeckManager.addCardWithQA: Calling Firebase API addCardToFirestore');
+    _logger.fine('Saving card to Firebase');
     firebaseapi.addCardToFirestore(userID, currentDeckName, sc);
   }
 
@@ -156,7 +159,7 @@ class CardDeckManager {
     } else {
       // log.info('Deck with name $deckName does not exist.');
       // Don't exit the app - just log a warning
-      print('Warning: Deck with name $deckName does not exist in CardDeckManager.');
+      _logger.warning('Deck "$deckName" does not exist in CardDeckManager');
     }
   }
 }

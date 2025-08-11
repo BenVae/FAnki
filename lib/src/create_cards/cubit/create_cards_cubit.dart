@@ -1,6 +1,9 @@
 import 'package:authentication_repository/authentication_repository.dart';
 import 'package:bloc/bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
+import '../../../main.dart';
+
+final _logger = getLogger('CreateCards');
 
 class CreateCardsCubit extends Cubit<CreateCardsState> {
   // ignore: unused_field
@@ -20,40 +23,39 @@ class CreateCardsCubit extends Cubit<CreateCardsState> {
 
   Future<void> _initializeCardDeckManager() async {
     // Debug: Check current state
-    print('CreateCardsCubit: Current CDM userID: "${cdm.userID}"');
-    print('CreateCardsCubit: Current CDM currentDeckName: "${cdm.currentDeckName}"');
+    _logger.config('Initializing CreateCards - CDM userID: "${cdm.userID}", deck: "${cdm.currentDeckName}"');
     
     // Ensure CardDeckManager has the current user ID
     final currentUser = _repo.currentUser;
-    print('CreateCardsCubit: Auth user email: "${currentUser.email}"');
+    _logger.fine('Auth user email: "${currentUser.email}"');
     
     if (currentUser.email != null && currentUser.email!.isNotEmpty) {
       cdm.setUserID(currentUser.email!);
-      print('CreateCardsCubit: Set userID to: "${cdm.userID}"');
+      _logger.info('Set userID for card creation: "${cdm.userID}"');
       
       // Wait a bit for the deck to be properly initialized
       await Future.delayed(Duration(milliseconds: 100));
       
       // Get current deck name, ensuring it's set
       deckName = await cdm.getCurrentDeck();
-      print('CreateCardsCubit: Current deck after getCurrentDeck(): "$deckName"');
+      _logger.fine('Current deck after initialization: "$deckName"');
       
       if (deckName.isEmpty) {
         // If no current deck, wait a bit more and try again
         await Future.delayed(Duration(milliseconds: 200));
         deckName = cdm.currentDeckName;
-        print('CreateCardsCubit: Current deck after retry: "$deckName"');
+        _logger.fine('Current deck after retry: "$deckName"');
       }
       
       loadCardsOfDeck();
     } else {
-      print('CreateCardsCubit: No valid user email found');
+      _logger.warning('No valid user email found for card creation');
       emit(CreateCardEmptyState());
     }
   }
 
   Future<void> addCard(String question, String answer) async {
-    print('CreateCardsCubit: Adding card - userID: "${cdm.userID}", currentDeckName: "${cdm.currentDeckName}"');
+    _logger.info('Adding card - userID: "${cdm.userID}", deck: "${cdm.currentDeckName}"');
     cdm.addCardWithQA(question, answer);
     cards = await cdm.getCurrentDeckCards();
     emit(CreateCardViewingState(deckName: deckName, cards: cards));

@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:card_repository/card_deck_manager.dart';
 import 'package:authentication_repository/authentication_repository.dart';
 import '../../widgets/study_heatmap.dart';
+import '../../../main.dart';
+
+final _logger = getLogger('StudyStats');
 
 class StudyStatsView extends StatefulWidget {
   const StudyStatsView({super.key});
@@ -36,7 +39,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
         _currentDeck = await cardDeckManager.getCurrentDeck();
       } catch (e) {
         // If CardDeckManager not available, just skip deck context
-        print('CardDeckManager not available: $e');
+        _logger.warning('CardDeckManager not available: $e');
         _currentDeck = '';
       }
 
@@ -49,7 +52,7 @@ class _StudyStatsViewState extends State<StudyStatsView> {
         }
       }
     } catch (e) {
-      print('Error in _initializeAndLoad: $e');
+      _logger.severe('Error initializing study stats: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

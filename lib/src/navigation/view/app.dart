@@ -17,6 +17,9 @@ import '../../manage_decks/view/manage_decks_view_v2.dart';
 import '../../study_stats/view/study_stats_page.dart';
 import '../../widgets/frosted_navigation.dart';
 import '../cubit/navigation_cubit.dart';
+import '../../../main.dart';
+
+final _logger = getLogger('App');
 
 class KarteiApp extends StatefulWidget {
   const KarteiApp({
@@ -82,13 +85,11 @@ class _KarteiAppState extends State<KarteiApp> {
         home: StreamBuilder<User>(
           stream: widget.authenticationRepository.user,
           builder: (context, snapshot) {
-            print('App: Auth StreamBuilder - connectionState: ${snapshot.connectionState}');
-            print('App: Auth StreamBuilder - hasData: ${snapshot.hasData}');
-            print('App: Auth StreamBuilder - data: ${snapshot.data}');
-            print('App: Auth StreamBuilder - is User.empty: ${snapshot.data == User.empty}');
+            _logger.fine('Auth stream state: ${snapshot.connectionState}, hasData: ${snapshot.hasData}');
+            _logger.fine('User data: ${snapshot.data}, isEmpty: ${snapshot.data == User.empty}');
             
             if (snapshot.connectionState == ConnectionState.waiting) {
-              print('App: Showing loading indicator');
+              _logger.info('Authentication loading, showing indicator');
               return Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
@@ -97,23 +98,20 @@ class _KarteiAppState extends State<KarteiApp> {
                        snapshot.data == null ||
                        snapshot.data!.email == null ||
                        snapshot.data!.email!.isEmpty) {
-              print('App: User is not authenticated - showing login page');
-              print('App: hasData: ${snapshot.hasData}');
-              print('App: data == User.empty: ${snapshot.data == User.empty}');
-              print('App: email: ${snapshot.data?.email}');
+              _logger.info('User not authenticated, showing login page');
+              _logger.fine('Auth details - hasData: ${snapshot.hasData}, email: ${snapshot.data?.email}');
               return Scaffold(
                 body: SafeArea(
                   child: LoginPage(),
                 ),
               );
             } else {
-              print('App: User is authenticated, showing main app');
               final user = snapshot.data!;
-              print('App: User email: "${user.email}", id: "${user.id}"');
+              _logger.info('User authenticated: ${user.email}');
               
               // Ensure the user is properly set in our managers
               if (user.email != null && user.email!.isNotEmpty) {
-                print('App: Ensuring userID is set in CardDeckManager');
+                _logger.fine('Setting userID in CardDeckManager');
                 widget.cardDeckManager.setUserID(user.email!);
               }
               return BlocBuilder<NavigationCubit, NavigationState>(

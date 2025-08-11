@@ -11,6 +11,9 @@ import '../../navigation/cubit/navigation_cubit.dart';
 import '../../create_cards/view/create_cards_view.dart';
 import '../../ai_import/view/ai_import_page.dart';
 import '../../create_cards/cubit/create_cards_cubit.dart';
+import '../../../main.dart';
+
+final _logger = getLogger('ManageDecksView');
 
 class ManageDecksViewV2 extends StatefulWidget {
   const ManageDecksViewV2({super.key});
@@ -506,7 +509,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
       ),
     ).then((_) {
       // Refresh deck counts when returning from AI import
-      print('ManageDecksCubitV2: Returned from AI import, refreshing deck counts');
+      _logger.fine('Returned from AI import, refreshing deck counts');
       cubit.loadDecks();
     });
   }
@@ -532,7 +535,7 @@ class _ManageDecksViewV2State extends State<ManageDecksViewV2> {
       ),
     ).then((_) {
       // Refresh deck counts when returning from card creation
-      print('ManageDecksCubitV2: Returned from card creation, refreshing deck counts');
+      _logger.fine('Returned from card creation, refreshing deck counts');
       cubit.loadDecks();
     });
   }

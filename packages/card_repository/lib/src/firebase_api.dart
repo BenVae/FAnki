@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'models/single_card.dart';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('FirebaseApi');
 
 class FirebaseApi {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -7,7 +10,7 @@ class FirebaseApi {
   Future<String> getLastDeckFromFireStore(String userID) async {
     try {
       if (userID.isEmpty) {
-        print('Error: userID is empty');
+        _logger.warning('UserID is empty');
         return '';
       }
 
@@ -19,14 +22,14 @@ class FirebaseApi {
       }
       return '';
     } catch (e) {
-      print('Error getting lastDeck: $e');
+      _logger.info('Error getting lastDeck: $e');
       return '';
     }
   }
 
   void setLastDeckInFireStore(String userID, String lastDeck) {
     if (userID.isEmpty) {
-      print('Error: userID is empty');
+      _logger.severe('Error: userID is empty');
       return;
     }
     firestore.collection('users').doc(userID).set({'lastDeck': lastDeck});
@@ -34,7 +37,7 @@ class FirebaseApi {
 
   void createDeckInFirestore(String userID, String deckName) {
     if (userID.isEmpty || deckName.isEmpty) {
-      print('Error: userID or deckName is empty');
+      _logger.severe('Error: userID or deckName is empty');
       return;
     }
     firestore
@@ -43,20 +46,20 @@ class FirebaseApi {
         .collection('decks')
         .doc(deckName)
         .set({'updatedOn': FieldValue.serverTimestamp()})
-        .then((value) => print('Deck $deckName created.'))
+        .then((value) => _logger.info('Deck $deckName created'))
         .onError((error, stackTrace) {
-          print('Deck $deckName could not be created. $error');
+          _logger.info('Deck $deckName could not be created. $error');
         });
   }
 
   void removeDeckFromFirestore(String userID, String deckName) {
     // Validate inputs
     if (userID.isEmpty) {
-      print('Error: userID is empty');
+      _logger.severe('Error: userID is empty');
       return;
     }
     if (deckName.isEmpty) {
-      print('Error: deckName is empty');
+      _logger.severe('Error: deckName is empty');
       return;
     }
     
@@ -79,9 +82,9 @@ class FirebaseApi {
         .collection('decks')
         .doc(deckName)
         .delete()
-        .then((value) => print('Deck removed succesfully.'))
+        .then((value) => _logger.info('Deck removed successfully'))
         .onError((error, stackTrace) {
-      print('Deck $deckName could not be removed.');
+      _logger.info('Deck $deckName could not be removed.');
     });
   }
 
@@ -89,15 +92,15 @@ class FirebaseApi {
       String userID, String currentDeckName, SingleCard card) {
     // Validate inputs
     if (userID.isEmpty) {
-      print('Error: userID is empty');
+      _logger.severe('Error: userID is empty');
       return;
     }
     if (currentDeckName.isEmpty) {
-      print('Error: currentDeckName is empty');
+      _logger.severe('Error: currentDeckName is empty');
       return;
     }
     if (card.id.isEmpty) {
-      print('Error: card.id is empty');
+      _logger.severe('Error: card.id is empty');
       return;
     }
     
@@ -119,15 +122,15 @@ class FirebaseApi {
       String userID, String currentDeckName, SingleCard card) {
     // Validate inputs
     if (userID.isEmpty) {
-      print('Error: userID is empty');
+      _logger.severe('Error: userID is empty');
       return;
     }
     if (currentDeckName.isEmpty) {
-      print('Error: currentDeckName is empty');
+      _logger.severe('Error: currentDeckName is empty');
       return;
     }
     if (card.id.isEmpty) {
-      print('Error: card.id is empty');
+      _logger.severe('Error: card.id is empty');
       return;
     }
     
@@ -144,15 +147,15 @@ class FirebaseApi {
       String userID, String currentDeckName, String id) {
     // Validate inputs
     if (userID.isEmpty) {
-      print('Error: userID is empty');
+      _logger.severe('Error: userID is empty');
       return;
     }
     if (currentDeckName.isEmpty) {
-      print('Error: currentDeckName is empty');
+      _logger.severe('Error: currentDeckName is empty');
       return;
     }
     if (id.isEmpty) {
-      print('Error: card id is empty');
+      _logger.severe('Error: card id is empty');
       return;
     }
     
@@ -171,7 +174,7 @@ class FirebaseApi {
 
     // Validate inputs
     if (userID.isEmpty || deckName.isEmpty) {
-      print('Error: userID or deckName is empty');
+      _logger.severe('Error: userID or deckName is empty');
       return deck;
     }
 
@@ -187,15 +190,15 @@ class FirebaseApi {
               SingleCard card = SingleCard.fromMap(cardMap);
               deck.add(card);
             } else {
-              print('Document does not exist');
+              _logger.info('Document does not exist');
             }
           }
         },
-        onError: (e) => print('Error getting document: $e'),
+        onError: (e) => _logger.severe('Error getting document: $e'),
       );
-      print('Ending of getAllCardsOfDeckFromFirestore');
+      _logger.info('Ending of getAllCardsOfDeckFromFirestore');
     } catch (e) {
-      print('Error in getAllCardsOfDeckFromFirestore: $e');
+      _logger.info('Error in getAllCardsOfDeckFromFirestore: $e');
     }
     return deck;
   }
@@ -222,7 +225,7 @@ class FirebaseApi {
 
     // Validate input
     if (userID.isEmpty) {
-      print('Error: userID is empty');
+      _logger.severe('Error: userID is empty');
       return deckNames;
     }
 
@@ -238,14 +241,14 @@ class FirebaseApi {
                 deckNames.add(doc.id);
               }
             } else {
-              print('Document does not exist');
+              _logger.info('Document does not exist');
             }
           }
         },
-        onError: (e) => print('Error getting document: $e'),
+        onError: (e) => _logger.severe('Error getting document: $e'),
       );
     } catch (e) {
-      print('Error in getAllDecknamesFromFirestore: $e');
+      _logger.info('Error in getAllDecknamesFromFirestore: $e');
     }
     return deckNames;
   }
@@ -260,9 +263,9 @@ class FirebaseApi {
         .collection('cards')
         .doc(card.id)
         .set(card.cardToMap())
-        .then((value) => print('Difficulty has been updated'))
+        .then((value) => _logger.fine('Difficulty updated'))
         .onError((error, stackTrace) =>
-            print('Update of difficulty was not successful. $error'));
+            _logger.info('Update of difficulty was not successful. $error'));
   }
 
   // New methods for hierarchical deck support
@@ -272,7 +275,7 @@ class FirebaseApi {
     try {
       // Validate input
       if (userID.isEmpty) {
-        print('Error: userID is empty');
+        _logger.warning('UserID is empty');
         return [];
       }
       
@@ -288,7 +291,7 @@ class FirebaseApi {
         return data;
       }).toList();
     } catch (e) {
-      print('Error getting decks: $e');
+      _logger.info('Error getting decks: $e');
       return [];
     }
   }
@@ -318,7 +321,7 @@ class FirebaseApi {
           .doc(deckId)
           .set(deckData);
     } catch (e) {
-      print('Error creating deck: $e');
+      _logger.info('Error creating deck: $e');
       throw e;
     }
   }
@@ -342,7 +345,7 @@ class FirebaseApi {
           .doc(deckId)
           .update(deckData);
     } catch (e) {
-      print('Error updating deck: $e');
+      _logger.info('Error updating deck: $e');
       throw e;
     }
   }
@@ -380,7 +383,7 @@ class FirebaseApi {
           .doc(deckId)
           .delete();
     } catch (e) {
-      print('Error deleting deck: $e');
+      _logger.info('Error deleting deck: $e');
       throw e;
     }
   }

@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../main.dart';
 
+final _logger = getLogger('LoginCubit');
+
 class LoginCubitV2 extends Cubit<LoginState> {
   final AuthenticationRepository _authenticationRepository;
   final CardDeckManager _cdm;
@@ -15,23 +17,22 @@ class LoginCubitV2 extends Cubit<LoginState> {
     this._cdm,
     this._deckTreeManager,
   ) : super(LoginLoading()) {
-    print('LoginCubitV2: Constructor - CDM userID before: "${_cdm.userID}"');
+    _logger.config('Initializing LoginCubitV2 - CDM userID: "${_cdm.userID}"');
     if (_authenticationRepository.currentUser.isEmpty) {
-      log.info('CurrentUser empty');
-      print('LoginCubitV2: CurrentUser is empty, emitting LoginInitial');
+      _logger.info('Current user is empty, showing login screen');
       emit(LoginInitial());
     } else {
-      log.info('CurrentUser not empty');
+      _logger.info('Current user found, setting up authentication');
       String email = _authenticationRepository.currentUser.email ?? '';
-      print('LoginCubitV2: Got email from currentUser: "$email"');
+      _logger.fine('Retrieved email from current user: "$email"');
       if (email != '') {
-        print('LoginCubitV2: Setting userID in CDM and DeckTreeManager');
+        _logger.info('Setting userID in deck managers');
         _cdm.setUserID(email);
         _deckTreeManager.setUserId(email);
-        print('LoginCubitV2: After setUserID - CDM userID: "${_cdm.userID}"');
+        _logger.fine('UserID set successfully - CDM userID: "${_cdm.userID}"');
         emit(LoginSuccess());
       } else {
-        log.severe('Did not get the email from auth.');
+        _logger.severe('Failed to get email from authenticated user');
         emit(LoginInitial());
       }
     }
@@ -45,10 +46,10 @@ class LoginCubitV2 extends Cubit<LoginState> {
       emit(LoginSuccess());
       _cdm.setUserID(email);
       await _deckTreeManager.setUserId(email);
-      log.info('Login successful');
+      _logger.info('User login successful');
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
-      log.info('Login failed');
+      _logger.warning('User login failed: ${error.toString()}');
     }
   }
 
@@ -57,10 +58,10 @@ class LoginCubitV2 extends Cubit<LoginState> {
     try {
       await _authenticationRepository.logOut();
       emit(LoginInitial());
-      log.info('Logout successful');
+      _logger.info('User logout successful');
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
-      log.info('Logout failed');
+      _logger.warning('User logout failed: ${error.toString()}');
     }
   }
 
@@ -71,10 +72,10 @@ class LoginCubitV2 extends Cubit<LoginState> {
       emit(LoginSuccess());
       _cdm.setUserID(email);
       await _deckTreeManager.setUserId(email);
-      log.info('Signup successful');
+      _logger.info('User signup successful');
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
-      log.info('Signup failed');
+      _logger.warning('User signup failed: ${error.toString()}');
     }
   }
 }

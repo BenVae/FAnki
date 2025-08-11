@@ -12,16 +12,16 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit(this._authenticationRepository, this._cdm)
       : super(LoginLoading()) {
     if (_authenticationRepository.currentUser.isEmpty) {
-      log.info('CurrentUser empty');
+      // log.info('CurrentUser empty');
       emit(LoginInitial());
     } else {
-      log.info('CurrentUser not empty');
+      // log.info('CurrentUser not empty');
       String email = _authenticationRepository.currentUser.email ?? '';
       if (email != '') {
         _cdm.setUserID(email);
         emit(LoginSuccess());
       } else {
-        log.severe('Did not get the email from auth.');
+        // log.severe('Did not get the email from auth.');
         emit(LoginInitial());
       }
     }
@@ -34,10 +34,10 @@ class LoginCubit extends Cubit<LoginState> {
           email: email, password: password);
       emit(LoginSuccess());
       _cdm.setUserID(email);
-      log.info('Login successful');
+      // log.info('Login successful');
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
-      log.info('Login failed');
+      // log.info('Login failed');
     }
   }
 
@@ -46,10 +46,10 @@ class LoginCubit extends Cubit<LoginState> {
     try {
       await _authenticationRepository.logOut();
       emit(LoginInitial());
-      log.info('Logout successful');
+      // log.info('Logout successful');
     } catch (error) {
       emit(LoginFailure(error: error.toString()));
-      log.info('Logout failed');
+      // log.info('Logout failed');
     }
   }
 

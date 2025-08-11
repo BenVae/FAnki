@@ -27,7 +27,7 @@ class LearningCubit extends Cubit<CardLearnState> {
         super(CardLoadingState()) {
     deckName = _cdm.currentDeckName;
     loadCards();
-    log.info(_repo.toString());
+    // log.info(_repo.toString());
 
     // Initialize activity manager with user ID
     final userId = _repo.currentUser.email ?? '';
@@ -51,7 +51,7 @@ class LearningCubit extends Cubit<CardLearnState> {
           cardsReviewed: currentState.cardsReviewed,
           totalCards: currentState.totalCards));
     } else {
-      log.warning('Wrong state 3454243 $state');
+      // log.warning('Wrong state 3454243 $state');
       nextCard();
     }
   }
@@ -100,7 +100,7 @@ class LearningCubit extends Cubit<CardLearnState> {
           totalCards: _totalCards);
       emit(state);
     } else {
-      log.severe('No first card');
+      // log.severe('No first card');
       emit(CardEmptyState());
     }
   }
@@ -206,6 +206,6 @@ class CardErrorState extends CardLearnState {
   final String error;
 
   CardErrorState(this.error) {
-    log.info(error);
+    // log.info(error);
   }
 }

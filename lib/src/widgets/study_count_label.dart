@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../main.dart';
+
+final _logger = getLogger('StudyCountLabel');
 
 class StudyCountLabel extends StatelessWidget {
   final int count;
@@ -10,15 +13,13 @@ class StudyCountLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('StudyCountLabel: Received count = $count');
+    _logger.finest('Rendering study count label with count = $count');
     
     // Don't show label if count is 0
     if (count <= 0) {
-      print('StudyCountLabel: Hiding label because count <= 0');
+      _logger.finest('Hiding label because count <= 0');
       return const SizedBox.shrink();
     }
-    
-    print('StudyCountLabel: Showing label with count = $count');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

@@ -1,4 +1,7 @@
 import 'package:uuid/uuid.dart';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('Deck');
 
 /// Represents a deck or subdeck in the Anki-like tree structure
 class Deck {
@@ -122,13 +125,13 @@ class Deck {
   /// Calculate total cards including all subdecks
   int get totalCards {
     int total = cardCount;
-    print('Deck "$name": cardCount = $cardCount, children.length = ${children.length}');
+    _logger.finest('Calculating total cards for deck "$name": direct=$cardCount, children=${children.length}');
     for (final child in children) {
       final childTotal = child.totalCards;
-      print('Deck "$name": child "${child.name}" has totalCards = $childTotal');
+      _logger.finest('Child "${child.name}" contributes $childTotal cards');
       total += childTotal;
     }
-    print('Deck "$name": final totalCards = $total');
+    _logger.finest('Deck "$name" total cards: $total');
     return total;
   }
 

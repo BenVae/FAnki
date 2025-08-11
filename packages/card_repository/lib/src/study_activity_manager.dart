@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'models/study_activity.dart';
+import 'package:logging/logging.dart';
+
+final _logger = Logger('StudyActivity');
 
 class StudyActivityManager {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -94,7 +97,7 @@ class StudyActivityManager {
         return StudyActivity.fromMap(data);
       }
     } catch (e) {
-      print('Error getting today activity: $e');
+      _logger.severe('Error getting today activity: $e');
     }
     
     return null;
@@ -114,7 +117,7 @@ class StudyActivityManager {
           .doc(dateStr)
           .set(activity.toMap());
     } catch (e) {
-      print('Error saving activity: $e');
+      _logger.severe('Error saving activity: $e');
     }
   }
 
@@ -139,7 +142,7 @@ class StudyActivityManager {
         return StudyActivity.fromMap(data);
       }).toList();
     } catch (e) {
-      print('Error getting recent activities: $e');
+      _logger.severe('Error getting recent activities: $e');
       return [];
     }
   }
