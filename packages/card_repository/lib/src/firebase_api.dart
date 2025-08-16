@@ -1,12 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'models/single_card.dart';
 import 'package:logging/logging.dart';
+import 'models/anki_card.dart';
+import 'services/sm2_service.dart';
 
 final _logger = Logger('FirebaseApi');
 
+/// Firebase API for managing AnkiCards and Decks
 class FirebaseApi {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
+  // ==================== User Settings ====================
+  
+  /// Get the last used deck from user settings
   Future<String> getLastDeckFromFireStore(String userID) async {
     try {
       if (userID.isEmpty) {
@@ -27,346 +32,62 @@ class FirebaseApi {
     }
   }
 
+  /// Set the last used deck in user settings
   void setLastDeckInFireStore(String userID, String lastDeck) {
     if (userID.isEmpty) {
       _logger.severe('Error: userID is empty');
       return;
     }
-    firestore.collection('users').doc(userID).set({'lastDeck': lastDeck});
+    firestore.collection('users').doc(userID).set(
+      {'lastDeck': lastDeck},
+      SetOptions(merge: true),
+    );
   }
 
-  void createDeckInFirestore(String userID, String deckName) {
-    if (userID.isEmpty || deckName.isEmpty) {
-      _logger.severe('Error: userID or deckName is empty');
-      return;
-    }
-    firestore
-        .collection('users')
-        .doc(userID)
-        .collection('decks')
-        .doc(deckName)
-        .set({'updatedOn': FieldValue.serverTimestamp()})
-        .then((value) => _logger.info('Deck $deckName created'))
-        .onError((error, stackTrace) {
-          _logger.info('Deck $deckName could not be created. $error');
-        });
-  }
-
-  void removeDeckFromFirestore(String userID, String deckName) {
-    // Validate inputs
-    if (userID.isEmpty) {
-      _logger.severe('Error: userID is empty');
-      return;
-    }
-    if (deckName.isEmpty) {
-      _logger.severe('Error: deckName is empty');
-      return;
-    }
-    
-    firestore
-        .collection('users')
-        .doc(userID)
-        .collection('decks')
-        .doc(deckName)
-        .collection('cards')
-        .get()
-        .then((snapshot) {
-      for (DocumentSnapshot ds in snapshot.docs) {
-        ds.reference.delete();
-      }
-    }).onError((error, stackTrace) => null);
-
-    firestore
-        .collection('users')
-        .doc(userID)
-        .collection('decks')
-        .doc(deckName)
-        .delete()
-        .then((value) => _logger.info('Deck removed successfully'))
-        .onError((error, stackTrace) {
-      _logger.info('Deck $deckName could not be removed.');
-    });
-  }
-
-  void addCardToFirestore(
-      String userID, String currentDeckName, SingleCard card) {
-    // Validate inputs
-    if (userID.isEmpty) {
-      _logger.severe('Error: userID is empty');
-      return;
-    }
-    if (currentDeckName.isEmpty) {
-      _logger.severe('Error: currentDeckName is empty');
-      return;
-    }
-    if (card.id.isEmpty) {
-      _logger.severe('Error: card.id is empty');
-      return;
-    }
-    
-    var userDoc = firestore.collection('users').doc(userID);
-    var deckDoc = userDoc.collection('decks').doc(currentDeckName);
-    deckDoc.collection('cards').doc(card.id).set(card.cardToMap());
-  }
-
-  void addCardToFirestoreWithoutSingleCard(
-      String userID, String currentDeckName, String question, String answer) {
-    SingleCard sc = SingleCard(
-        deckName: currentDeckName, questionText: question, answerText: answer);
-    var userDoc = firestore.collection('users').doc(userID);
-    var deckDoc = userDoc.collection('decks').doc(currentDeckName);
-    deckDoc.collection('cards').doc(sc.id).set(sc.cardToMap());
-  }
-
-  void removeCardFromFirestore(
-      String userID, String currentDeckName, SingleCard card) {
-    // Validate inputs
-    if (userID.isEmpty) {
-      _logger.severe('Error: userID is empty');
-      return;
-    }
-    if (currentDeckName.isEmpty) {
-      _logger.severe('Error: currentDeckName is empty');
-      return;
-    }
-    if (card.id.isEmpty) {
-      _logger.severe('Error: card.id is empty');
-      return;
-    }
-    
-    final deckCollection = firestore
-        .collection('users')
-        .doc(userID)
-        .collection('decks')
-        .doc(currentDeckName)
-        .collection('cards');
-    deckCollection.doc(card.id).delete();
-  }
-
-  void removeCardFromFirestoreByID(
-      String userID, String currentDeckName, String id) {
-    // Validate inputs
-    if (userID.isEmpty) {
-      _logger.severe('Error: userID is empty');
-      return;
-    }
-    if (currentDeckName.isEmpty) {
-      _logger.severe('Error: currentDeckName is empty');
-      return;
-    }
-    if (id.isEmpty) {
-      _logger.severe('Error: card id is empty');
-      return;
-    }
-    
-    final deckCollection = firestore
-        .collection('users')
-        .doc(userID)
-        .collection('decks')
-        .doc(currentDeckName)
-        .collection('cards');
-    deckCollection.doc(id).delete();
-  }
-
-  Future<List<SingleCard>> getAllCardsOfDeckFromFirestore(
-      String userID, String deckName) async {
-    List<SingleCard> deck = [];
-
-    // Validate inputs
-    if (userID.isEmpty || deckName.isEmpty) {
-      _logger.severe('Error: userID or deckName is empty');
-      return deck;
-    }
-
-    try {
-      var userDoc = firestore.collection('users').doc(userID);
-      var docRef =
-          userDoc.collection('decks').doc(deckName).collection('cards');
-      await docRef.get().then(
-        (QuerySnapshot querySnapshot) {
-          for (var doc in querySnapshot.docs) {
-            if (doc.exists) {
-              final cardMap = doc.data() as Map<String, dynamic>;
-              SingleCard card = SingleCard.fromMap(cardMap);
-              deck.add(card);
-            } else {
-              _logger.info('Document does not exist');
-            }
-          }
-        },
-        onError: (e) => _logger.severe('Error getting document: $e'),
-      );
-      _logger.info('Ending of getAllCardsOfDeckFromFirestore');
-    } catch (e) {
-      _logger.info('Error in getAllCardsOfDeckFromFirestore: $e');
-    }
-    return deck;
-  }
-
-  Future<List<SingleCard>> getAllCardsOfDeckFromFirestoreAndListen(
-      String userID, String currentDeckName) async {
-    List<SingleCard> deck = [];
-
-    var userDoc = firestore.collection('users').doc(userID);
-    var docRef =
-        userDoc.collection('decks').doc(currentDeckName).collection('cards');
-
-    docRef.snapshots().listen((QuerySnapshot querySnapshot) {
-      for (var doc in querySnapshot.docs) {
-        SingleCard sc = SingleCard.fromMap(doc as Map<String, dynamic>);
-        deck.add(sc);
-      }
-    });
-    return deck;
-  }
-
-  Future<List<String>> getAllDecknamesFromFirestore(String userID) async {
-    List<String> deckNames = [];
-
-    // Validate input
-    if (userID.isEmpty) {
-      _logger.severe('Error: userID is empty');
-      return deckNames;
-    }
-
-    try {
-      var userDoc = firestore.collection('users').doc(userID);
-      var docRef = userDoc.collection('decks');
-
-      await docRef.get().then(
-        (QuerySnapshot querySnapshot) {
-          for (var doc in querySnapshot.docs) {
-            if (doc.exists) {
-              if (!deckNames.contains(doc.id)) {
-                deckNames.add(doc.id);
-              }
-            } else {
-              _logger.info('Document does not exist');
-            }
-          }
-        },
-        onError: (e) => _logger.severe('Error getting document: $e'),
-      );
-    } catch (e) {
-      _logger.info('Error in getAllDecknamesFromFirestore: $e');
-    }
-    return deckNames;
-  }
-
-  void updateDifficultyOfCardInFirestore(
-      String userID, String currentDeckName, SingleCard card) {
-    firestore
-        .collection('users')
-        .doc(userID)
-        .collection('decks')
-        .doc(currentDeckName)
-        .collection('cards')
-        .doc(card.id)
-        .set(card.cardToMap())
-        .then((value) => _logger.fine('Difficulty updated'))
-        .onError((error, stackTrace) =>
-            _logger.info('Update of difficulty was not successful. $error'));
-  }
-
-  // New methods for hierarchical deck support
+  // ==================== Deck Management ====================
   
-  /// Get all decks with their metadata
-  Future<List<Map<String, dynamic>>> getAllDecksFromFirestore(String userID) async {
+  /// Create a new deck
+  Future<void> createDeckInFirestore(String userID, String deckId, {String? deckName}) async {
     try {
-      // Validate input
-      if (userID.isEmpty) {
-        _logger.warning('UserID is empty');
-        return [];
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('UserID and deckId cannot be empty');
       }
-      
-      final snapshot = await firestore
-          .collection('users')
-          .doc(userID)
-          .collection('decks_v2')
-          .get();
-      
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return data;
-      }).toList();
-    } catch (e) {
-      _logger.info('Error getting decks: $e');
-      return [];
-    }
-  }
 
-  /// Create a new deck with v2 structure
-  Future<void> createDeckInFirestoreV2(String userID, Map<String, dynamic> deckData) async {
-    try {
-      // Validate inputs
-      if (userID.isEmpty) {
-        throw ArgumentError('userID cannot be empty');
-      }
-      
-      final deckId = deckData['id'] as String?;
-      if (deckId == null || deckId.isEmpty) {
-        throw ArgumentError('Deck ID cannot be null or empty');
-      }
-      
-      final deckName = deckData['name'] as String?;
-      if (deckName == null || deckName.isEmpty) {
-        throw ArgumentError('Deck name cannot be null or empty');
-      }
-      
       await firestore
           .collection('users')
           .doc(userID)
-          .collection('decks_v2')
+          .collection('decks')
           .doc(deckId)
-          .set(deckData);
+          .set({
+            'id': deckId,
+            'name': deckName ?? deckId,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+            'cardCount': 0,
+            'newCount': 0,
+            'reviewCount': 0,
+            'learningCount': 0,
+          });
+      
+      _logger.info('Deck $deckId created successfully');
     } catch (e) {
-      _logger.info('Error creating deck: $e');
-      throw e;
+      _logger.severe('Error creating deck: $e');
+      rethrow;
     }
   }
 
-  /// Update deck metadata
-  Future<void> updateDeckInFirestore(String userID, String deckId, Map<String, dynamic> deckData) async {
+  /// Remove a deck and all its cards
+  Future<void> removeDeckFromFirestore(String userID, String deckId) async {
     try {
-      // Validate inputs
-      if (userID.isEmpty) {
-        throw ArgumentError('userID cannot be empty');
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('UserID and deckId cannot be empty');
       }
       
-      if (deckId.isEmpty) {
-        throw ArgumentError('deckId cannot be empty');
-      }
-      
-      await firestore
-          .collection('users')
-          .doc(userID)
-          .collection('decks_v2')
-          .doc(deckId)
-          .update(deckData);
-    } catch (e) {
-      _logger.info('Error updating deck: $e');
-      throw e;
-    }
-  }
-
-  /// Delete a deck
-  Future<void> deleteDeckFromFirestore(String userID, String deckId) async {
-    try {
-      // Validate inputs
-      if (userID.isEmpty) {
-        throw ArgumentError('userID cannot be empty');
-      }
-      
-      if (deckId.isEmpty) {
-        throw ArgumentError('deckId cannot be empty');
-      }
-      
-      // Delete all cards in the deck first
+      // Delete all cards in the deck
       final cardsSnapshot = await firestore
           .collection('users')
           .doc(userID)
-          .collection('decks_v2')
+          .collection('decks')
           .doc(deckId)
           .collection('cards')
           .get();
@@ -379,12 +100,521 @@ class FirebaseApi {
       await firestore
           .collection('users')
           .doc(userID)
-          .collection('decks_v2')
+          .collection('decks')
           .doc(deckId)
           .delete();
+      
+      _logger.info('Deck $deckId removed successfully');
     } catch (e) {
-      _logger.info('Error deleting deck: $e');
-      throw e;
+      _logger.severe('Error removing deck: $e');
+      rethrow;
     }
+  }
+
+  /// Get all deck names for a user
+  Future<List<String>> getAllDecknamesFromFirestore(String userID) async {
+    try {
+      if (userID.isEmpty) {
+        _logger.warning('UserID is empty');
+        return [];
+      }
+
+      final snapshot = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .get();
+
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      _logger.severe('Error getting deck names: $e');
+      return [];
+    }
+  }
+
+  /// Get deck metadata with card counts
+  Future<Map<String, dynamic>?> getDeckMetadata(String userID, String deckId) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        _logger.warning('UserID or deckId is empty');
+        return null;
+      }
+
+      final doc = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .get();
+
+      if (doc.exists) {
+        return doc.data();
+      }
+      return null;
+    } catch (e) {
+      _logger.severe('Error getting deck metadata: $e');
+      return null;
+    }
+  }
+
+  /// Update deck statistics
+  Future<void> updateDeckStatistics(String userID, String deckId) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('UserID and deckId cannot be empty');
+      }
+
+      // Get all cards in the deck
+      final cards = await getAllAnkiCardsFromDeck(userID, deckId);
+      
+      // Calculate statistics
+      int newCount = 0;
+      int learningCount = 0;
+      int reviewCount = 0;
+      int dueCount = 0;
+      final now = DateTime.now();
+      
+      for (final card in cards) {
+        if (card.suspended) continue;
+        
+        switch (card.state) {
+          case CardState.newCard:
+            newCount++;
+            break;
+          case CardState.learning:
+          case CardState.relearning:
+            learningCount++;
+            if (card.isDue) dueCount++;
+            break;
+          case CardState.review:
+            reviewCount++;
+            if (card.isDue) dueCount++;
+            break;
+        }
+      }
+      
+      // Update deck document
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .update({
+            'cardCount': cards.length,
+            'newCount': newCount,
+            'learningCount': learningCount,
+            'reviewCount': reviewCount,
+            'dueCount': dueCount,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+      
+      _logger.info('Updated statistics for deck $deckId');
+    } catch (e) {
+      _logger.severe('Error updating deck statistics: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== AnkiCard CRUD Operations ====================
+  
+  /// Add a new AnkiCard to a deck
+  Future<void> addAnkiCardToFirestore(String userID, String deckId, AnkiCard card) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('UserID and deckId cannot be empty');
+      }
+      
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .doc(card.id)
+          .set(card.toFirestore());
+      
+      // Update deck statistics
+      await updateDeckStatistics(userID, deckId);
+      
+      _logger.info('AnkiCard ${card.id} added to deck $deckId');
+    } catch (e) {
+      _logger.severe('Error adding AnkiCard: $e');
+      rethrow;
+    }
+  }
+
+  /// Get a single AnkiCard
+  Future<AnkiCard?> getAnkiCard(String userID, String deckId, String cardId) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty || cardId.isEmpty) {
+        _logger.warning('UserID, deckId, or cardId is empty');
+        return null;
+      }
+
+      final doc = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .doc(cardId)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        return AnkiCard.fromFirestore(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      _logger.severe('Error getting AnkiCard: $e');
+      return null;
+    }
+  }
+
+  /// Update an existing AnkiCard
+  Future<void> updateAnkiCard(String userID, String deckId, AnkiCard card) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('UserID and deckId cannot be empty');
+      }
+      
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .doc(card.id)
+          .update(card.toFirestore());
+      
+      // Update deck statistics
+      await updateDeckStatistics(userID, deckId);
+      
+      _logger.info('AnkiCard ${card.id} updated in deck $deckId');
+    } catch (e) {
+      _logger.severe('Error updating AnkiCard: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete an AnkiCard
+  Future<void> removeAnkiCardFromFirestore(String userID, String deckId, String cardId) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty || cardId.isEmpty) {
+        throw ArgumentError('UserID, deckId, and cardId cannot be empty');
+      }
+      
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .doc(cardId)
+          .delete();
+      
+      // Update deck statistics
+      await updateDeckStatistics(userID, deckId);
+      
+      _logger.info('AnkiCard $cardId removed from deck $deckId');
+    } catch (e) {
+      _logger.severe('Error removing AnkiCard: $e');
+      rethrow;
+    }
+  }
+
+  /// Get all AnkiCards from a deck
+  Future<List<AnkiCard>> getAllAnkiCardsFromDeck(String userID, String deckId) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        _logger.warning('UserID or deckId is empty');
+        return [];
+      }
+
+      final snapshot = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .get();
+
+      final cards = <AnkiCard>[];
+      for (final doc in snapshot.docs) {
+        if (doc.data() != null) {
+          try {
+            cards.add(AnkiCard.fromFirestore(doc.data()));
+          } catch (e) {
+            _logger.warning('Error parsing card ${doc.id}: $e');
+          }
+        }
+      }
+      
+      _logger.info('Retrieved ${cards.length} AnkiCards from deck $deckId');
+      return cards;
+    } catch (e) {
+      _logger.severe('Error getting AnkiCards from deck: $e');
+      return [];
+    }
+  }
+
+  /// Get cards due for review
+  Future<List<AnkiCard>> getDueCardsFromDeck(String userID, String deckId, {int? limit}) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        _logger.warning('UserID or deckId is empty');
+        return [];
+      }
+
+      Query query = firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .where('suspended', isEqualTo: false)
+          .where('dueDate', isLessThanOrEqualTo: DateTime.now().toIso8601String())
+          .orderBy('dueDate');
+      
+      if (limit != null && limit > 0) {
+        query = query.limit(limit);
+      }
+
+      final snapshot = await query.get();
+
+      final cards = <AnkiCard>[];
+      for (final doc in snapshot.docs) {
+        if (doc.data() != null) {
+          try {
+            final data = doc.data() as Map<String, dynamic>;
+            cards.add(AnkiCard.fromFirestore(data));
+          } catch (e) {
+            _logger.warning('Error parsing card ${doc.id}: $e');
+          }
+        }
+      }
+      
+      _logger.info('Retrieved ${cards.length} due cards from deck $deckId');
+      return cards;
+    } catch (e) {
+      _logger.severe('Error getting due cards: $e');
+      return [];
+    }
+  }
+
+  /// Get new cards from a deck
+  Future<List<AnkiCard>> getNewCardsFromDeck(String userID, String deckId, {int? limit}) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        _logger.warning('UserID or deckId is empty');
+        return [];
+      }
+
+      Query query = firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .collection('cards')
+          .where('state', isEqualTo: CardState.newCard.value)
+          .where('suspended', isEqualTo: false)
+          .orderBy('created');
+      
+      if (limit != null && limit > 0) {
+        query = query.limit(limit);
+      }
+
+      final snapshot = await query.get();
+
+      final cards = <AnkiCard>[];
+      for (final doc in snapshot.docs) {
+        if (doc.data() != null) {
+          try {
+            final data = doc.data() as Map<String, dynamic>;
+            cards.add(AnkiCard.fromFirestore(data));
+          } catch (e) {
+            _logger.warning('Error parsing card ${doc.id}: $e');
+          }
+        }
+      }
+      
+      _logger.info('Retrieved ${cards.length} new cards from deck $deckId');
+      return cards;
+    } catch (e) {
+      _logger.severe('Error getting new cards: $e');
+      return [];
+    }
+  }
+
+  /// Process a card review and update it
+  Future<void> processCardReview(
+    String userID, 
+    String deckId, 
+    AnkiCard card, 
+    ReviewGrade grade,
+  ) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('UserID and deckId cannot be empty');
+      }
+      
+      // Use SM2Service to process the review
+      final sm2Service = SM2Service();
+      final updatedCard = sm2Service.processReview(card, grade);
+      
+      // Update the card in Firestore
+      await updateAnkiCard(userID, deckId, updatedCard);
+      
+      _logger.info('Processed review for card ${card.id} with grade ${grade.name}');
+    } catch (e) {
+      _logger.severe('Error processing card review: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== Batch Operations ====================
+  
+  /// Suspend multiple cards
+  Future<void> suspendCards(String userID, String deckId, List<String> cardIds) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty || cardIds.isEmpty) {
+        throw ArgumentError('UserID, deckId, and cardIds cannot be empty');
+      }
+      
+      final batch = firestore.batch();
+      
+      for (final cardId in cardIds) {
+        final ref = firestore
+            .collection('users')
+            .doc(userID)
+            .collection('decks')
+            .doc(deckId)
+            .collection('cards')
+            .doc(cardId);
+        
+        batch.update(ref, {'suspended': true, 'modified': DateTime.now().toIso8601String()});
+      }
+      
+      await batch.commit();
+      await updateDeckStatistics(userID, deckId);
+      
+      _logger.info('Suspended ${cardIds.length} cards in deck $deckId');
+    } catch (e) {
+      _logger.severe('Error suspending cards: $e');
+      rethrow;
+    }
+  }
+
+  /// Unsuspend multiple cards
+  Future<void> unsuspendCards(String userID, String deckId, List<String> cardIds) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty || cardIds.isEmpty) {
+        throw ArgumentError('UserID, deckId, and cardIds cannot be empty');
+      }
+      
+      final batch = firestore.batch();
+      
+      for (final cardId in cardIds) {
+        final ref = firestore
+            .collection('users')
+            .doc(userID)
+            .collection('decks')
+            .doc(deckId)
+            .collection('cards')
+            .doc(cardId);
+        
+        batch.update(ref, {'suspended': false, 'modified': DateTime.now().toIso8601String()});
+      }
+      
+      await batch.commit();
+      await updateDeckStatistics(userID, deckId);
+      
+      _logger.info('Unsuspended ${cardIds.length} cards in deck $deckId');
+    } catch (e) {
+      _logger.severe('Error unsuspending cards: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete multiple cards
+  Future<void> deleteCards(String userID, String deckId, List<String> cardIds) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty || cardIds.isEmpty) {
+        throw ArgumentError('UserID, deckId, and cardIds cannot be empty');
+      }
+      
+      final batch = firestore.batch();
+      
+      for (final cardId in cardIds) {
+        final ref = firestore
+            .collection('users')
+            .doc(userID)
+            .collection('decks')
+            .doc(deckId)
+            .collection('cards')
+            .doc(cardId);
+        
+        batch.delete(ref);
+      }
+      
+      await batch.commit();
+      await updateDeckStatistics(userID, deckId);
+      
+      _logger.info('Deleted ${cardIds.length} cards from deck $deckId');
+    } catch (e) {
+      _logger.severe('Error deleting cards: $e');
+      rethrow;
+    }
+  }
+
+  // ==================== Stream Methods ====================
+  
+  /// Stream of AnkiCards for real-time updates
+  Stream<List<AnkiCard>> streamAnkiCardsFromDeck(String userID, String deckId) {
+    if (userID.isEmpty || deckId.isEmpty) {
+      _logger.warning('UserID or deckId is empty');
+      return Stream.value([]);
+    }
+
+    return firestore
+        .collection('users')
+        .doc(userID)
+        .collection('decks')
+        .doc(deckId)
+        .collection('cards')
+        .snapshots()
+        .map((snapshot) {
+          final cards = <AnkiCard>[];
+          for (final doc in snapshot.docs) {
+            if (doc.data() != null) {
+              try {
+                cards.add(AnkiCard.fromFirestore(doc.data()));
+              } catch (e) {
+                _logger.warning('Error parsing card ${doc.id}: $e');
+              }
+            }
+          }
+          return cards;
+        });
+  }
+
+  /// Stream of deck metadata for real-time updates
+  Stream<Map<String, dynamic>?> streamDeckMetadata(String userID, String deckId) {
+    if (userID.isEmpty || deckId.isEmpty) {
+      _logger.warning('UserID or deckId is empty');
+      return Stream.value(null);
+    }
+
+    return firestore
+        .collection('users')
+        .doc(userID)
+        .collection('decks')
+        .doc(deckId)
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.exists && snapshot.data() != null) {
+            return snapshot.data();
+          }
+          return null;
+        });
   }
 }
