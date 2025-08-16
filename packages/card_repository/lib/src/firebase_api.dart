@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'models/anki_card.dart';
+import 'models/single_card.dart';
 import 'services/sm2_service.dart';
 
 final _logger = Logger('FirebaseApi');
@@ -172,7 +173,6 @@ class FirebaseApi {
       int learningCount = 0;
       int reviewCount = 0;
       int dueCount = 0;
-      final now = DateTime.now();
       
       for (final card in cards) {
         if (card.suspended) continue;
@@ -616,5 +616,140 @@ class FirebaseApi {
           }
           return null;
         });
+  }
+
+  // ==================== Legacy Compatibility Methods ====================
+  // These methods provide backward compatibility for CardDeckManager and DeckTreeManager
+  // They will be removed once the app fully transitions to AnkiCardManager
+  
+  /// Legacy V2 method: Get all decks with metadata
+  Future<List<Map<String, dynamic>>> getAllDecksFromFirestore(String userID) async {
+    try {
+      if (userID.isEmpty) {
+        _logger.warning('UserID is empty');
+        return [];
+      }
+      
+      final snapshot = await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .get();
+      
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      _logger.severe('Error getting decks: $e');
+      return [];
+    }
+  }
+
+  /// Legacy V2 method: Create deck with metadata
+  Future<void> createDeckInFirestoreV2(String userID, Map<String, dynamic> deckData) async {
+    try {
+      if (userID.isEmpty) {
+        throw ArgumentError('userID cannot be empty');
+      }
+      
+      final deckId = deckData['id'] as String?;
+      if (deckId == null || deckId.isEmpty) {
+        throw ArgumentError('Deck ID cannot be null or empty');
+      }
+      
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .set(deckData);
+    } catch (e) {
+      _logger.severe('Error creating deck: $e');
+      rethrow;
+    }
+  }
+
+  /// Legacy V2 method: Update deck metadata
+  Future<void> updateDeckInFirestore(String userID, String deckId, Map<String, dynamic> deckData) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('userID and deckId cannot be empty');
+      }
+      
+      await firestore
+          .collection('users')
+          .doc(userID)
+          .collection('decks')
+          .doc(deckId)
+          .update(deckData);
+    } catch (e) {
+      _logger.severe('Error updating deck: $e');
+      rethrow;
+    }
+  }
+
+  /// Legacy V2 method: Delete deck
+  Future<void> deleteDeckFromFirestore(String userID, String deckId) async {
+    try {
+      if (userID.isEmpty || deckId.isEmpty) {
+        throw ArgumentError('userID and deckId cannot be empty');
+      }
+      
+      // Use the new method
+      await removeDeckFromFirestore(userID, deckId);
+    } catch (e) {
+      _logger.severe('Error deleting deck: $e');
+      rethrow;
+    }
+  }
+  
+  /// Legacy method: Get all SingleCards from a deck (converts from AnkiCards)
+  Future<List<SingleCard>> getAllCardsOfDeckFromFirestore(String userID, String deckName) async {
+    _logger.warning('Using legacy method getAllCardsOfDeckFromFirestore - consider migrating to AnkiCards');
+    
+    try {
+      // Get AnkiCards and convert them to SingleCards
+      final ankiCards = await getAllAnkiCardsFromDeck(userID, deckName);
+      final singleCards = ankiCards.map((ankiCard) => ankiCard.toSingleCard()).toList();
+      
+      _logger.info('Converted ${singleCards.length} AnkiCards to SingleCards for compatibility');
+      return singleCards;
+    } catch (e) {
+      _logger.severe('Error in legacy getAllCardsOfDeckFromFirestore: $e');
+      return [];
+    }
+  }
+
+  /// Legacy method: Add a SingleCard (converts to AnkiCard)
+  void addCardToFirestore(String userID, String currentDeckName, SingleCard card) {
+    _logger.warning('Using legacy method addCardToFirestore - consider migrating to AnkiCards');
+    
+    // Convert SingleCard to AnkiCard and add it
+    final ankiCard = AnkiCard.fromSingleCard(card, currentDeckName);
+    addAnkiCardToFirestore(userID, currentDeckName, ankiCard).catchError((e) {
+      _logger.severe('Error in legacy addCardToFirestore: $e');
+    });
+  }
+
+  /// Legacy method: Remove a SingleCard
+  void removeCardFromFirestore(String userID, String currentDeckName, SingleCard card) {
+    _logger.warning('Using legacy method removeCardFromFirestore - consider migrating to AnkiCards');
+    
+    removeAnkiCardFromFirestore(userID, currentDeckName, card.id).catchError((e) {
+      _logger.severe('Error in legacy removeCardFromFirestore: $e');
+    });
+  }
+
+  /// Legacy method: Update card difficulty (used by learning system)
+  void updateDifficultyOfCardInFirestore(String userID, String currentDeckName, SingleCard card) {
+    _logger.warning('Using legacy method updateDifficultyOfCardInFirestore - consider using SM-2 review system');
+    
+    // Convert difficulty to ease factor and update
+    final ankiCard = AnkiCard.fromSingleCard(card, currentDeckName);
+    updateAnkiCard(userID, currentDeckName, ankiCard).catchError((e) {
+      _logger.severe('Error in legacy updateDifficultyOfCardInFirestore: $e');
+    });
   }
 }
